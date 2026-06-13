@@ -1,0 +1,14 @@
+.teaHeader { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 0.5px solid var(--border); }
+.teaName { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+.teaMeta { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+.teaDesc { font-size: 14px; color: var(--text-muted); }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.sectionTitle { font-size: 15px; font-weight: 500; margin-bottom: 1rem; }
+.empty { font-size: 13px; color: var(--text-hint); }
+.pubReview { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 8px; }
+.pubHeader { display: flex; justify-content: space-between; margin-bottom: 8px; }
+.pubName { font-weight: 500; font-size: 13px; }
+.pubScore { font-size: 12px; color: var(--text-muted); }
+.scores { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.scoreItem { font-size: 11px; background: var(--green-light); color: var(--green-dark); padding: 2px 8px; border-radius: 20px; display: flex; gap: 4px; }
+.pubComment { font-size: 12px; color: var(--text-muted); font-style: italic; }

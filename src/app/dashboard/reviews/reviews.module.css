@@ -1,0 +1,16 @@
+.title { font-size: 20px; font-weight: 600; margin-bottom: 1.5rem; }
+.empty { text-align: center; padding: 3rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.btn { background: var(--green); color: #fff; border-radius: var(--radius); padding: 8px 16px; font-size: 13px; }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.card { display: block; background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
+.card:hover { border-color: var(--border-strong); }
+.cardHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.teaName { font-weight: 500; font-size: 15px; }
+.avg { font-size: 13px; color: var(--text-muted); }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.pill { font-size: 11px; background: var(--green-light); color: var(--green-dark); padding: 2px 8px; border-radius: 20px; }
+.comment { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+.footer { display: flex; justify-content: space-between; margin-top: 8px; }
+.date { font-size: 11px; color: var(--text-hint); }
+.public { font-size: 11px; color: var(--green); }
+.private { font-size: 11px; color: var(--text-hint); }

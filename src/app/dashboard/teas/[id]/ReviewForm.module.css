@@ -1,0 +1,13 @@
+.wrap { display: flex; flex-direction: column; gap: 12px; }
+.chartWrap { display: flex; justify-content: center; }
+.sliders { display: flex; flex-direction: column; gap: 8px; }
+.sliderRow { display: flex; align-items: center; gap: 10px; }
+.sliderLabel { width: 56px; font-size: 12px; color: var(--text-muted); flex-shrink: 0; }
+.slider { flex: 1; accent-color: var(--green); }
+.sliderVal { width: 20px; font-size: 13px; font-weight: 500; text-align: right; flex-shrink: 0; }
+.textarea { width: 100%; border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 9px 12px; font-size: 14px; font-family: inherit; background: var(--bg-card); color: var(--text); outline: none; resize: vertical; }
+.textarea:focus { border-color: var(--green); }
+.checkLabel { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.saveBtn { background: var(--green); color: #fff; border: none; border-radius: var(--radius); padding: 10px; font-size: 14px; font-weight: 500; }
+.saveBtn:hover { background: var(--green-dark); }
+.saveBtn:disabled { opacity: 0.6; cursor: default; }

@@ -1,0 +1,12 @@
+.btn { background: var(--green); color: #fff; border: none; border-radius: var(--radius); padding: 8px 16px; font-size: 13px; }
+.btn:hover { background: var(--green-dark); }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal { background: var(--bg-card); border-radius: var(--radius-lg); padding: 1.5rem; width: 420px; max-width: 90vw; display: flex; flex-direction: column; gap: 6px; }
+.modalTitle { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.label { font-size: 12px; color: var(--text-muted); }
+.input { width: 100%; border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 9px 12px; font-size: 14px; font-family: inherit; background: var(--bg-card); color: var(--text); outline: none; resize: vertical; }
+.input:focus { border-color: var(--green); }
+.footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+.cancel { background: none; border: 0.5px solid var(--border-strong); border-radius: var(--radius); padding: 7px 14px; font-size: 13px; }
+.save { background: var(--green); color: #fff; border: none; border-radius: var(--radius); padding: 7px 14px; font-size: 13px; }
+.save:disabled { opacity: 0.6; }
