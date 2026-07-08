@@ -1,61 +1,577 @@
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { redirect } from 'next/navigation'
-import { CATEGORY_LABELS } from '@/types'
-import DeleteTeaButton from './DeleteTeaButton'
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 import styles from './admin.module.css'
 
-export default async function AdminPage() {
-  const supabase = createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user!.id).single()
-  if (!profile?.is_admin) redirect('/dashboard')
+const LIMIT_ROLES: { key: string; label: string }[] = [
+  { key: 'general',    label: '一般ユーザー' },
+  { key: 'subscribed', label: '課金ユーザー' },
+  { key: 'admin',      label: '管理者' },
+  { key: 'creator',    label: '製作者' },
+]
+const LIMIT_FEATURES: { key: string; label: string }[] = [
+  { key: 'reviews', label: '評価の登録上限' },
+  { key: 'public',  label: 'コミュニティ公開の上限（月間）' },
+  { key: 'wants',   label: '「飲みたい」の登録上限' },
+]
 
-  const { data: teas } = await supabase.from('teas').select('*, profiles(name)').order('is_official', { ascending: false }).order('created_at')
-  const { data: allReviews } = await supabase.from('reviews').select('id', { count: 'exact' })
-  const { data: users } = await supabase.from('profiles').select('id, name, is_admin, created_at').order('created_at')
+export default function AdminPage() {
+  const supabase = createClient()
+  const router = useRouter()
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
+  const [isCreator, setIsCreator] = useState(false)
+  const [activeTab, setActiveTab] = useState<'aroma'|'settings'|'users'|'points'>('aroma')
+  const [presets, setPresets] = useState<any[]>([])
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({ group_name: '', itemsText: '' })
+  const [showAdd, setShowAdd] = useState(false)
+  const [addForm, setAddForm] = useState({ group_name: '', itemsText: '' })
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { router.push('/auth'); return }
+    const { data: profile } = await supabase.from('profiles').select('is_admin,is_creator').eq('id', user.id).single()
+    if (!profile?.is_admin && !profile?.is_creator) { router.push('/dashboard'); return }
+    setIsAdmin(true)
+    setIsCreator(profile?.is_creator ?? false)
+    const { data } = await supabase.from('aroma_presets').select('*').order('sort_order')
+    setPresets(data ?? [])
+  }, [supabase, router])
+
+  useEffect(() => { load() }, [load])
+
+  function startEdit(preset: any) {
+    setEditingId(preset.id)
+    setEditForm({ group_name: preset.group_name, itemsText: (preset.items ?? []).join('、') })
+  }
+
+  async function saveEdit() {
+    if (!editingId) return
+    setSaving(true)
+    const items = editForm.itemsText.split(/[、,，\n]/).map(s => s.trim()).filter(Boolean)
+    await supabase.from('aroma_presets').update({ group_name: editForm.group_name, items }).eq('id', editingId)
+    setSaving(false); setEditingId(null); load()
+  }
+
+  async function addPreset() {
+    if (!addForm.group_name.trim()) return
+    setSaving(true)
+    const items = addForm.itemsText.split(/[、,，\n]/).map(s => s.trim()).filter(Boolean)
+    const maxOrder = Math.max(0, ...presets.map(p => p.sort_order ?? 0))
+    await supabase.from('aroma_presets').insert({ group_name: addForm.group_name, items, sort_order: maxOrder + 10 })
+    setSaving(false); setShowAdd(false); setAddForm({ group_name: '', itemsText: '' }); load()
+  }
+
+  async function deletePreset(id: string, name: string) {
+    if (!confirm(`「${name}」を削除しますか？`)) return
+    await supabase.from('aroma_presets').delete().eq('id', id)
+    load()
+  }
+
+  async function movePreset(id: string, dir: 'up' | 'down') {
+    const idx = presets.findIndex(p => p.id === id)
+    const target = dir === 'up' ? idx - 1 : idx + 1
+    if (target < 0 || target >= presets.length) return
+    const reordered = [...presets]
+    ;[reordered[idx], reordered[target]] = [reordered[target], reordered[idx]]
+    const updates = reordered.map((p, i) => ({ id: p.id, sort_order: (i + 1) * 10 }))
+    setPresets(reordered.map((p, i) => ({ ...p, sort_order: (i + 1) * 10 })))
+    await Promise.all(updates.map(u => supabase.from('aroma_presets').update({ sort_order: u.sort_order }).eq('id', u.id)))
+  }
+
+  // ─── アプリ設定 ──────────────────────────────────
+  const [limits, setLimits] = useState<Record<string, number>>({})  // key: `${role}:${feature}`
+  const [costs, setCosts] = useState<any[]>([])
+  const [savingCosts, setSavingCosts] = useState(false)
+  const [costsSaved, setCostsSaved] = useState(false)
+  const [pointPolicy, setPointPolicy] = useState({ initial: '5', monthly: '10', carryover: '10', loginDays: '5', loginPoints: '2' })
+  const [savingPolicy, setSavingPolicy] = useState(false)
+  const [policySaved, setPolicySaved] = useState(false)
+
+  useEffect(() => {
+    supabase.from('feature_costs').select('feature,cost,label,sort_order').order('sort_order')
+      .then(({ data }) => setCosts(data ?? []))
+    supabase.from('app_settings').select('key,value')
+      .in('key', ['points_initial', 'points_monthly_grant', 'points_carryover_max', 'login_bonus_days', 'login_bonus_points'])
+      .then(({ data }) => {
+        const m: any = {}
+        for (const r of data ?? []) m[r.key] = r.value
+        setPointPolicy({
+          initial: m['points_initial'] ?? '5',
+          monthly: m['points_monthly_grant'] ?? '10',
+          carryover: m['points_carryover_max'] ?? '10',
+          loginDays: m['login_bonus_days'] ?? '5',
+          loginPoints: m['login_bonus_points'] ?? '2',
+        })
+      })
+  }, [supabase])
+
+  async function savePointPolicy() {
+    setSavingPolicy(true)
+    const { error } = await supabase.from('app_settings').upsert([
+      { key: 'points_initial', value: pointPolicy.initial, updated_at: new Date().toISOString() },
+      { key: 'points_monthly_grant', value: pointPolicy.monthly, updated_at: new Date().toISOString() },
+      { key: 'points_carryover_max', value: pointPolicy.carryover, updated_at: new Date().toISOString() },
+      { key: 'login_bonus_days', value: pointPolicy.loginDays, updated_at: new Date().toISOString() },
+      { key: 'login_bonus_points', value: pointPolicy.loginPoints, updated_at: new Date().toISOString() },
+    ])
+    setSavingPolicy(false)
+    if (error) { alert(error.message); return }
+    setPolicySaved(true); setTimeout(() => setPolicySaved(false), 2000)
+  }
+
+  async function saveCosts() {
+    setSavingCosts(true)
+    const rows = costs.map(c => ({ feature: c.feature, cost: c.cost, label: c.label, sort_order: c.sort_order, updated_at: new Date().toISOString() }))
+    const { error } = await supabase.from('feature_costs').upsert(rows)
+    setSavingCosts(false)
+    if (error) { alert(error.message); return }
+    setCostsSaved(true); setTimeout(() => setCostsSaved(false), 2000)
+  }
+  const [savingSettings, setSavingSettings] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
+
+  useEffect(() => {
+    supabase.from('plan_limits').select('role,feature,max_count')
+      .then(({ data }) => {
+        const map: Record<string, number> = {}
+        for (const row of data ?? []) map[`${row.role}:${row.feature}`] = row.max_count
+        setLimits(map)
+      })
+  }, [supabase])
+
+  async function saveSettings() {
+    setSavingSettings(true)
+    const rows = Object.entries(limits).map(([key, max_count]) => {
+      const [role, feature] = key.split(':')
+      return { role, feature, max_count, updated_at: new Date().toISOString() }
+    })
+    await supabase.from('plan_limits').upsert(rows)
+    setSavingSettings(false); setSettingsSaved(true); setTimeout(() => setSettingsSaved(false), 2000)
+  }
+
+  // ─── ユーザー管理 ──────────────────────────────────
+  const STATUS_LABEL: Record<string, string> = {
+    normal: '通常', write_restricted: '書き込み制限', login_disabled: 'ログイン不可',
+  }
+  const [users, setUsers] = useState<any[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
+  const [usersLoaded, setUsersLoaded] = useState(false)
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
+
+  const loadUsers = useCallback(async () => {
+    setLoadingUsers(true)
+    const [{ data: profiles }, { data: reviews }, { data: visits }, { data: signIns }] = await Promise.all([
+      supabase.from('profiles').select('id,name,is_admin,is_creator,is_subscribed,account_status,points,created_at').order('created_at', { ascending: true }),
+      supabase.from('reviews').select('user_id,is_public'),
+      supabase.from('shop_visits').select('user_id'),
+      supabase.rpc('get_users_last_sign_in'),
+    ])
+    const reviewCount: Record<string, number> = {}
+    const publicCount: Record<string, number> = {}
+    for (const r of reviews ?? []) {
+      reviewCount[r.user_id] = (reviewCount[r.user_id] ?? 0) + 1
+      if (r.is_public) publicCount[r.user_id] = (publicCount[r.user_id] ?? 0) + 1
+    }
+    const visitCount: Record<string, number> = {}
+    for (const v of visits ?? []) visitCount[v.user_id] = (visitCount[v.user_id] ?? 0) + 1
+    const signInMap: Record<string, string> = {}
+    for (const s of signIns ?? []) signInMap[s.id] = s.last_sign_in_at
+
+    setUsers((profiles ?? []).map(p => ({
+      ...p,
+      account_status: p.account_status ?? 'normal',
+      reviewCount: reviewCount[p.id] ?? 0,
+      publicCount: publicCount[p.id] ?? 0,
+      visitCount: visitCount[p.id] ?? 0,
+      lastSignInAt: signInMap[p.id] ?? null,
+    })))
+    setLoadingUsers(false)
+    setUsersLoaded(true)
+  }, [supabase])
+
+  useEffect(() => {
+    if (activeTab === 'users' && !usersLoaded) loadUsers()
+  }, [activeTab, usersLoaded, loadUsers])
+
+  async function updateAccountStatus(userId: string, status: string) {
+    setUpdatingUserId(userId)
+    const { error } = await supabase.rpc('admin_set_account_status', { p_user_id: userId, p_status: status })
+    if (error) { alert(error.message); setUpdatingUserId(null); return }
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, account_status: status } : u))
+    setUpdatingUserId(null)
+  }
+
+  async function updateRole(userId: string, role: 'user' | 'subscribed' | 'admin') {
+    setUpdatingUserId(userId)
+    const newIsAdmin = role === 'admin'
+    const newIsSubscribed = role === 'subscribed'
+    // 管理者フラグは直接更新、課金フラグは保護ガードがあるため専用RPCで更新する
+    const { error: e1 } = await supabase.from('profiles').update({ is_admin: newIsAdmin }).eq('id', userId)
+    if (e1) { alert(e1.message); setUpdatingUserId(null); return }
+    const { error: e2 } = await supabase.rpc('admin_set_subscription', { p_user_id: userId, p_subscribed: newIsSubscribed })
+    if (e2) { alert(e2.message); setUpdatingUserId(null); return }
+    setUsers(prev => prev.map(u => u.id === userId
+      ? { ...u, is_admin: newIsAdmin, is_subscribed: newIsSubscribed }
+      : u))
+    setUpdatingUserId(null)
+  }
+
+  // 現在の区分を求める（優先順位: 管理者 > 課金 > 一般）
+  function currentRole(u: any): 'user' | 'subscribed' | 'admin' {
+    if (u.is_admin) return 'admin'
+    if (u.is_subscribed) return 'subscribed'
+    return 'user'
+  }
+
+  if (isAdmin === null) return <p className={styles.loading}>読み込み中…</p>;
 
   return (
-    <div>
-      <h1 className={styles.title}>管理者メニュー</h1>
-      <div className={styles.stats}>
-        <div className={styles.stat}><div className={styles.sl}>ユーザー数</div><div className={styles.sv}>{users?.length ?? 0}</div></div>
-        <div className={styles.stat}><div className={styles.sl}>茶葉数</div><div className={styles.sv}>{teas?.length ?? 0}</div></div>
-        <div className={styles.stat}><div className={styles.sl}>評価数</div><div className={styles.sv}>{allReviews?.length ?? 0}</div></div>
+    <div className={styles.page}>
+      <h1 className={styles.title}>⚙️ 管理者メニュー</h1>
+
+      {/* タブ */}
+      <div className={styles.tabs}>
+        <button className={`${styles.tab} ${activeTab==='aroma' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('aroma')}>
+          🌸 香り分析プリセット
+        </button>
+        <button className={`${styles.tab} ${activeTab==='settings' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('settings')}>
+          ⚙️ アプリ設定
+        </button>
+        <button className={`${styles.tab} ${activeTab==='users' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('users')}>
+          👥 ユーザー管理
+        </button>
+        {isCreator && (
+          <button className={`${styles.tab} ${activeTab==='points' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('points')}>
+            💎 ポイント設定
+          </button>
+        )}
       </div>
 
-      <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>茶葉マスタ</h2>
-        <table className={styles.table}>
-          <thead><tr><th>名前</th><th>カテゴリ</th><th>登録者</th><th>種別</th><th></th></tr></thead>
-          <tbody>
-            {teas?.map((t: any) => (
-              <tr key={t.id}>
-                <td>{t.name}</td>
-                <td>{CATEGORY_LABELS[t.category as keyof typeof CATEGORY_LABELS]}</td>
-                <td>{t.profiles?.name ?? 'システム'}</td>
-                <td>{t.is_official ? <span className={styles.official}>公式</span> : <span className={styles.user}>ユーザー</span>}</td>
-                <td><DeleteTeaButton teaId={t.id} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* ─── 香り分析プリセット管理 ─── */}
+      {activeTab === 'aroma' && <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>🌸 香り分析プリセット管理</h2>
+          <p className={styles.sectionDesc}>
+            お茶の評価画面に表示される香りの選択肢を管理します。<br/>
+            三井農林「紅茶キャラクターホイール」の9系統構造に準拠しています。
+          </p>
+          <button className={styles.addBtn} onClick={() => setShowAdd(true)}>+ グループを追加</button>
+        </div>
 
-      <div className={styles.section} style={{ marginTop: '1.5rem' }}>
-        <h2 className={styles.sectionTitle}>ユーザー一覧</h2>
-        <table className={styles.table}>
-          <thead><tr><th>名前</th><th>管理者</th><th>登録日</th></tr></thead>
-          <tbody>
-            {users?.map((u: any) => (
-              <tr key={u.id}>
-                <td>{u.name}</td>
-                <td>{u.is_admin ? '✅' : '—'}</td>
-                <td>{new Date(u.created_at).toLocaleDateString('ja-JP')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        {/* 追加フォーム */}
+        {showAdd && (
+          <div className={styles.editCard}>
+            <h3 className={styles.editCardTitle}>新しいグループを追加</h3>
+            <label className={styles.label}>グループ名（系統名）</label>
+            <input className={styles.input} value={addForm.group_name}
+              onChange={e => setAddForm(f => ({ ...f, group_name: e.target.value }))}
+              placeholder="例: Floral（フローラル）"/>
+            <label className={styles.label}>香り語（読点・カンマ・改行で区切る）</label>
+            <textarea className={styles.textarea} rows={4} value={addForm.itemsText}
+              onChange={e => setAddForm(f => ({ ...f, itemsText: e.target.value }))}
+              placeholder="例: バラ、ジャスミン、スズラン、金木犀"/>
+            <div className={styles.editActions}>
+              <button className={styles.cancelBtn} onClick={() => { setShowAdd(false); setAddForm({ group_name: '', itemsText: '' }) }}>キャンセル</button>
+              <button className={styles.saveBtn} onClick={addPreset} disabled={saving || !addForm.group_name.trim()}>
+                {saving ? '追加中…' : '追加'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* プリセット一覧 */}
+        <div className={styles.presetList}>
+          {presets.map((preset, idx) => (
+            <div key={preset.id} className={styles.presetCard}>
+              {editingId === preset.id ? (
+                /* 編集フォーム */
+                <div className={styles.editForm}>
+                  <label className={styles.label}>グループ名</label>
+                  <input className={styles.input} value={editForm.group_name}
+                    onChange={e => setEditForm(f => ({ ...f, group_name: e.target.value }))}/>
+                  <label className={styles.label}>香り語（読点・カンマ・改行で区切る）</label>
+                  <textarea className={styles.textarea} rows={5} value={editForm.itemsText}
+                    onChange={e => setEditForm(f => ({ ...f, itemsText: e.target.value }))}/>
+                  <div className={styles.editActions}>
+                    <button className={styles.cancelBtn} onClick={() => setEditingId(null)}>キャンセル</button>
+                    <button className={styles.saveBtn} onClick={saveEdit} disabled={saving}>
+                      {saving ? '保存中…' : '保存'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* 表示モード */
+                <>
+                  <div className={styles.presetHeader}>
+                    <div className={styles.presetMoveButtons}>
+                      <button className={styles.moveBtn} disabled={idx === 0} onClick={() => movePreset(preset.id, 'up')}>▲</button>
+                      <button className={styles.moveBtn} disabled={idx === presets.length - 1} onClick={() => movePreset(preset.id, 'down')}>▼</button>
+                    </div>
+                    <span className={styles.presetGroupName}>{preset.group_name}</span>
+                    <span className={styles.presetCount}>{(preset.items ?? []).length}語</span>
+                    <div className={styles.presetActions}>
+                      <button className={styles.editBtn} onClick={() => startEdit(preset)}>編集</button>
+                      <button className={styles.deleteBtn} onClick={() => deletePreset(preset.id, preset.group_name)}>削除</button>
+                    </div>
+                  </div>
+                  <div className={styles.presetItems}>
+                    {(preset.items ?? []).map((item: string) => (
+                      <span key={item} className={styles.presetTag}>{item}</span>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>}
+
+      {/* ─── アプリ設定 ─── */}
+      {activeTab === 'settings' && <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>⚙️ アプリ設定</h2>
+          <p className={styles.sectionDesc}>TeaNoteの各種制限・設定を管理します。</p>
+        </div>
+        <div className={styles.settingsCard}>
+          <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
+            権限区分ごとに各機能の上限を設定します。<strong>0 は無制限</strong>です。
+          </p>
+          {LIMIT_FEATURES.map(f => (
+            <div key={f.key} className={styles.limitGroup}>
+              <p className={styles.limitGroupTitle}>{f.label}</p>
+              <div className={styles.limitGrid}>
+                {LIMIT_ROLES.map(role => {
+                  const key = `${role.key}:${f.key}`
+                  return (
+                    <div key={key} className={styles.limitCell}>
+                      <label className={styles.limitRoleLabel}>{role.label}</label>
+                      <div className={styles.settingControl}>
+                        <input className={styles.settingInput} type="number" min={0} max={9999}
+                          value={limits[key] ?? 0}
+                          onChange={e => setLimits(prev => ({ ...prev, [key]: parseInt(e.target.value) || 0 }))}/>
+                        <span className={styles.settingUnit}>件</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12 }}>
+            <button className={styles.saveBtn} onClick={saveSettings} disabled={savingSettings}>
+              {savingSettings ? '保存中…' : '設定を保存'}
+            </button>
+            {settingsSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
+          </div>
+        </div>
+      </div>}
+
+      {/* ─── ユーザー管理 ─── */}
+      {activeTab === 'users' && <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>👥 ユーザー管理</h2>
+          <p className={styles.sectionDesc}>
+            登録ユーザーの一覧と利用状況を確認できます。AI分析のポイント制導入に向けた管理用画面です。<br/>
+            アカウント制限は「書き込み制限」（評価・訪問記録の登録不可）と「ログイン不可」の2種類。管理者ユーザーはこれらの制限を一切受けません。
+          </p>
+        </div>
+
+        {loadingUsers ? (
+          <p className={styles.sectionDesc}>読み込み中…</p>
+        ) : (
+          <div className={styles.tableWrap}>
+            <table className={styles.userTable}>
+              <thead>
+                <tr>
+                  <th>ユーザ名</th>
+                  <th>ユーザID</th>
+                  <th>権限</th>
+                  <th>評価数</th>
+                  <th>公開数</th>
+                  <th>訪問店舗数</th>
+                  <th>ポイント</th>
+                  <th>最終ログイン</th>
+                  <th>アカウント制限</th>                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id}>
+                    <td>{u.name || '（未設定）'}</td>
+                    <td><span className={styles.userId} title={u.id}>{u.id}</span></td>
+                    <td>
+                      {u.is_creator ? (
+                        <span className={`${styles.roleBadge} ${styles.roleCreator}`}>製作者</span>
+                      ) : isCreator ? (
+                        // 製作者のみ権限を変更できる
+                        <select
+                          className={styles.statusSelect}
+                          value={currentRole(u)}
+                          disabled={updatingUserId === u.id}
+                          onChange={e => updateRole(u.id, e.target.value as 'user'|'subscribed'|'admin')}
+                        >
+                          <option value="user">一般</option>
+                          <option value="subscribed">課金ユーザー</option>
+                          <option value="admin">管理者</option>
+                        </select>
+                      ) : (
+                        <span className={`${styles.roleBadge} ${u.is_admin ? styles.roleAdmin : ''}`}>
+                          {u.is_admin ? '管理者' : u.is_subscribed ? '課金' : '一般'}
+                        </span>
+                      )}
+                    </td>
+                    <td>{u.reviewCount}</td>
+                    <td>{u.publicCount}</td>
+                    <td>{u.visitCount}</td>
+                    <td>
+                      {(u.is_admin || u.is_creator) ? (
+                        <span className={styles.statusExempt}>消費なし</span>
+                      ) : (
+                        <span className={styles.pointsCell}>💎 {u.points ?? 0}pt</span>
+                      )}
+                    </td>
+                    <td className={styles.lastSignIn}>
+                      {u.lastSignInAt
+                        ? new Date(u.lastSignInAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                        : <span className={styles.statusExempt}>―</span>}
+                    </td>
+                    <td>
+                      {(u.is_admin || u.is_creator) ? (
+                        <span className={styles.statusExempt}>制限対象外</span>
+                      ) : (
+                        <select
+                          className={styles.statusSelect}
+                          value={u.account_status}
+                          disabled={updatingUserId === u.id}
+                          onChange={e => updateAccountStatus(u.id, e.target.value)}
+                        >
+                          {Object.entries(STATUS_LABEL).map(([val, label]) => (
+                            <option key={val} value={val}>{label}</option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>}
+
+      {/* ─── ポイント設定（製作者のみ） ─── */}
+      {activeTab === 'points' && isCreator && <div className={styles.section}>
+        <h2 className={styles.cardTitle}>💎 AI機能のポイント消費数</h2>
+        <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
+          各AI機能を使うときに消費するポイント数です。<strong>0 にすると無料</strong>になります。
+          （管理者・製作者は元々消費しません）
+        </p>
+        <div className={styles.settingsCard}>
+          {costs.map((c, i) => (
+            <div key={c.feature} className={styles.settingRow}>
+              <div className={styles.settingInfo}>
+                <p className={styles.settingLabel}>{c.label}</p>
+                <p className={styles.settingDesc}>機能キー: {c.feature}</p>
+              </div>
+              <div className={styles.settingControl}>
+                <input className={styles.settingInput} type="number" min={0} max={999}
+                  value={c.cost}
+                  onChange={e => {
+                    const v = parseInt(e.target.value) || 0
+                    setCosts(prev => prev.map((x, j) => j === i ? { ...x, cost: v } : x))
+                  }}/>
+                <span className={styles.settingUnit}>pt</span>
+              </div>
+            </div>
+          ))}
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12 }}>
+            <button className={styles.saveBtn} onClick={saveCosts} disabled={savingCosts}>
+              {savingCosts ? '保存中…' : '設定を保存'}
+            </button>
+            {costsSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
+          </div>
+        </div>
+
+        <h2 className={styles.cardTitle} style={{ marginTop: 24 }}>💠 ポイント制度の設定</h2>
+        <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
+          初期ポイント・毎月の付与数・繰越上限を設定します。月次付与と繰越上限は次回の月次処理から反映されます。
+        </p>
+        <div className={styles.settingsCard}>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>初期ポイント</p>
+              <p className={styles.settingDesc}>新規登録したユーザーに最初に付与されるポイント</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={0} max={9999}
+                value={pointPolicy.initial}
+                onChange={e => setPointPolicy(p => ({ ...p, initial: e.target.value }))}/>
+              <span className={styles.settingUnit}>pt</span>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>毎月の付与ポイント</p>
+              <p className={styles.settingDesc}>課金ユーザーに毎月付与されるポイント数</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={0} max={9999}
+                value={pointPolicy.monthly}
+                onChange={e => setPointPolicy(p => ({ ...p, monthly: e.target.value }))}/>
+              <span className={styles.settingUnit}>pt</span>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>繰越上限</p>
+              <p className={styles.settingDesc}>翌月に繰り越せるポイントの上限。超過分は失効します</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={0} max={9999}
+                value={pointPolicy.carryover}
+                onChange={e => setPointPolicy(p => ({ ...p, carryover: e.target.value }))}/>
+              <span className={styles.settingUnit}>pt</span>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>ログインボーナス：必要日数</p>
+              <p className={styles.settingDesc}>累計何日ログインするとボーナスを付与するか</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={1} max={999}
+                value={pointPolicy.loginDays}
+                onChange={e => setPointPolicy(p => ({ ...p, loginDays: e.target.value }))}/>
+              <span className={styles.settingUnit}>日</span>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>ログインボーナス：付与ポイント</p>
+              <p className={styles.settingDesc}>必要日数を達成したときに付与されるポイント</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={0} max={9999}
+                value={pointPolicy.loginPoints}
+                onChange={e => setPointPolicy(p => ({ ...p, loginPoints: e.target.value }))}/>
+              <span className={styles.settingUnit}>pt</span>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12 }}>
+            <button className={styles.saveBtn} onClick={savePointPolicy} disabled={savingPolicy}>
+              {savingPolicy ? '保存中…' : '設定を保存'}
+            </button>
+            {policySaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
+          </div>
+        </div>
+      </div>}
     </div>
   )
 }

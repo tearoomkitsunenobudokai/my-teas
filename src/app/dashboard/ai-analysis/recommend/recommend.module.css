@@ -1,0 +1,37 @@
+.back { font-size: 12px; color: var(--text-muted); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.hint { font-size: 13px; color: var(--text-muted); }
+
+.mockTag {
+  display: inline-block;
+  font-size: 11px; font-weight: 600;
+  color: var(--green);
+  background: var(--green-light);
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-left: 8px;
+}
+
+.runBtn {
+  align-self: flex-start;
+  background: var(--green); color: #fff; border: none;
+  border-radius: 10px; padding: 12px 24px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.runBtn:hover { background: var(--green-dark); }
+.runBtn:disabled { opacity: 0.6; cursor: default; }
+
+.thinking { font-size: 13px; color: var(--text-muted); }
+.pointsHint { font-size: 12px; color: #5B21B6; font-weight: 600; }
+
+.resultCard {
+  background: var(--green-light);
+  border: 0.5px solid var(--green);
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: 480px;
+}
+.resultLabel { font-size: 11px; font-weight: 700; color: var(--green); }
+.resultTitle { font-size: 16px; font-weight: 700; }
+.resultReason { font-size: 13px; line-height: 1.7; color: var(--text-muted); }

@@ -87,3 +87,15 @@
 }
 .btnPrimary:hover { background: var(--green-dark); }
 .btnPrimary:disabled { opacity: 0.6; cursor: default; }
+.linkBtn {
+  margin-top: 10px;
+  background: none;
+  border: none;
+  color: var(--green);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px;
+  width: 100%;
+}
+.linkBtn:hover { text-decoration: underline; }

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import Sidebar from '@/components/layout/Sidebar'
 import Header from '@/components/layout/Header'
+import LoginBonus from '@/components/LoginBonus'
 import styles from './app-layout.module.css'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -17,9 +18,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className={styles.app}>
+      <LoginBonus />
       <Header profile={profile} />
       <div className={styles.body}>
-        <Sidebar isAdmin={profile?.is_admin ?? false} />
+        {/* 製作者(is_creator)も管理者メニューが見えるようにする */}
+        <Sidebar isAdmin={(profile?.is_admin || profile?.is_creator) ?? false} />
         <main className={styles.main}>{children}</main>
       </div>
     </div>

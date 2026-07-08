@@ -1,0 +1,46 @@
+.page { display: flex; flex-direction: column; gap: 1.25rem; }
+.title { font-size: 20px; font-weight: 600; }
+.lead { font-size: 13px; color: var(--text-muted); line-height: 1.6; max-width: 640px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+
+.tile {
+  position: relative;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+.tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.07);
+  border-color: var(--green);
+}
+
+.tileBadge {
+  position: absolute;
+  top: 14px; right: 14px;
+  font-size: 10px; font-weight: 700;
+  color: var(--green);
+  background: var(--green-light);
+  border-radius: 20px;
+  padding: 2px 8px;
+}
+.tileIcon { font-size: 32px; }
+.tileTitle { font-size: 15px; font-weight: 700; }
+.tileDesc { font-size: 12px; color: var(--text-muted); line-height: 1.6; flex: 1; }
+.tileArrow { font-size: 12px; font-weight: 600; color: var(--green); margin-top: 4px; }
+.tileCost { font-size: 11px; font-weight: 600; color: #5B21B6; }
+
+.note {
+  font-size: 12px; color: var(--text-muted);
+  background: var(--green-light);
+  border-radius: 8px; padding: 10px 14px; line-height: 1.6;
+  max-width: 640px;
+}

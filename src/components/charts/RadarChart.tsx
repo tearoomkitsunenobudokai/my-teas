@@ -8,15 +8,12 @@ import { ReviewScores, SCORE_LABELS } from '@/types'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
-interface Props {
-  scores: ReviewScores
-  label?: string
-  size?: number
-}
+interface Props { scores: ReviewScores; label?: string; size?: number }
 
-export default function RadarChart({ scores, label = '', size = 300 }: Props) {
-  const labels = Object.keys(SCORE_LABELS).map(k => SCORE_LABELS[k as keyof ReviewScores])
-  const data = Object.keys(SCORE_LABELS).map(k => scores[k as keyof ReviewScores])
+export default function RadarChart({ scores, label = '', size = 260 }: Props) {
+  const keys = Object.keys(SCORE_LABELS) as (keyof ReviewScores)[]
+  const labels = keys.map(k => SCORE_LABELS[k])
+  const data   = keys.map(k => scores[k] ?? 1)
 
   return (
     <div style={{ width: size, height: size, maxWidth: '100%' }}>
@@ -26,11 +23,11 @@ export default function RadarChart({ scores, label = '', size = 300 }: Props) {
           datasets: [{
             label,
             data,
-            backgroundColor: 'rgba(29,158,117,0.15)',
+            backgroundColor: 'rgba(29,158,117,0.18)',
             borderColor: '#1D9E75',
             pointBackgroundColor: '#1D9E75',
             borderWidth: 2,
-            pointRadius: 4,
+            pointRadius: 5,
           }],
         }}
         options={{
@@ -39,9 +36,9 @@ export default function RadarChart({ scores, label = '', size = 300 }: Props) {
           plugins: { legend: { display: false } },
           scales: {
             r: {
-              min: 0, max: 10,
-              ticks: { stepSize: 2, font: { size: 11 } },
-              pointLabels: { font: { size: 12 } },
+              min: 0, max: 5,
+              ticks: { stepSize: 1, font: { size: 11 }, callback: (v: any) => `${v}` },
+              pointLabels: { font: { size: 13, weight: '600' as const } },
             },
           },
         }}

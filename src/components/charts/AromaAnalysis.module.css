@@ -1,0 +1,175 @@
+.wrap {
+  background: #faf8f5;
+  border: 0.5px solid #e8e4df;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1917;
+}
+.countBadge {
+  font-size: 11px;
+  background: #1D9E75;
+  color: #fff;
+  padding: 1px 8px;
+  border-radius: 20px;
+}
+
+/* 選択済みタグ */
+.selectedTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.selectedTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #E1F5EE;
+  color: #085041;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 0.5px solid #9FE1CB;
+}
+.removeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1D9E75;
+  font-size: 13px;
+  padding: 0;
+  line-height: 1;
+  margin-left: 2px;
+}
+.removeBtn:hover { color: #dc2626; }
+
+/* プリセットグループ */
+.presets {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.group {
+  border: 0.5px solid #e0dbd5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.groupBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
+  font-family: inherit;
+  text-align: left;
+}
+.groupBtn:hover { background: #f5f0ea; }
+.groupBtnOpen { background: #f0faf5 !important; color: #085041; }
+.groupArrow { font-size: 10px; color: #9e9b96; }
+.groupItems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 8px 12px;
+  background: #fdfdfc;
+  border-top: 0.5px solid #e0dbd5;
+}
+.presetTag {
+  background: #fff;
+  border: 0.5px solid #d0cac4;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  color: #4b5563;
+  font-family: inherit;
+  transition: all 0.1s;
+}
+.presetTag:hover { border-color: #1D9E75; color: #1D9E75; background: #f0faf5; }
+.presetTagActive {
+  background: #1D9E75 !important;
+  color: #fff !important;
+  border-color: #1D9E75 !important;
+}
+.checkMark { font-size: 10px; }
+
+/* カスタム入力 */
+.customRow {
+  display: flex;
+  gap: 6px;
+}
+.customInput {
+  flex: 1;
+  border: 0.5px solid #d0cac4;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  background: #fff;
+  color: #1a1917;
+  outline: none;
+}
+.customInput:focus { border-color: #1D9E75; }
+.addBtn {
+  background: #1D9E75;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.addBtn:disabled { opacity: 0.5; cursor: default; }
+.addBtn:not(:disabled):hover { background: #0F6E56; }
+
+/* 自由記入 */
+.descWrap { display: flex; flex-direction: column; gap: 4px; }
+.descLabel { font-size: 11px; color: #9e9b96; }
+.descInput {
+  width: 100%;
+  border: 0.5px solid #d0cac4;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: inherit;
+  background: #fff;
+  color: #1a1917;
+  outline: none;
+  resize: vertical;
+  line-height: 1.6;
+}
+.descInput:focus { border-color: #1D9E75; }
+.descText {
+  font-size: 13px;
+  color: #4b5563;
+  line-height: 1.7;
+}
+.descEmpty { font-size: 12px; color: #9e9b96; }
+
+/* ─── 上限到達バッジ ─── */
+.countBadgeMax {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 0.5px solid #FCD34D;
+}

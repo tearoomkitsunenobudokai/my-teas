@@ -1,0 +1,220 @@
+/* ─── 2カラムレイアウト ─── */
+.pageWrap { display: flex; height: calc(100vh - 56px); overflow: hidden; margin: -1.75rem; }
+
+/* ─── 左ペイン ─── */
+.leftPane { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; border-right: 0.5px solid var(--border); background: var(--bg-card); }
+.pageHeader { padding: 0.875rem 1.25rem 0.75rem; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+.title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.subtitle { font-size: 11px; color: var(--text-muted); }
+.link { color: var(--green); }
+.headerActions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+
+.btnPrimary { background: var(--green); color: #fff; border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+.btnPrimary:hover { background: var(--green-dark); }
+.btnSecondary { background: none; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 5px 8px; font-size: 11px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 3px; }
+.btnSecondary:hover { background: var(--bg-muted); }
+.btnActive { background: #FEF9C3 !important; border-color: #EAB308 !important; color: #854D0E; }
+.btnDanger { background: none; border: 0.5px solid #fca5a5; color: #dc2626; border-radius: 6px; padding: 5px 8px; font-size: 11px; cursor: pointer; }
+.btnDanger:hover { background: #fef2f2; }
+.bmCount { background: #EAB308; color: #fff; border-radius: 20px; padding: 0 5px; font-size: 10px; font-weight: 700; }
+
+/* ─── ブックマークパネル ─── */
+.bookmarkPanel { border-bottom: 0.5px solid var(--border); background: #FEFCE8; flex-shrink: 0; max-height: 180px; overflow-y: auto; }
+.bookmarkHeader { display: flex; align-items: center; justify-content: space-between; padding: 7px 1.25rem 3px; }
+.bookmarkTitle { font-size: 12px; font-weight: 600; color: #854D0E; }
+.bookmarkCount { font-size: 11px; color: #9e9b96; }
+.bookmarkEmpty { font-size: 11px; color: #9e9b96; padding: 6px 1.25rem 10px; }
+.bookmarkList { padding: 0 0 6px; }
+.bookmarkItem { display: flex; align-items: center; padding: 5px 1.25rem; cursor: pointer; gap: 8px; }
+.bookmarkItem:hover { background: #FEF3C7; }
+.bookmarkItemInfo { flex: 1; min-width: 0; }
+.bookmarkItemName { font-size: 12px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bookmarkItemAddr { font-size: 10px; color: #9e9b96; }
+.bookmarkRemoveBtn { background: none; border: none; cursor: pointer; color: #9e9b96; font-size: 12px; padding: 2px 4px; }
+.bookmarkRemoveBtn:hover { color: #dc2626; }
+
+/* ─── 年度タブ ─── */
+.yearTabs { display: flex; gap: 4px; padding: 7px 1.25rem; border-bottom: 0.5px solid var(--border); flex-wrap: wrap; flex-shrink: 0; }
+.yearTab { padding: 3px 10px; border-radius: 20px; font-size: 11px; border: 0.5px solid var(--border-strong); background: none; cursor: pointer; color: var(--text-muted); }
+.yearTabActive { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* ─── フィルター ─── */
+.filters { display: flex; gap: 5px; padding: 7px 1.25rem; border-bottom: 0.5px solid var(--border); align-items: center; flex-wrap: wrap; flex-shrink: 0; }
+.search { flex: 1; min-width: 90px; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 5px 9px; font-size: 12px; font-family: inherit; background: var(--bg-muted); color: var(--text); outline: none; }
+.search:focus { border-color: var(--green); }
+.select { border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 5px 4px; font-size: 11px; font-family: inherit; background: var(--bg-muted); color: var(--text); outline: none; max-width: 96px; }
+.count { font-size: 11px; color: var(--text-hint); white-space: nowrap; }
+
+/* ─── 店舗リスト ─── */
+.shopList { flex: 1; overflow-y: auto; }
+.areaGroup { }
+.areaTitle { font-size: 10px; font-weight: 600; color: var(--text-hint); padding: 8px 1.25rem 3px; display: flex; align-items: center; gap: 5px; position: sticky; top: 0; background: var(--bg-card); z-index: 1; border-bottom: 0.5px solid var(--border); }
+.areaCount { font-size: 10px; background: var(--bg-muted); padding: 1px 6px; border-radius: 20px; font-weight: 400; }
+.shopRow { display: flex; align-items: center; justify-content: space-between; padding: 7px 1.25rem; cursor: pointer; transition: background 0.1s; gap: 6px; border-bottom: 0.5px solid var(--border); }
+.shopRow:hover { background: var(--bg-muted); }
+.shopRowSelected { background: var(--green-light) !important; }
+.shopRowLeft { display: flex; align-items: flex-start; gap: 6px; flex: 1; min-width: 0; }
+.shopRowName { font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 1px; }
+.shopRowAddr { font-size: 10px; color: var(--text-hint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+.shopRowRight { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.catBadge { font-size: 10px; padding: 1px 6px; border-radius: 20px; color: #333; white-space: nowrap; }
+.newBadge { font-size: 9px; background: #DCFCE7; color: #166534; padding: 1px 5px; border-radius: 20px; font-weight: 600; }
+.awardBadge { font-size: 11px; }
+.bmBtn { background: none; border: none; cursor: pointer; font-size: 15px; color: #D1D5DB; padding: 0 2px; line-height: 1; transition: color 0.15s; }
+.bmBtn:hover { color: #EAB308; }
+.bmBtnActive { color: #EAB308 !important; }
+.shopLinkBtn { font-size: 12px; color: var(--green); text-decoration: none; padding: 0 3px; }
+.shopLinkBtn:hover { text-decoration: underline; }
+.deleteBtn { font-size: 10px; color: #dc2626; background: none; border: none; cursor: pointer; padding: 1px 3px; opacity: 0.6; }
+.deleteBtn:hover { opacity: 1; }
+.empty { text-align: center; padding: 2rem 1rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+/* ─── 選択中店舗パネル（リスト下部） ─── */
+.selectedPanel { border-top: 0.5px solid var(--border); padding: 10px 1.25rem; background: var(--green-light); flex-shrink: 0; }
+.selectedPanelTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.selectedPanelName { font-size: 13px; font-weight: 700; color: var(--green-dark); }
+.clearBtn { background: none; border: none; cursor: pointer; color: var(--text-hint); font-size: 13px; padding: 0; }
+.selectedPanelAddr { font-size: 11px; color: #4b5563; margin-bottom: 3px; }
+.selectedPanelNote { font-size: 11px; color: #6b6760; font-style: italic; margin-bottom: 3px; }
+.selectedPanelLink { font-size: 11px; color: var(--green-dark); font-weight: 500; display: block; margin-bottom: 6px; }
+.selectedPanelHint { font-size: 10px; color: #6b6760; background: rgba(255,255,255,0.6); padding: 5px 8px; border-radius: 6px; line-height: 1.5; }
+
+/* ─── 右ペイン（マイマップ） ─── */
+.rightPane { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.mapHeader { display: flex; flex-direction: column; gap: 3px; padding: 8px 16px; background: var(--bg-card); border-bottom: 0.5px solid var(--border); flex-shrink: 0; min-height: 48px; justify-content: center; }
+.mapTitle { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.mapHint { font-size: 11px; color: var(--text-hint); }
+
+/* ─── マイマップ iframe ─── */
+.mapWrap { flex: 1; position: relative; overflow: hidden; }
+.mapIframe { width: 100%; height: 100%; border: none; display: block; }
+.mapOverlayBadge { position: absolute; bottom: 20px; left: 12px; background: rgba(255,255,255,0.95); border-radius: 10px; padding: 8px 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 2px; pointer-events: none; max-width: 280px; }
+.mapOverlayBadge span:first-child { font-size: 13px; font-weight: 600; color: #1a1917; }
+.mapOverlayHint { font-size: 10px; color: #9e9b96; }
+
+/* マイマップ未設定時 */
+.mapPlaceholder { flex: 1; display: flex; align-items: center; justify-content: center; background: #f5f0ea; }
+.mapPlaceholderInner { background: #fff; border-radius: 14px; padding: 2rem; max-width: 380px; text-align: left; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.mapPlaceholderTitle { font-size: 15px; font-weight: 600; margin-bottom: 12px; text-align: center; }
+.mapPlaceholderSteps { font-size: 13px; color: #4b5563; line-height: 2; padding-left: 1.2rem; margin-bottom: 12px; }
+.mapPlaceholderSub { font-size: 12px; color: #9e9b96; text-align: center; background: var(--green-light); padding: 8px 12px; border-radius: 8px; }
+.mapLink { color: var(--green); }
+
+/* ─── マップID設定モーダル ─── */
+.mapIdNote { font-size: 12px; color: var(--text-muted); background: #F0FDF4; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; line-height: 1.7; }
+.mapIdSteps { font-size: 12px; color: var(--text-muted); line-height: 1.9; margin-top: 8px; }
+.coordLink { color: var(--green); }
+
+/* ─── モーダル共通 ─── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 1rem; }
+.modal { background: #fff; border-radius: 14px; padding: 1.5rem; width: 520px; max-width: 92vw; max-height: 88vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 4px; }
+.modalTitle { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.label { font-size: 12px; color: #6b6760; margin-top: 6px; display: block; }
+.input { width: 100%; border: 0.5px solid #ccc; border-radius: 8px; padding: 8px 10px; font-size: 13px; font-family: inherit; background: #faf8f5; color: #1a1917; outline: none; resize: vertical; }
+.input:focus { border-color: var(--green); }
+.checkLabel { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.modalFooter { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; }
+.cancelBtn { background: none; border: 0.5px solid #ccc; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; color: #6b6760; }
+.saveBtn { background: var(--green); color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; cursor: pointer; }
+.saveBtn:disabled { opacity: 0.6; }
+
+/* ─── プレースホルダー追加要素 ─── */
+.placeholderDivider {
+  border: none;
+  border-top: 0.5px solid #e0dbd5;
+  margin: 14px 0;
+}
+.mapPlaceholderSubTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* ─── テキスト出力モーダル ─── */
+.exportTextarea {
+  width: 100%;
+  border: 0.5px solid #ccc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-family: monospace;
+  background: #faf8f5;
+  color: #1a1917;
+  outline: none;
+  resize: vertical;
+  line-height: 1.6;
+}
+.exportTextarea:focus { border-color: var(--green); }
+
+/* ─── マップヘッダー上段（タイトル＋切替ボタン） ─── */
+.mapHeaderTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mapToggleBtn {
+  font-size: 11px;
+  background: none;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 20px;
+  padding: 4px 11px;
+  cursor: pointer;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.mapToggleBtn:hover { background: var(--bg-muted); color: var(--text); }
+.mapToggleBtnActive {
+  background: #8B5CF6 !important;
+  border-color: #8B5CF6 !important;
+  color: #fff !important;
+}
+
+/* ─── 訪問済み機能 ─── */
+.visitCountBadge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #166534;
+  background: #DCFCE7;
+  padding: 5px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+.visitCountBadge:hover { background: #BBF7D0; }
+.visitBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 2px;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.visitBtn:hover { opacity: 1; transform: scale(1.15); }
+.visitBtnActive { opacity: 1; }
+.shopRowVisited {
+  background: #F0FDF4;
+}
+.shopRowVisited:hover {
+  background: #DCFCE7 !important;
+}
+.visitedBadge {
+  font-size: 9px;
+  background: #166534;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}

@@ -1,0 +1,157 @@
+.back { font-size: 12px; color: var(--text-muted); text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.hint { font-size: 13px; color: var(--text-muted); }
+
+.mockTag {
+  display: inline-block;
+  font-size: 11px; font-weight: 600;
+  color: var(--green);
+  background: var(--green-light);
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-left: 8px;
+}
+
+.adminTag {
+  display: inline-block;
+  font-size: 11px; font-weight: 600;
+  color: #8a5a00;
+  background: #FFF3D6;
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-left: 8px;
+}
+
+.statRow { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.statBox { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.statNum { font-size: 16px; font-weight: 700; color: var(--green); text-align: center; }
+.statLabel { font-size: 11px; color: var(--text-muted); }
+
+.runBtn {
+  align-self: flex-start;
+  background: var(--green); color: #fff; border: none;
+  border-radius: 10px; padding: 12px 24px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.runBtn:hover { background: var(--green-dark); }
+.runBtn:disabled { opacity: 0.6; cursor: default; }
+
+.pointsHint { font-size: 12px; color: #5B21B6; font-weight: 600; }
+
+.thinking { font-size: 13px; color: var(--text-muted); }
+
+.resultCard {
+  background: var(--green-light);
+  border: 0.5px solid var(--green);
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 8px;
+  max-width: 560px;
+}
+.resultLabel { font-size: 11px; font-weight: 700; color: var(--green); }
+.resultText { font-size: 14px; line-height: 1.7; }
+
+/* ─── キャラクター選択 ─── */
+.tierTrack { display: flex; gap: 10px; flex-wrap: wrap; }
+.tierStep {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-muted);
+  background: var(--bg-card); border: 0.5px solid var(--border);
+  border-radius: 14px; padding: 8px 14px;
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tierStep:hover:not(:disabled) { border-color: var(--green); }
+.tierStepEmoji { font-size: 22px; line-height: 1; }
+.tierStepText { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; }
+.tierStepName { font-size: 12px; font-weight: 700; color: var(--text); }
+.tierStepRange { font-size: 10px; color: var(--text-hint); }
+
+.tierStepActive { color: var(--green); border-color: var(--green); background: var(--green-light); }
+.tierStepActive .tierStepName { color: var(--green); }
+
+.tierStepLocked { opacity: 0.45; cursor: not-allowed; filter: grayscale(1); }
+.tierStepLocked:hover { border-color: var(--border); }
+.tierStepLocked .tierStepName { color: var(--text-hint); }
+
+.historyBtn {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-muted);
+  background: var(--bg-card); border: 0.5px dashed var(--border);
+  border-radius: 14px; padding: 8px 14px;
+  cursor: pointer; font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+.historyBtn:hover:not(:disabled) { border-color: var(--green); }
+.historyBtn:disabled { cursor: not-allowed; }
+
+/* ─── キャラクター吹き出し ─── */
+.speechRow { display: flex; align-items: flex-start; gap: 14px; max-width: 560px; }
+
+.avatar {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  width: 76px;
+}
+.avatarEmoji {
+  font-size: 40px; line-height: 1;
+  width: 64px; height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 50%;
+}
+.avatarTalking .avatarEmoji { animation: bounce 0.6s infinite alternate; border-color: var(--green); }
+.avatarTag { font-size: 10px; color: var(--text-muted); font-weight: 600; }
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-4px); }
+}
+
+.bubble {
+  position: relative;
+  flex: 1;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.bubble::before {
+  content: '';
+  position: absolute; left: -8px; top: 18px;
+  width: 0; height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid var(--border);
+}
+.bubble::after {
+  content: '';
+  position: absolute; left: -7px; top: 18px;
+  width: 0; height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid var(--bg-card);
+}
+.bubbleHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.bubbleName { font-size: 11px; font-weight: 700; color: var(--green); }
+.bubbleTime { font-size: 10px; color: var(--text-hint); white-space: nowrap; }
+.bubbleText { font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+.bubbleTyping { font-size: 13px; color: var(--text-muted); }
+.dots { display: inline-block; animation: blink 1.2s infinite; }
+@keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+
+.speechRowCompact { max-width: 560px; }
+.speechRowCompact .avatarEmoji { font-size: 28px; width: 46px; height: 46px; }
+.speechRowCompact .avatar { width: 56px; }
+
+/* ─── 履歴パネル ─── */
+.historyPanel {
+  max-width: 560px;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.historyPanelTitle { font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.historyList { display: flex; flex-direction: column; gap: 14px; max-height: 480px; overflow-y: auto; }

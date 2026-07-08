@@ -1,0 +1,109 @@
+/* ─── ページ全体 ─── */
+.page { display: flex; flex-direction: column; gap: 1.25rem; }
+.pageHeader { display: flex; align-items: baseline; gap: 10px; }
+.title { font-size: 20px; font-weight: 600; }
+.subtitle { font-size: 13px; color: var(--text-muted); }
+
+/* ─── ツールバー ─── */
+.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.searchInput { flex: 1; min-width: 160px; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 6px 10px; font-size: 12px; font-family: inherit; background: var(--bg-muted); color: var(--text); outline: none; }
+.searchInput:focus { border-color: var(--green); }
+.select { border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-family: inherit; background: var(--bg-muted); color: var(--text); outline: none; }
+.countBadge { font-size: 11px; color: var(--text-hint); margin-left: auto; white-space: nowrap; }
+
+/* ─── タイルグリッド ─── */
+.tileGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+
+/* ─── コミュニティタイル ─── */
+.tile { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 14px; padding: 1rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; display: flex; flex-direction: column; gap: 10px; }
+.tile:hover { border-color: var(--green); box-shadow: 0 4px 16px rgba(29,158,117,0.12); }
+
+/* タイル上部 */
+.tileHeader { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; border-bottom: 0.5px solid var(--border); }
+.tileNameRow { display: flex; align-items: baseline; gap: 8px; }
+.tileName { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+.tileMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tileShop { font-size: 11px; color: var(--text-muted); overflow-wrap: anywhere; word-break: break-word; max-width: 100%; }
+.tileBrand { font-size: 11px; color: var(--text-muted); background: var(--bg-muted); border-radius: 20px; padding: 2px 8px; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; }
+.tileDate { font-size: 11px; color: var(--text-hint); margin-left: auto; white-space: nowrap; flex-shrink: 0; }
+.tilePlaceholder { font-size: 11px; color: var(--text-hint); opacity: 0.6; }
+
+/* タイル本体 */
+.tileBody { display: flex; gap: 12px; align-items: flex-start; }
+.tileLeft { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 80px; }
+.tileChart { flex: 1; min-width: 0; display: flex; justify-content: center; }
+
+/* 香りタグ */
+.tileAroma { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
+.tileAromaTag { font-size: 9px; background: #E1F5EE; color: #085041; padding: 1px 6px; border-radius: 20px; border: 0.5px solid #9FE1CB; white-space: nowrap; }
+
+/* タイル下部（投稿者） */
+.tileFooter { display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 0.5px solid var(--border); }
+.tileAuthor { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+.tileLocation { font-size: 11px; color: var(--text-hint); }
+
+/* ─── 詳細モーダル ─── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 500; padding: 1rem; }
+.detailModal { background: var(--bg-card); border-radius: 16px; padding: 1.5rem; width: 580px; max-width: 94vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 12px; }
+.detailHeader { display: flex; justify-content: space-between; align-items: flex-start; }
+.modalTitle { font-size: 16px; font-weight: 600; overflow-wrap: anywhere; word-break: break-word; }
+.detailBody { display: flex; gap: 16px; align-items: flex-start; }
+.detailLeft { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 110px; flex-shrink: 0; }
+.detailRight { flex: 1; display: flex; justify-content: center; }
+.detailSectionLabel { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.detailComment { font-size: 13px; color: var(--text); line-height: 1.7; background: var(--bg-muted); border-radius: 8px; padding: 10px 12px; }
+.detailInfoRow { display: flex; flex-wrap: wrap; gap: 6px; }
+.detailInfoTag { font-size: 12px; color: var(--text-muted); background: var(--bg-muted); border: 0.5px solid var(--border); border-radius: 20px; padding: 3px 10px; }
+.detailMeta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--text-muted); padding-top: 8px; border-top: 0.5px solid var(--border); }
+.closeBtn { background: none; border: none; cursor: pointer; color: var(--text-hint); font-size: 18px; padding: 0; line-height: 1; }
+
+/* ─── 投稿者パネル ─── */
+.authorPanel { display: flex; gap: 12px; align-items: flex-start; background: var(--bg-muted); border-radius: 10px; padding: 12px; }
+.authorAvatar { width: 36px; height: 36px; border-radius: 50%; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; flex-shrink: 0; }
+.authorInfo { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.authorName { font-size: 13px; font-weight: 600; }
+.authorSub { font-size: 11px; color: var(--text-muted); }
+.authorBio { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+/* その他 */
+.hint { font-size: 13px; color: var(--text-muted); padding: 1rem 0; overflow-wrap: anywhere; word-break: break-word; }
+
+/* アバター画像 */
+.authorAvatar { overflow: hidden; }
+.authorAvatarImg { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.tileAuthor { display: inline-flex; align-items: center; gap: 4px; }
+.tileAuthorAvatar { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; vertical-align: middle; }
+
+/* 飲みたいボタン・飲みたい数 */
+.wantRow {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 14px 0 4px; padding: 12px 0; border-top: 0.5px solid var(--border);
+}
+.wantBtn {
+  background: var(--bg-card); border: 1px solid var(--green);
+  color: var(--green); border-radius: 20px; padding: 8px 18px;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.wantBtn:hover { background: var(--green-light); }
+.wantBtnActive { background: var(--green); color: #fff; }
+.wantOwnNote { font-size: 12px; color: var(--text-muted); }
+
+/* 飲みたいフィルターボタン */
+.wantFilterBtn {
+  font-size: 13px; border: 0.5px solid var(--border-strong);
+  background: var(--bg-card); color: var(--text);
+  border-radius: 8px; padding: 7px 12px; cursor: pointer; white-space: nowrap;
+}
+.wantFilterBtn:hover { border-color: var(--green); color: var(--green); }
+.wantFilterActive { background: var(--green); color: #fff; border-color: var(--green); }
+
+/* タイル内の飲みたいボタン */
+.tileWantBtn {
+  margin-left: auto;
+  font-size: 11px; font-weight: 600;
+  border: 1px solid var(--green); background: var(--bg-card); color: var(--green);
+  border-radius: 14px; padding: 4px 10px; cursor: pointer; white-space: nowrap;
+  transition: all 0.15s;
+}
+.tileWantBtn:hover { background: var(--green-light); }
+.tileWantBtnActive { background: var(--green); color: #fff; }

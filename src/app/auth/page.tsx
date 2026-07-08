@@ -11,10 +11,23 @@ export default function AuthPage() {
   const [tab, setTab] = useState<'login' | 'signup'>('login')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resetMode, setResetMode] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
+
+  async function handleResetRequest() {
+    if (!form.email) { setError('メールアドレスを入力してください'); return }
+    setLoading(true); setError('')
+    const { error } = await supabase.auth.resetPasswordForEmail(form.email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
+    })
+    // メールアドレスの存在有無を攻撃者に伝えないため、成否に関わらず同じ表示にする
+    setResetSent(true)
+    setLoading(false)
+  }
 
   async function handleLogin() {
     setLoading(true); setError('')
@@ -50,14 +63,41 @@ export default function AuthPage() {
         </div>
         <p className={styles.tagline}>紅茶を記録して、共有しよう</p>
 
-        <div className={styles.tabs}>
-          <button className={`${styles.tab} ${tab === 'login' ? styles.tabActive : ''}`} onClick={() => { setTab('login'); setError('') }}>ログイン</button>
-          <button className={`${styles.tab} ${tab === 'signup' ? styles.tabActive : ''}`} onClick={() => { setTab('signup'); setError('') }}>新規登録</button>
-        </div>
+        {!resetMode && (
+          <div className={styles.tabs}>
+            <button className={`${styles.tab} ${tab === 'login' ? styles.tabActive : ''}`} onClick={() => { setTab('login'); setError('') }}>ログイン</button>
+            <button className={`${styles.tab} ${tab === 'signup' ? styles.tabActive : ''}`} onClick={() => { setTab('signup'); setError('') }}>新規登録</button>
+          </div>
+        )}
 
         {error && <div className={styles.error}>{error}</div>}
 
-        {tab === 'login' ? (
+        {resetMode ? (
+          resetSent ? (
+            <div className={styles.form}>
+              <p className={styles.tagline} style={{ marginBottom: 8 }}>
+                入力されたメールアドレス宛に、パスワード再設定用のリンクを送信しました。メールをご確認ください。
+              </p>
+              <button className={styles.btnPrimary} onClick={() => { setResetMode(false); setResetSent(false); setError('') }}>
+                ログインに戻る
+              </button>
+            </div>
+          ) : (
+            <div className={styles.form}>
+              <p className={styles.tagline} style={{ marginBottom: 8 }}>
+                ご登録のメールアドレスを入力してください。パスワード再設定用のリンクをお送りします。
+              </p>
+              <label className={styles.label}>メールアドレス</label>
+              <input className={styles.input} type="email" placeholder="tea@example.com" value={form.email} onChange={set('email')} onKeyDown={e => e.key === 'Enter' && handleResetRequest()} />
+              <button className={styles.btnPrimary} onClick={handleResetRequest} disabled={loading}>
+                {loading ? '送信中...' : '再設定リンクを送信'}
+              </button>
+              <button className={styles.linkBtn} onClick={() => { setResetMode(false); setError('') }}>
+                ← ログインに戻る
+              </button>
+            </div>
+          )
+        ) : tab === 'login' ? (
           <div className={styles.form}>
             <label className={styles.label}>メールアドレス</label>
             <input className={styles.input} type="email" placeholder="tea@example.com" value={form.email} onChange={set('email')} />
@@ -65,6 +105,9 @@ export default function AuthPage() {
             <input className={styles.input} type="password" placeholder="••••••••" value={form.password} onChange={set('password')} onKeyDown={e => e.key === 'Enter' && handleLogin()} />
             <button className={styles.btnPrimary} onClick={handleLogin} disabled={loading}>
               {loading ? 'ログイン中...' : 'ログイン'}
+            </button>
+            <button className={styles.linkBtn} onClick={() => { setResetMode(true); setError('') }}>
+              パスワードをお忘れですか？
             </button>
           </div>
         ) : (

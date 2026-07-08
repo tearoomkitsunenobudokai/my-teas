@@ -1,0 +1,119 @@
+.wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.lead {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+.card {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+.typeList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.typeList li { display: flex; align-items: center; gap: 10px; }
+.badge {
+  display: inline-block;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+.formBtn {
+  display: block;
+  text-align: center;
+  background: var(--green);
+  color: #fff;
+  border-radius: 10px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.formBtn:hover { background: var(--green-dark); }
+.note {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 12px;
+  line-height: 1.6;
+}
+.notReady {
+  background: #FEF9C3;
+  border: 0.5px solid #EAB308;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13px;
+  color: #854D0E;
+}
+.idBox {
+  margin-top: 1.5rem;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.idLabel { font-size: 12px; color: var(--text-muted); width: 100%; }
+.idValue {
+  font-size: 12px;
+  background: var(--bg);
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--text);
+  word-break: break-all;
+  flex: 1;
+  min-width: 200px;
+}
+.copyBtn {
+  font-size: 12px;
+  border: 0.5px solid var(--border-strong);
+  background: var(--bg-card);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.copyBtn:hover { border-color: var(--green); color: var(--green); }
+.idHint {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 100%;
+  margin: 4px 0 0;
+  line-height: 1.5;
+}

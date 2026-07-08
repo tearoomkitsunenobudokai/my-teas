@@ -1,21 +1,123 @@
-.header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 1.5rem; height: 56px;
-  background: var(--bg-card); border-bottom: 0.5px solid var(--border);
-  flex-shrink: 0;
-}
+/* ─── ヘッダー ─── */
+.header { display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; height: 56px; background: var(--bg-card); border-bottom: 0.5px solid var(--border); flex-shrink: 0; position: relative; z-index: 100; }
 .logo { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600; }
 .logoIcon { font-size: 22px; }
-.right { display: flex; align-items: center; gap: 12px; }
-.name { font-size: 13px; color: var(--text-muted); }
-.avatar {
-  width: 32px; height: 32px; border-radius: 50%;
+.right { display: flex; align-items: center; gap: 12px; position: relative; }
+
+/* ─── アバターボタン ─── */
+.avatarBtn { background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--green-light); color: var(--green-dark); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; border: 2px solid transparent; transition: border-color 0.15s; }
+.avatarBtn:hover .avatar { border-color: var(--green); }
+
+/* ─── プロフィールパネル ─── */
+.panel {
+  position: absolute; top: calc(100% + 10px); right: 0;
+  background: #ffffff;
+  border: 0.5px solid #e0dbd5;
+  border-radius: 14px;
+  width: 300px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  overflow: hidden;
+  z-index: 500;
+}
+
+/* パネルヘッダー */
+.panelHeader { display: flex; align-items: center; gap: 12px; padding: 1rem 1.25rem 0.875rem; background: linear-gradient(135deg, #f5ede0, #e8f5f0); border-bottom: 0.5px solid #e8e4df; }
+.panelAvatar { width: 42px; height: 42px; border-radius: 50%; background: #1D9E75; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; flex-shrink: 0; }
+.panelNameWrap { flex: 1; min-width: 0; }
+.panelName { font-size: 15px; font-weight: 700; color: #1a1917; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.panelLocation { font-size: 11px; color: #6b6760; margin-top: 2px; }
+
+/* 統計 */
+.statsRow { display: flex; border-bottom: 0.5px solid #f0ece6; }
+.statItem { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 6px; border-right: 0.5px solid #f0ece6; }
+.statItem:last-child { border-right: none; }
+.statNum { font-size: 20px; font-weight: 700; color: #1D9E75; line-height: 1; }
+.statLabel { font-size: 10px; color: #9e9b96; margin-top: 3px; text-align: center; }
+
+/* お気に入り */
+.favSection { padding: 10px 1.25rem; border-bottom: 0.5px solid #f0ece6; }
+.favLabel { font-size: 11px; color: #9e9b96; margin-bottom: 6px; }
+.favTea { display: flex; align-items: center; gap: 8px; }
+.favTeaName { font-size: 13px; font-weight: 600; color: #1a1917; }
+
+/* 自己紹介 */
+.bioSection { padding: 10px 1.25rem; border-bottom: 0.5px solid #f0ece6; }
+.bioText { font-size: 12px; color: #6b6760; line-height: 1.6; }
+
+/* アクション */
+.panelActions { display: flex; gap: 8px; padding: 10px 1.25rem; }
+.editBtn { flex: 1; background: none; border: 0.5px solid #d0cac4; border-radius: 8px; padding: 7px; font-size: 12px; cursor: pointer; color: #4b5563; font-family: inherit; }
+.editBtn:hover { background: #f5f0ea; }
+.logoutBtn { background: none; border: 0.5px solid #fca5a5; border-radius: 8px; padding: 7px 12px; font-size: 12px; cursor: pointer; color: #dc2626; font-family: inherit; }
+.logoutBtn:hover { background: #fef2f2; }
+
+/* ─── 編集フォーム ─── */
+.editForm { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 2px; max-height: 420px; overflow-y: auto; }
+.eLabel { font-size: 11px; color: #9e9b96; margin-top: 8px; display: block; }
+.eInput { width: 100%; border: 0.5px solid #d0cac4; border-radius: 8px; padding: 7px 10px; font-size: 13px; font-family: inherit; background: #faf8f5; color: #1a1917; outline: none; resize: vertical; }
+.eInput:focus { border-color: #1D9E75; box-shadow: 0 0 0 2px rgba(29,158,117,0.1); }
+.editActions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; padding-top: 10px; border-top: 0.5px solid #f0ece6; }
+.cancelSmBtn { background: none; border: 0.5px solid #d0cac4; border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer; color: #6b6760; font-family: inherit; }
+.saveSmBtn { background: #1D9E75; color: #fff; border: none; border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.saveSmBtn:disabled { opacity: 0.6; }
+
+/* ─── 自動集計の注記 ─── */
+.autoCalcNote {
+  font-size: 10px;
+  color: #9e9b96;
+  padding: 0 1.25rem 8px;
+  line-height: 1.5;
+}
+
+/* ─── AI分析ポイント（自分のみ表示） ─── */
+.pointsBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 1.25rem 12px;
+  padding: 8px 12px;
+  background: #F3EEFF;
+  border: 0.5px solid #D9CCFF;
+  border-radius: 10px;
+  width: fit-content;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.pointsBadge:hover { border-color: #5B21B6; }
+.pointsIcon { font-size: 14px; }
+.pointsNum { font-size: 15px; font-weight: 700; color: #5B21B6; }
+.pointsLabel { font-size: 11px; color: #6B5B95; }
+
+/* アバター画像（円形にクロップ表示） */
+.avatarImg { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.avatar, .panelAvatar, .avatarPreview { overflow: hidden; }
+
+/* 編集フォームのアバターアップロードUI */
+.avatarEditRow { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.avatarPreview {
+  width: 56px; height: 56px; border-radius: 50%;
   background: var(--green-light); color: var(--green-dark);
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 600;
+  font-size: 20px; font-weight: 700; flex-shrink: 0;
 }
-.logout {
-  font-size: 12px; color: var(--text-hint); background: none;
-  border: 0.5px solid var(--border); border-radius: 6px; padding: 4px 10px;
+.avatarUploadBtn {
+  font-size: 13px; border: 0.5px solid var(--border-strong);
+  background: var(--bg-card); color: var(--text);
+  border-radius: 8px; padding: 7px 14px; cursor: pointer;
 }
-.logout:hover { color: var(--text); border-color: var(--border-strong); }
+.avatarUploadBtn:hover { border-color: var(--green); color: var(--green); }
+.avatarUploadBtn:disabled { opacity: 0.6; cursor: default; }
+.avatarHint { font-size: 11px; color: var(--text-muted); margin: 4px 0 0; }
+
+/* マイページボタン */
+.myPageBtn {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-strong);
+  color: var(--text);
+  font-size: 13px; font-weight: 500;
+  border-radius: 8px; padding: 7px 14px; cursor: pointer;
+  white-space: nowrap;
+}
+.myPageBtn:hover { border-color: var(--green); color: var(--green); }

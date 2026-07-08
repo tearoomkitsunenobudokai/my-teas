@@ -1,18 +1,99 @@
-.title { font-size: 20px; font-weight: 600; margin-bottom: 1.5rem; }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 2rem; }
-.stat { background: var(--bg-muted); border-radius: var(--radius); padding: 1rem; }
-.statLabel { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
-.statVal { font-size: 26px; font-weight: 600; }
-.section { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; }
-.sectionHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.sectionTitle { font-size: 15px; font-weight: 500; }
-.link { font-size: 13px; color: var(--green); }
-.empty { text-align: center; padding: 2rem; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.btnGreen { background: var(--green); color: #fff; border-radius: var(--radius); padding: 8px 16px; font-size: 13px; }
-.reviewList { display: flex; flex-direction: column; gap: 8px; }
-.reviewCard { display: block; padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius); }
-.reviewCard:hover { border-color: var(--border-strong); background: var(--bg-muted); }
-.reviewName { font-weight: 500; font-size: 14px; margin-bottom: 2px; }
-.reviewMeta { font-size: 12px; color: var(--text-muted); }
-.reviewComment { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.reviewDate { font-size: 11px; color: var(--text-hint); margin-top: 4px; }
+.page { display: flex; flex-direction: column; gap: 1.5rem; }
+.title { font-size: 20px; font-weight: 600; }
+.loading { font-size: 13px; color: var(--text-muted); padding: 2rem; }
+
+/* ─── 統計カード ─── */
+.statsRow { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+.statCard { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.statNum { font-size: 28px; font-weight: 700; color: var(--green); }
+.statLabel { font-size: 12px; color: var(--text-muted); }
+
+/* ─── グリッド ─── */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.card { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 14px; padding: 1.25rem; display: flex; flex-direction: column; gap: 12px; }
+.cardWide { grid-column: 1 / -1; }
+.cardTitle { font-size: 14px; font-weight: 600; }
+.cardTitleRow { display: flex; align-items: center; justify-content: space-between; }
+.moreLink { font-size: 12px; color: var(--green); text-decoration: none; }
+.moreLink:hover { text-decoration: underline; }
+.noData { font-size: 12px; color: var(--text-hint); }
+
+/* ─── ランキングリスト ─── */
+.rankList { display: flex; flex-direction: column; gap: 8px; }
+.rankRow { display: flex; align-items: center; gap: 8px; }
+.rank { font-size: 13px; font-weight: 700; color: var(--text-hint); width: 18px; flex-shrink: 0; text-align: right; }
+.shopIcon { font-size: 20px; flex-shrink: 0; }
+.rankInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.rankName { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar { height: 6px; background: var(--bg-muted); border-radius: 20px; overflow: hidden; }
+.barFill { height: 100%; border-radius: 20px; transition: width 0.4s; min-width: 4px; }
+.rankCount { font-size: 11px; color: var(--text-hint); white-space: nowrap; flex-shrink: 0; }
+
+/* ─── 香りグリッド ─── */
+.aromaGrid { display: flex; flex-wrap: wrap; gap: 6px; }
+.aromaItem { display: flex; align-items: center; gap: 5px; background: #E1F5EE; border: 0.5px solid #9FE1CB; border-radius: 20px; padding: 4px 10px; }
+.aromaName { font-size: 12px; color: #085041; font-weight: 500; }
+.aromaCount { font-size: 11px; color: #1D9E75; font-weight: 700; }
+
+/* ─── 平均スコア ─── */
+.scoreList { display: flex; flex-direction: column; gap: 8px; }
+.scoreRow { display: flex; align-items: center; gap: 8px; }
+.scoreLabel { width: 36px; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.scoreEdge { font-size: 10px; color: var(--text-hint); width: 20px; flex-shrink: 0; }
+.scorebar { flex: 1; height: 8px; background: var(--bg-muted); border-radius: 20px; position: relative; overflow: hidden; }
+.scorebarFill { height: 100%; background: var(--green); border-radius: 20px; transition: width 0.4s; min-width: 4px; }
+.scorebarVal { width: 28px; text-align: right; font-size: 11px; font-weight: 700; color: var(--green); flex-shrink: 0; }
+.scoreTrend { font-size: 12px; color: var(--text-muted); background: var(--green-light); border-radius: 8px; padding: 8px 12px; line-height: 1.5; margin-top: 4px; }
+
+/* ─── 最近の評価 ─── */
+.recentList { display: flex; flex-direction: column; gap: 10px; }
+.recentRow { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+.recentRow:last-child { border-bottom: none; }
+.recentInfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.recentName { font-size: 13px; font-weight: 600; }
+.recentShop { font-size: 11px; color: var(--text-muted); }
+.recentAroma { display: flex; flex-wrap: wrap; gap: 3px; }
+.recentAromaTag { font-size: 9px; background: #E1F5EE; color: #085041; padding: 1px 6px; border-radius: 20px; border: 0.5px solid #9FE1CB; }
+.recentDate { font-size: 11px; color: var(--text-hint); white-space: nowrap; flex-shrink: 0; }
+
+/* ─── 空状態 ─── */
+.empty { text-align: center; padding: 4rem 2rem; display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--text-muted); }
+.startBtn { background: var(--green); color: #fff; border-radius: 8px; padding: 10px 20px; font-size: 13px; text-decoration: none; }
+.startBtn:hover { background: var(--green-dark); }
+
+/* ポイントカード */
+.statCardLink { text-decoration: none; cursor: pointer; transition: border-color 0.15s; }
+.statCardLink:hover { border-color: var(--green); }
+.statPt { font-size: 14px; margin-left: 2px; }
+
+/* ログインスタンプカード */
+.stampOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem;
+}
+.stampCard {
+  background: var(--bg-card); border-radius: 18px; padding: 1.75rem;
+  max-width: 420px; width: 100%; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+.stampClose {
+  position: absolute; top: 14px; right: 14px; background: none; border: none;
+  font-size: 18px; color: var(--text-muted); cursor: pointer;
+}
+.stampTitle { font-size: 20px; font-weight: 700; color: var(--text); margin: 0 0 8px; text-align: center; }
+.stampDesc { font-size: 14px; color: var(--text-muted); text-align: center; line-height: 1.7; margin: 0 0 1.25rem; }
+.stampGrid { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 1rem; }
+.stampBox {
+  width: 60px; height: 60px; border-radius: 12px;
+  border: 2px dashed var(--border-strong); background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; color: var(--text-hint);
+}
+.stampBoxFilled {
+  border-style: solid; border-color: var(--green);
+  background: var(--green-light); color: var(--green-dark);
+  animation: stampPop 0.3s ease;
+}
+.stampBoxGoal { border-color: #EAB308; color: #A16207; font-size: 13px; }
+.stampBoxGoal.stampBoxFilled { border-color: var(--green); }
+@keyframes stampPop { 0% { transform: scale(0.6); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.stampProgress { font-size: 14px; color: var(--text); text-align: center; margin: 0; }
