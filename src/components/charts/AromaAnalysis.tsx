@@ -19,21 +19,29 @@ export default function AromaAnalysis({ notes, description, onChange, readOnly =
   // DBからプリセットを取得（失敗時はフォールバック）
   const [presets, setPresets] = useState<{ group_name: string; items: string[] }[]>([])
 
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.from('aroma_presets').select('group_name, items').order('sort_order')
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setPresets(data)
-        } else {
-          // テーブルが存在しない or データがない場合はフォールバック
-          setPresets(AROMA_PRESETS.map(p => ({ group_name: p.group, items: p.items })))
-        }
-      })
-      .catch(() => {
+ useEffect(() => {
+  const supabase = createClient()
+
+  async function loadPresets() {
+    try {
+      const { data } = await supabase
+        .from('aroma_presets')
+        .select('group_name, items')
+        .order('sort_order')
+
+      if (data && data.length > 0) {
+        setPresets(data)
+      } else {
+        // テーブルが存在しない or データがない場合はフォールバック
         setPresets(AROMA_PRESETS.map(p => ({ group_name: p.group, items: p.items })))
-      })
-  }, [])
+      }
+    } catch {
+      setPresets(AROMA_PRESETS.map(p => ({ group_name: p.group, items: p.items })))
+    }
+  }
+
+  loadPresets()
+}, [])
 
   function toggleNote(note: string) {
     if (readOnly) return
