@@ -118,7 +118,7 @@ export default function CommunityPage() {
     const reviewRows = data ?? []
     // 投稿者のプロフィールは公開ビュー(public_profiles)から必要な列だけ取得してマージする
     // （profilesテーブルを直接JOINしないことで points/account_status 等の露出を防ぐ）
-    const userIds = [...new Set(reviewRows.map((r: any) => r.user_id).filter(Boolean))]
+    const userIds = Array.from(new Set(reviewRows.map((r: any) => r.user_id).filter(Boolean)))
     let profileMap: Record<string, any> = {}
     if (userIds.length) {
       const { data: profs } = await supabase

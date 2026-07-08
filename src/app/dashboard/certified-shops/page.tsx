@@ -329,7 +329,7 @@ export default function CertifiedShopsPage() {
         }))
         .sort((a, b) => (a.area ?? '').localeCompare(b.area ?? '') || a.name.localeCompare(b.name))
       setShops(flattened)
-      const ys = [...new Set(flattened.map(s => s.year))].sort((a, b) => b - a)
+      const ys = Array.from(new Set(flattened.map(s => s.year))).sort((a, b) => b - a)
       setYears(ys.length ? ys : [new Date().getFullYear()])
       if (ys.length) setSelectedYear(ys[0])
     }

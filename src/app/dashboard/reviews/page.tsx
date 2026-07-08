@@ -164,7 +164,7 @@ function Modal({ userId, initial, onClose, onSaved }: {
       })
     supabase.from('reviews').select('brand_name').eq('user_id', userId).not('brand_name','is',null)
       .then(({data}) => {
-        const unique = [...new Set((data ?? []).map((r:any) => r.brand_name).filter(Boolean))] as string[]
+        const unique = Array.from(new Set((data ?? []).map((r:any) => r.brand_name).filter(Boolean))) as string[]
         setPastBrands(unique.sort())
       })
   }, [supabase, userId])
