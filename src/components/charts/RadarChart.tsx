@@ -38,7 +38,7 @@ export default function RadarChart({ scores, label = '', size = 260 }: Props) {
             r: {
               min: 0, max: 5,
               ticks: { stepSize: 1, font: { size: 11 }, callback: (v: any) => `${v}` },
-              pointLabels: { font: { size: 13, weight: '600' as const } },
+              pointLabels: { font: { size: 13, weight: 600 } },
             },
           },
         }}
