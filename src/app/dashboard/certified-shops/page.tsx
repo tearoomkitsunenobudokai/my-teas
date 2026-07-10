@@ -337,16 +337,22 @@ export default function CertifiedShopsPage() {
     setVisits(vts ?? [])
   }, [supabase])
 
-  // マップIDをSupabase app_settings または localStorage から読み込み
+  // マップIDをSupabase app_settings から読み込み（全ユーザー共通）
   useEffect(() => {
     load()
-    const saved = localStorage.getItem('teanote_map_id') ?? ''
-    setMapId(saved)
-  }, [load])
+    supabase.from('app_settings').select('value').eq('key', 'certified_shops_map_id').maybeSingle()
+      .then(({ data }) => setMapId(data?.value ?? ''))
+  }, [load, supabase])
 
-  function saveMapId(id: string) {
+  async function saveMapId(id: string) {
     setMapId(id)
-    localStorage.setItem('teanote_map_id', id)
+    const { error } = await supabase.from('app_settings').upsert({
+      key: 'certified_shops_map_id',
+      value: id,
+      description: '認定店タブに表示するGoogleマイマップのID（全ユーザー共通）',
+      updated_at: new Date().toISOString(),
+    })
+    if (error) alert('マップIDの保存に失敗しました: ' + error.message)
   }
 
   const bookmarkedIds = new Set(bookmarks.map(b => b.shop_id))
