@@ -598,13 +598,27 @@ export default function CertifiedShopsPage() {
         )}
       </div>
 
+      {/* ─── スマホ用: 地図パネルが開いている間、背景タップで閉じられるようにする ─── */}
+      {(selectedShop || showMyMap) && (
+        <div className={styles.mapScrim} onClick={() => { setSelectedShop(null); setShowMyMap(false) }} />
+      )}
+
       {/* ─── 右ペイン（マイマップ） ─── */}
-      <div className={styles.rightPane}>
+      {/* スマホ幅では店舗選択 or 全体表示中のみ画面下からせり上がる */}
+      <div className={`${styles.rightPane} ${(selectedShop || showMyMap) ? styles.rightPaneOpen : ''}`}>
         <div className={styles.mapHeader}>
           <div className={styles.mapHeaderTop}>
             <span className={styles.mapTitle}>
               {showMyMap ? '🗺️ マイマップ（全体表示）' : selectedShop ? `🗺️ ${selectedShop.name}` : '🗺️ Google マップ'}
             </span>
+            {/* スマホ用の閉じるボタン（PCでは非表示） */}
+            <button
+              type="button"
+              className={styles.mapCloseBtn}
+              aria-label="地図を閉じる"
+              onClick={() => { setSelectedShop(null); setShowMyMap(false) }}>
+              ✕
+            </button>
             {mapId && (
               <button
                 className={`${styles.mapToggleBtn} ${showMyMap ? styles.mapToggleBtnActive : ''}`}
