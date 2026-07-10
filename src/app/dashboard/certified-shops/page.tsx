@@ -156,7 +156,7 @@ function buildKml(shops: any[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
-    <name>TeaNote 認定店リスト</name>
+    <name>My-Teas 認定店リスト</name>
 ${placemarks}
   </Document>
 </kml>`

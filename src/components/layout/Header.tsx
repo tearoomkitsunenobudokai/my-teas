@@ -180,7 +180,7 @@ export default function Header({ profile: initialProfile }: { profile: any }) {
     <header className={styles.header}>
       <div className={styles.logo}>
         <span className={styles.logoIcon}>🍵</span>
-        TeaNote
+        My-Teas
       </div>
       <div className={styles.right} ref={panelRef}>
         <button className={styles.avatarBtn} onClick={() => { setOpen(v => !v); setEditing(false) }}>

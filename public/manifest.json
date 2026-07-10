@@ -1,6 +1,6 @@
 {
-  "name": "TeaNote — 紅茶評価アプリ",
-  "short_name": "TeaNote",
+  "name": "My-Teas — 紅茶評価アプリ",
+  "short_name": "My-Teas",
   "description": "紅茶をレーダーチャートで評価・共有できるアプリ",
   "start_url": "/dashboard",
   "scope": "/",

@@ -59,7 +59,7 @@ export default function AuthPage() {
       <div className={styles.box}>
         <div className={styles.logo}>
           <span className={styles.logoIcon}>🍵</span>
-          TeaNote
+          My-Teas
         </div>
         <p className={styles.tagline}>紅茶を記録して、共有しよう</p>
 

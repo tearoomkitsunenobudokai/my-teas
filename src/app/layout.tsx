@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'TeaNote — 紅茶評価アプリ',
+  title: 'My-Teas — 紅茶評価アプリ',
   description: '紅茶をレーダーチャートで評価・共有できるアプリ',
   manifest: '/manifest.json',
   icons: {
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   // iOSでホーム画面に追加した際、全画面表示（standalone）で起動させるための設定
   appleWebApp: {
     capable: true,
-    title: 'TeaNote',
+    title: 'My-Teas',
     statusBarStyle: 'default',
   },
 }

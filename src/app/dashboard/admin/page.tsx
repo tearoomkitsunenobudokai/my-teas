@@ -338,7 +338,7 @@ export default function AdminPage() {
       {activeTab === 'settings' && <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>⚙️ アプリ設定</h2>
-          <p className={styles.sectionDesc}>TeaNoteの各種制限・設定を管理します。</p>
+          <p className={styles.sectionDesc}>My-Teasの各種制限・設定を管理します。</p>
         </div>
         <div className={styles.settingsCard}>
           <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
