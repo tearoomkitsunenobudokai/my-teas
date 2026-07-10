@@ -563,7 +563,10 @@ export default function CertifiedShopsPage() {
                         {CAT_LABEL[s.category]}
                       </span>
                       <button className={`${styles.visitBtn} ${isVisited ? styles.visitBtnActive : ''}`}
-                        onClick={e => toggleVisit(e, s)} title={isVisited ? '訪問済みを解除' : '訪問済みにする'}>
+                        onClick={e => { if (isAdmin) toggleVisit(e, s); else e.stopPropagation() }}
+                        disabled={!isAdmin}
+                        style={!isAdmin ? { cursor: 'default', opacity: isVisited ? 1 : 0.5 } : undefined}
+                        title={isAdmin ? (isVisited ? '訪問済みを解除' : '訪問済みにする') : (isVisited ? '訪問済み（管理者のみ変更可）' : '未訪問（管理者のみ変更可）')}>
                         {isVisited ? '✅' : '⬜'}
                       </button>
                       <button className={`${styles.bmBtn} ${isBm ? styles.bmBtnActive : ''}`}
