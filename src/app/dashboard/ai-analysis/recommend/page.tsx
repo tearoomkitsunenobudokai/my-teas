@@ -42,6 +42,7 @@ export default function RecommendPage() {
   useEffect(() => { load() }, [load])
 
   async function run() {
+    if (!confirm(`${RECOMMEND_COST}ptを消費してオススメを実行します。よろしいですか？`)) return
     setThinking(true)
     setResult(null)
 

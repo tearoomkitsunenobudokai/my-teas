@@ -37,9 +37,10 @@ function ReviewTile({ r, onEdit, onDelete, costNormal, costOjou }: { r: any; onE
   const [summarizing, setSummarizing] = useState<SummaryTone | null>(null)
 
   async function runSummary(tone: SummaryTone) {
+    const cost = tone === 'ojou' ? costOjou : costNormal
+    if (!confirm(`${cost}ptを消費して要約を生成します。よろしいですか？`)) return
     setSummarizing(tone)
     try {
-      const cost = tone === 'ojou' ? costOjou : costNormal
       // ポイント消費（製作者/管理者は消費なし判定）。失敗時は生成しない。
       const { data: consumed, error } = await supabase.rpc('consume_points', {
         p_amount: cost, p_feature: tone === 'ojou' ? 'summary_ojou' : 'summary',

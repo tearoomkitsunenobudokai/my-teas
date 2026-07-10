@@ -80,6 +80,7 @@ export default function AdvisorPage() {
 
   async function runAnalysis() {
     if (!tier) return
+    if (!confirm(`${ADVISOR_COST}ptを消費してAIアドバイザーを実行します。よろしいですか？`)) return
     setAnalyzing(true)
     setShowHistory(false)
 
