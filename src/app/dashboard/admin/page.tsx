@@ -127,24 +127,26 @@ export default function AdminPage() {
 
   function addPackageRow() {
     setPackages(prev => [...prev, {
-      id: `new-${Date.now()}`, label: '新しいプラン', points: 10, price_yen: 500,
-      sort_order: prev.length + 1, is_limited: false, limited_until: null, is_active: true, __isNew: true,
+      id: crypto.randomUUID(), label: '新しいプラン', points: 10, price_yen: 500,
+      sort_order: prev.length + 1, is_limited: false, limited_until: null, is_active: true, _new: true,
     }])
   }
 
-  function removePackageRow(id: string) {
+  function removePackageRow(id: string, isNew: boolean) {
     setPackages(prev => prev.filter(p => p.id !== id))
-    if (!id.startsWith('new-')) setDeletedPackageIds(prev => [...prev, id])
+    if (!isNew) setDeletedPackageIds(prev => [...prev, id])
   }
 
   async function savePackages() {
     setSavingPackages(true)
-    // 新規行（__isNew）はidをDB側に生成させるため送らない
-    const rows = packages.map(p => {
-      const { __isNew, id, ...rest } = p
-      const base = { ...rest, limited_until: p.is_limited ? p.limited_until : null, updated_at: new Date().toISOString() }
-      return __isNew ? base : { ...base, id }
-    })
+    // 全行が常にidを持つ状態でまとめて送る（idの有無が混在すると
+    // PostgRESTがNULLを明示送信してNOT NULL制約に違反するため）
+    const rows = packages.map(p => ({
+      id: p.id, label: p.label, points: p.points, price_yen: p.price_yen,
+      sort_order: p.sort_order, is_limited: p.is_limited,
+      limited_until: p.is_limited ? p.limited_until : null,
+      is_active: p.is_active, updated_at: new Date().toISOString(),
+    }))
     const [{ error: upsertErr }] = await Promise.all([
       supabase.from('point_packages').upsert(rows),
       deletedPackageIds.length
@@ -619,7 +621,7 @@ export default function AdminPage() {
                     value={p.limited_until ? new Date(p.limited_until).toISOString().slice(0,16) : ''}
                     onChange={e => setPackages(prev => prev.map((x, j) => j === i ? { ...x, limited_until: e.target.value ? new Date(e.target.value).toISOString() : null } : x))}/>
                 )}
-                <button className={styles.cancelBtn} onClick={() => removePackageRow(p.id)}>削除</button>
+                <button className={styles.cancelBtn} onClick={() => removePackageRow(p.id, !!p._new)}>削除</button>
               </div>
             </div>
           ))}
