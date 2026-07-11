@@ -188,9 +188,10 @@ const EMPTY_FORM = {
   description: '', category: 'orange', is_official: false,
 }
 
-function ColorForm({ initial, isAdmin, onSave, onCancel }: {
+function ColorForm({ initial, isAdmin, readOnly, onSave, onCancel }: {
   initial?: typeof EMPTY_FORM
   isAdmin: boolean
+  readOnly?: boolean
   onSave: (data: typeof EMPTY_FORM) => void
   onCancel: () => void
 }) {
@@ -207,28 +208,30 @@ function ColorForm({ initial, isAdmin, onSave, onCancel }: {
       </div>
       <div className={styles.formFields}>
         <label className={styles.label}>色名 *</label>
-        <input className={styles.input} value={form.name} onChange={set('name')} placeholder="例: 琥珀色"/>
+        <input className={styles.input} value={form.name} onChange={set('name')} placeholder="例: 琥珀色" disabled={readOnly}/>
         <label className={styles.label}>英語名（任意）</label>
-        <input className={styles.input} value={form.name_en} onChange={set('name_en')} placeholder="例: Amber"/>
+        <input className={styles.input} value={form.name_en} onChange={set('name_en')} placeholder="例: Amber" disabled={readOnly}/>
         <label className={styles.label}>カテゴリ</label>
-        <select className={styles.input} value={form.category} onChange={set('category')}>
+        <select className={styles.input} value={form.category} onChange={set('category')} disabled={readOnly}>
           {CAT_ORDER.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}
         </select>
         <label className={styles.label}>色を選択</label>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <input type="color" value={form.hex}
             onChange={e => setForm(f => ({ ...f, hex: e.target.value }))}
-            style={{ width:48, height:36, border:'none', cursor:'pointer', borderRadius:8 }}/>
+            disabled={readOnly}
+            style={{ width:48, height:36, border:'none', cursor: readOnly ? 'default' : 'pointer', borderRadius:8 }}/>
           <code style={{ fontSize:12, color:'var(--text-muted)' }}>{form.hex}</code>
         </div>
         <label className={styles.label}>透明度 {Math.round(form.alpha/255*100)}%</label>
         <input type="range" min={80} max={230} value={form.alpha}
           onChange={e => setForm(f => ({ ...f, alpha: +e.target.value }))}
+          disabled={readOnly}
           style={{ width:'100%', accentColor:'var(--green)' }}/>
         <label className={styles.label}>説明</label>
         <textarea className={styles.input} rows={2} value={form.description} onChange={set('description')}
-          placeholder="どんな茶葉のお茶に多い色か、特徴など…"/>
-        {isAdmin && (
+          placeholder="どんな茶葉のお茶に多い色か、特徴など…" disabled={readOnly}/>
+        {isAdmin && !readOnly && (
           <label className={styles.checkLabel}>
             <input type="checkbox" checked={form.is_official}
               onChange={e => setForm(f => ({ ...f, is_official: e.target.checked }))}/>
@@ -236,8 +239,10 @@ function ColorForm({ initial, isAdmin, onSave, onCancel }: {
           </label>
         )}
         <div className={styles.formActions}>
-          <button className={styles.cancelBtn} onClick={onCancel}>キャンセル</button>
-          <button className={styles.saveBtn} onClick={() => onSave({ ...form })} disabled={!form.name}>保存</button>
+          <button className={styles.cancelBtn} onClick={onCancel}>{readOnly ? '閉じる' : 'キャンセル'}</button>
+          {!readOnly && (
+            <button className={styles.saveBtn} onClick={() => onSave({ ...form })} disabled={!form.name}>保存</button>
+          )}
         </div>
       </div>
     </div>
@@ -256,6 +261,9 @@ export default function ColorsPage() {
   const [filterCat, setFilterCat] = useState('')
   const [filterOwner, setFilterOwner] = useState<'all'|'official'|'mine'>('official')
   const [viewMode, setViewMode] = useState<'list'|'wheel'>('list')
+
+  // 編集可能かどうか（管理者/製作者は全て編集可。一般・課金は自分の非公式カラーのみ編集可）
+  const canEditColor = (c: any) => isAdmin || (!c.is_official && c.created_by === userId)
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -368,7 +376,9 @@ export default function ColorsPage() {
       {/* フォーム（インライン表示） */}
       {showForm && (
         <div className={styles.formCard}>
-          <h2 className={styles.formTitle}>{editTarget ? '色を編集' : '新しい色を追加'}</h2>
+          <h2 className={styles.formTitle}>
+            {editTarget ? (canEditColor(editTarget) ? '色を編集' : '色の詳細') : '新しい色を追加'}
+          </h2>
           <ColorForm
             initial={editTarget ? {
               name: editTarget.name, name_en: editTarget.name_en ?? '',
@@ -379,6 +389,7 @@ export default function ColorsPage() {
               is_official: editTarget.is_official,
             } : undefined}
             isAdmin={isAdmin}
+            readOnly={!!editTarget && !canEditColor(editTarget)}
             onSave={saveColor}
             onCancel={() => { setShowForm(false); setEditTarget(null) }}
           />
