@@ -2,6 +2,8 @@
   width: 220px; flex-shrink: 0;
   background: var(--bg-card); border-right: 0.5px solid var(--border);
   padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 2px;
+  position: relative;
+  transition: width 0.15s ease;
 }
 .section {
   font-size: 10px; color: var(--text-hint); padding: 10px 8px 4px;
@@ -12,6 +14,32 @@
   padding: 8px 10px; border-radius: 8px;
   font-size: 13px; color: var(--text-muted);
   transition: background 0.1s;
+  white-space: nowrap; overflow: hidden;
 }
 .item:hover { background: var(--bg-muted); color: var(--text); }
 .active { background: var(--green-light) !important; color: var(--green-dark) !important; font-weight: 500; }
+
+/* ─── 最小化ボタン ─── */
+.toggleBtn {
+  align-self: flex-end;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 50%;
+  background: var(--bg-muted); color: var(--text-muted);
+  font-size: 12px; cursor: pointer;
+  margin-bottom: 4px;
+}
+.toggleBtn:hover { background: var(--border-strong); }
+
+/* ─── 最小化時: 絵文字のみ表示 ─── */
+.collapsed {
+  width: 52px;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+}
+.collapsed .toggleBtn { align-self: center; }
+.collapsed .item {
+  justify-content: center;
+  padding: 8px 0;
+  font-size: 16px;
+}
