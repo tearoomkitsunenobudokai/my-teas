@@ -148,6 +148,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   }
 
   const [makingCard, setMakingCard] = useState(false)
+  const [cardSource, setCardSource] = useState<'memo' | 'normal' | 'ojou'>('memo')
 
   async function makeCard() {
     if (!isEdit) return
@@ -161,9 +162,19 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       const row = Array.isArray(consumed) ? consumed[0] : consumed
       if (row && row.success === false) { alert(row.message || 'ポイントが不足しています'); return }
 
+      // カードに載せる名前（プロフィール名）を取得
+      const { data: profile } = await supabase.from('profiles').select('name').eq('id', userId).single()
+
+      // 選択された文章ソース（メモ / AI要約 / お嬢様風）
+      const cardText =
+        cardSource === 'normal' && summaryNormal ? summaryNormal :
+        cardSource === 'ojou' && summaryOjou ? summaryOjou :
+        comment
+
       const blob = await generateTeaCard({
-        tea_name: teaName, brand_name: brandName, shop_name: shopName, color_hex: colorHex,
-        comment, aroma_notes: aromaNotes, brew_method: brewMethod,
+        tea_name: teaName, brand_name: brandName, shop_name: shopName,
+        user_name: profile?.name ?? null, color_hex: colorHex,
+        comment: cardText, aroma_notes: aromaNotes, brew_method: brewMethod,
         steep_seconds: steepSec ? parseInt(steepSec) : null,
         tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
         accompaniments: accs,
@@ -453,6 +464,20 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </div>
 
             <div style={{ marginTop: 10 }}>
+              {(summaryNormal || summaryOjou) && (
+                <div style={{ marginBottom: 8 }}>
+                  <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
+                    カードに載せる文章
+                  </label>
+                  <select className={styles.input} value={cardSource}
+                    onChange={e => setCardSource(e.target.value as any)}
+                    style={{ fontSize: 13 }}>
+                    <option value="memo">自分のメモ</option>
+                    {summaryNormal && <option value="normal">📝 AI要約</option>}
+                    {summaryOjou && <option value="ojou">🎀 お嬢様風の要約</option>}
+                  </select>
+                </div>
+              )}
               <button type="button" className={styles.cardBtn} disabled={makingCard}
                 onClick={makeCard}>
                 {makingCard ? '作成中…' : `🖼️ 評価カード画像を作成（${costCard}pt）`}

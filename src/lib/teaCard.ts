@@ -16,6 +16,7 @@ export interface TeaCardData {
   tea_name: string
   brand_name?: string | null
   shop_name?: string | null
+  user_name?: string | null
   color_hex?: string | null
   comment?: string | null
   aroma_notes?: string[] | null
@@ -211,14 +212,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const cupCx = 250, cupCy = 190
   drawTeaCircle(ctx, cupCx, cupCy, cupR, data.color_hex ?? '#C8A96E')
 
-  // ── BLACK TEA バッジ（左上） ──
+  // ── My-Teas バッジ（左上） ──
   ctx.fillStyle = '#8E3B2F'
   ctx.fillRect(36, 34, 150, 38)
-  ctx.font = `700 19px ${SERIF}`
+  ctx.font = `700 20px ${SERIF}`
   ctx.fillStyle = '#F5EDE0'
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.letterSpacing = '3px' as any
-  ctx.fillText('BLACK TEA', 36 + 75, 34 + 20)
+  ctx.letterSpacing = '2px' as any
+  ctx.fillText('My-Teas', 36 + 75, 34 + 20)
   ctx.letterSpacing = '0px' as any
 
   // ── 円の下: 筆記体風ブランド → 大きな紅茶名 ──
@@ -239,60 +240,84 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.font = `700 ${nameFont}px ${MINCHO}`
   }
   ctx.fillText(data.tea_name || '（お茶の名前）', 44, ny)
-  ny += 40
-  if (data.shop_name) {
-    ctx.font = `400 22px ${MINCHO}`
-    ctx.fillStyle = INK_SOFT
-    ctx.fillText(`at ${data.shop_name}`, 46, ny)
-    ny += 30
-  }
+  ny += 24
 
-  // ── 左下: 香りノート + 淹れ方 ──
-  let ly = Math.max(ny + 24, H - 200)
-  ctx.font = `700 20px ${MINCHO}`
-  ctx.fillStyle = GOLD_DEEP
-  if (data.aroma_notes && data.aroma_notes.length) {
-    ctx.fillText('― 香りノート ―', 44, ly)
-    ly += 34
-    ctx.font = `400 20px ${MINCHO}`
+  // ── 左下: 香りノート + 淹れ方 + 添え物 ──
+  // 3セクションをコンパクトに縦積みする
+  let ly = Math.max(ny + 20, H - 216)
+  const section = (title: string, body: string) => {
+    ctx.font = `700 17px ${MINCHO}`
+    ctx.fillStyle = GOLD_DEEP
+    ctx.fillText(title, 44, ly)
+    ly += 27
+    ctx.font = `400 18px ${MINCHO}`
     ctx.fillStyle = INK
-    const usedA = wrapText(ctx, data.aroma_notes.slice(0, 8).join('・'), 44, ly, 490, 30, 2)
-    ly += usedA * 30 + 22
+    wrapText(ctx, body, 44, ly, 500, 26, 1)
+    ly += 40
+  }
+  if (data.aroma_notes && data.aroma_notes.length) {
+    section('― 香りノート ―', data.aroma_notes.slice(0, 8).join('・'))
   }
   const details: string[] = []
   if (data.brew_method) details.push(data.brew_method)
   if (data.tea_grams_per_100ml) details.push(`${data.tea_grams_per_100ml}g/100ml`)
   if (data.steep_seconds) details.push(`${data.steep_seconds}秒`)
-  if (data.accompaniments && data.accompaniments.length) details.push(data.accompaniments.slice(0, 3).join('・'))
   if (details.length) {
-    ctx.font = `700 20px ${MINCHO}`
-    ctx.fillStyle = GOLD_DEEP
-    ctx.fillText('― 淹れ方 ―', 44, ly)
-    ly += 32
-    ctx.font = `400 19px ${MINCHO}`
-    ctx.fillStyle = INK
-    wrapText(ctx, details.join(' / '), 44, ly, 490, 28, 2)
+    section('― 淹れ方 ―', details.join(' / '))
+  }
+  if (data.accompaniments && data.accompaniments.length) {
+    section('― 添え物 ―', data.accompaniments.slice(0, 5).join('・'))
   }
 
-  // ── 右上: 見出し（紅茶名+ブランドの和文見出し）とメモ ──
+  // ── 右上: 見出し（紅茶名+ブランド） → By ユーザ名・店 → メモ ──
   const rightX = 600
   let ty = 76
   ctx.font = `700 32px ${MINCHO}`
   ctx.fillStyle = '#3B2F20'
   const heading = [data.tea_name, data.brand_name].filter(Boolean).join(' ')
   const headLines = wrapText(ctx, heading, rightX, ty, W - 48 - rightX, 44, 2)
-  ty += headLines * 44 + 26
+  ty += (headLines - 1) * 44 + 34
+
+  const byLine = [
+    data.user_name ? `By ${data.user_name}` : '',
+    data.shop_name ? `at ${data.shop_name}` : '',
+  ].filter(Boolean).join('　')
+  if (byLine) {
+    ctx.font = `italic 400 21px ${SERIF}`
+    ctx.fillStyle = INK_SOFT
+    ctx.fillText(byLine, rightX, ty)
+    ty += 36
+  }
 
   if (data.comment) {
     ctx.font = `400 22px ${MINCHO}`
     ctx.fillStyle = INK
-    wrapText(ctx, data.comment, rightX, ty, W - 48 - rightX, 36, 6)
+    // 見出しが2行のときは本文を1行減らし、レーダーの上ラベルと重ならないようにする
+    wrapText(ctx, data.comment, rightX, ty, W - 48 - rightX, 36, headLines > 1 ? 4 : 5)
   }
 
   // ── 右下: レーダーチャート ──
-  drawRadar(ctx, W - 240, H - 220, 130,
+  drawRadar(ctx, W - 240, H - 280, 130,
     [data.score_aroma, data.score_sweetness, data.score_richness, data.score_astringency],
     ['香り', '甘み', 'コク', '渋み'])
+
+  // ── 右下最下部: フッター（クレジット・生成日時・リンク） ──
+  const now = new Date()
+  const jst = new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(now).replace(/\//g, '/').replace(' ', ' ')
+  ctx.font = `400 15px ${SERIF}`
+  ctx.fillStyle = INK_SOFT
+  ctx.textAlign = 'right'
+  const footer = [
+    '© 2026 My-Teas',
+    `Generated: ${jst} JST`,
+    'Website: https://my-teas-omega.vercel.app',
+    'X: @myteas_kbk',
+  ]
+  footer.forEach((line, i) => ctx.fillText(line, W - 40, H - 92 + i * 21))
+  ctx.textAlign = 'left'
 
   return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/png', 0.95))
 }
