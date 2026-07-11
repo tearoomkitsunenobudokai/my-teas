@@ -175,20 +175,36 @@ function drawRadar(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius
 
 function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number, maxLines: number): number {
   const chars = text.split('')
-  let line = '', lines: string[] = []
-  for (const ch of chars) {
-    const test = line + ch
+  const lines: string[] = []
+  let line = ''
+  let truncated = false
+
+  for (let i = 0; i < chars.length; i++) {
+    const test = line + chars[i]
     if (ctx.measureText(test).width > maxWidth && line) {
-      lines.push(line); line = ch
+      // 現在の行が埋まった。これ以上行を増やせないなら、残りは入りきらない
+      if (lines.length + 1 >= maxLines) {
+        lines.push(line)
+        truncated = true      // まだ文字が残っている＝切り捨てが発生
+        line = ''
+        break
+      }
+      lines.push(line)
+      line = chars[i]
     } else {
       line = test
     }
-    if (lines.length >= maxLines) break
   }
-  if (line && lines.length < maxLines) lines.push(line)
-  if (lines.length === maxLines) {
-    lines[maxLines - 1] = lines[maxLines - 1].replace(/.$/, '…')
+  if (line) lines.push(line)
+
+  // 実際に収まりきらなかった場合のみ末尾を「…」にする
+  if (truncated && lines.length) {
+    const last = lines.length - 1
+    let s = lines[last]
+    while (s && ctx.measureText(s + '…').width > maxWidth) s = s.slice(0, -1)
+    lines[last] = s + '…'
   }
+
   lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight))
   return lines.length
 }
@@ -243,17 +259,17 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ny += 24
 
   // ── 左下: 香りノート + 淹れ方 + 添え物 ──
-  // 3セクションをコンパクトに縦積みする
-  let ly = Math.max(ny + 20, H - 216)
+  // 3セクションを縦積み。内容が多い場合は2行まで折り返す。
+  let ly = Math.max(ny + 20, H - 250)
   const section = (title: string, body: string) => {
     ctx.font = `700 17px ${MINCHO}`
     ctx.fillStyle = GOLD_DEEP
     ctx.fillText(title, 44, ly)
-    ly += 27
+    ly += 26
     ctx.font = `400 18px ${MINCHO}`
     ctx.fillStyle = INK
-    wrapText(ctx, body, 44, ly, 500, 26, 1)
-    ly += 40
+    const used = wrapText(ctx, body, 44, ly, 520, 25, 2)
+    ly += used * 25 + 14
   }
   if (data.aroma_notes && data.aroma_notes.length) {
     section('― 香りノート ―', data.aroma_notes.slice(0, 8).join('・'))
