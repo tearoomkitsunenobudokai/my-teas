@@ -174,3 +174,13 @@
 .summaryTag { font-size:11px; font-weight:700; color:var(--green-dark); }
 .summaryBubbleOjou .summaryTag { color:#A03A6E; }
 .summaryText { font-size:13px; color:var(--text); margin:4px 0 0; line-height:1.6; }
+
+/* AI要約（編集モーダル内） */
+.summaryEditBlock { margin-top:2px; }
+.summaryBubbleHead { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.copyBtn {
+  font-size:11px; font-weight:600; white-space:nowrap;
+  border:1px solid var(--border-strong); background:var(--bg-card); color:var(--text-muted);
+  border-radius:6px; padding:3px 8px; cursor:pointer;
+}
+.copyBtn:hover { background:var(--bg-muted); color:var(--text); }

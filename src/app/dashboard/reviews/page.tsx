@@ -27,35 +27,10 @@ function fmtDate(d?: string) { return d ? d.slice(0,10).replace(/-/g,'/') : '' }
 // 水色カップの描画は共通コンポーネント @/components/TeaCup を使用
 
 // ─── タイル ───────────────────────────────────────
-function ReviewTile({ r, onEdit, onDelete, costNormal, costOjou }: { r: any; onEdit: () => void; onDelete: () => void; costNormal: number; costOjou: number }) {
-  const supabase = createClient()
+function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDelete: () => void }) {
   const scores: ReviewScores = {
     score_aroma: r.score_aroma ?? 3, score_astringency: r.score_astringency ?? 3,
     score_richness: r.score_richness ?? 3, score_sweetness: r.score_sweetness ?? 3,
-  }
-  const [summary, setSummary] = useState<{ tone: SummaryTone; text: string } | null>(null)
-  const [summarizing, setSummarizing] = useState<SummaryTone | null>(null)
-
-  async function runSummary(tone: SummaryTone) {
-    const cost = tone === 'ojou' ? costOjou : costNormal
-    if (!confirm(`${cost}ptを消費して要約を生成します。よろしいですか？`)) return
-    setSummarizing(tone)
-    try {
-      // ポイント消費（製作者/管理者は消費なし判定）。失敗時は生成しない。
-      const { data: consumed, error } = await supabase.rpc('consume_points', {
-        p_amount: cost, p_feature: tone === 'ojou' ? 'summary_ojou' : 'summary',
-      })
-      if (error) { alert(error.message); return }
-      const row = Array.isArray(consumed) ? consumed[0] : consumed
-      if (row && row.success === false) { alert(row.message || 'ポイントが不足しています'); return }
-
-      const text = await summarizeReview(r, tone)
-      setSummary({ tone, text })
-    } catch (e: any) {
-      alert(e?.message ?? '要約の生成に失敗しました')
-    } finally {
-      setSummarizing(null)
-    }
   }
 
   return (
@@ -87,24 +62,6 @@ function ReviewTile({ r, onEdit, onDelete, costNormal, costOjou }: { r: any; onE
         <div className={styles.tileRight}><RadarChart scores={scores} size={155}/></div>
       </div>
 
-      {/* AI要約 */}
-      <div className={styles.summaryRow}>
-        <button className={styles.summaryBtn} disabled={summarizing !== null}
-          onClick={() => runSummary('normal')}>
-          {summarizing === 'normal' ? '生成中…' : `📝 まとめる（${costNormal}pt）`}
-        </button>
-        <button className={`${styles.summaryBtn} ${styles.summaryBtnOjou}`} disabled={summarizing !== null}
-          onClick={() => runSummary('ojou')}>
-          {summarizing === 'ojou' ? '生成中…' : `🎀 お嬢様風（${costOjou}pt）`}
-        </button>
-      </div>
-      {summary && (
-        <div className={`${styles.summaryBubble} ${summary.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
-          <span className={styles.summaryTag}>{summary.tone === 'ojou' ? '🎀 お嬢様風の要約' : '📝 AI要約'}</span>
-          <p className={styles.summaryText}>{summary.text}</p>
-        </div>
-      )}
-
       <div className={styles.tileActions}>
         <button className={styles.editBtn} onClick={onEdit}>✏️ 編集</button>
         <button className={styles.delBtn} onClick={onDelete}>🗑 削除</button>
@@ -114,8 +71,8 @@ function ReviewTile({ r, onEdit, onDelete, costNormal, costOjou }: { r: any; onE
 }
 
 // ─── 評価入力モーダル ─────────────────────────────
-function Modal({ userId, initial, onClose, onSaved }: {
-  userId: string; initial?: any; onClose: () => void; onSaved: () => void
+function Modal({ userId, initial, costNormal, costOjou, onClose, onSaved }: {
+  userId: string; initial?: any; costNormal: number; costOjou: number; onClose: () => void; onSaved: () => void
 }) {
   const supabase = createClient()
   const isEdit = !!initial
@@ -136,6 +93,58 @@ function Modal({ userId, initial, onClose, onSaved }: {
   const [steepSec,  setSteepSec]  = useState(initial?.steep_seconds ? String(initial.steep_seconds) : '')
   const [teaGrams,  setTeaGrams]  = useState(initial?.tea_grams_per_100ml ? String(initial.tea_grams_per_100ml) : '')
   const [accs,      setAccs]      = useState<string[]>(initial?.accompaniments ?? [])
+
+  // AI要約（通常/お嬢様風）。既存の保存済み要約があれば復元。
+  const [summaryNormal, setSummaryNormal] = useState<string | null>(initial?.summary_normal ?? null)
+  const [summaryOjou,   setSummaryOjou]   = useState<string | null>(initial?.summary_ojou ?? null)
+  const [summarizing,   setSummarizing]   = useState<SummaryTone | null>(null)
+  const [copiedTone,    setCopiedTone]    = useState<SummaryTone | null>(null)
+
+  async function runSummary(tone: SummaryTone) {
+    if (!isEdit) return
+    const cost = tone === 'ojou' ? costOjou : costNormal
+    const already = tone === 'ojou' ? summaryOjou : summaryNormal
+    const confirmMsg = already
+      ? `${cost}ptを消費して再生成します。既存の要約は上書きされます。よろしいですか？`
+      : `${cost}ptを消費して要約を生成します。よろしいですか？`
+    if (!confirm(confirmMsg)) return
+    setSummarizing(tone)
+    try {
+      // ポイント消費（製作者/管理者は消費なし判定）。失敗時は生成しない。
+      const { data: consumed, error } = await supabase.rpc('consume_points', {
+        p_amount: cost, p_feature: tone === 'ojou' ? 'summary_ojou' : 'summary',
+      })
+      if (error) { alert(error.message); return }
+      const row = Array.isArray(consumed) ? consumed[0] : consumed
+      if (row && row.success === false) { alert(row.message || 'ポイントが不足しています'); return }
+
+      const text = await summarizeReview(initial, tone)
+
+      // ポイントは既に消費済みのため、生成結果は即座にDBへ保存する
+      // （このモーダルの「保存」ボタンを押さなくても消えないようにする）
+      const col = tone === 'ojou' ? 'summary_ojou' : 'summary_normal'
+      const { error: saveErr } = await supabase.from('reviews').update({ [col]: text }).eq('id', initial.id)
+      if (saveErr) { alert('要約は生成されましたが保存に失敗しました: ' + saveErr.message); return }
+
+      if (tone === 'ojou') setSummaryOjou(text); else setSummaryNormal(text)
+    } catch (e: any) {
+      alert(e?.message ?? '要約の生成に失敗しました')
+    } finally {
+      setSummarizing(null)
+    }
+  }
+
+  async function copySummary(tone: SummaryTone) {
+    const text = tone === 'ojou' ? summaryOjou : summaryNormal
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedTone(tone)
+      setTimeout(() => setCopiedTone(null), 1500)
+    } catch {
+      alert('コピーに失敗しました。手動で選択してコピーしてください。')
+    }
+  }
 
   const [colors,      setColors]      = useState<any[]>([])
   const [presets,     setPresets]     = useState<any[]>([])
@@ -396,6 +405,48 @@ function Modal({ userId, initial, onClose, onSaved }: {
         <label className={styles.label}>💬 コメント <span className={styles.sub}>({comment.length}/{MAX_COMMENT})</span></label>
         <textarea className={styles.textarea} rows={2} value={comment} maxLength={MAX_COMMENT}
           onChange={e => setComment(e.target.value.slice(0, MAX_COMMENT))} placeholder="感想・メモ…"/>
+
+        {/* AI要約（編集時のみ表示。新規登録時はまず保存してから利用可能） */}
+        {isEdit ? (
+          <div className={styles.summaryEditBlock}>
+            <div className={styles.summaryRow}>
+              <button type="button" className={styles.summaryBtn} disabled={summarizing !== null}
+                onClick={() => runSummary('normal')}>
+                {summarizing === 'normal' ? '生成中…' : `📝 まとめる（${costNormal}pt）`}
+              </button>
+              <button type="button" className={`${styles.summaryBtn} ${styles.summaryBtnOjou}`} disabled={summarizing !== null}
+                onClick={() => runSummary('ojou')}>
+                {summarizing === 'ojou' ? '生成中…' : `🎀 お嬢様風（${costOjou}pt）`}
+              </button>
+            </div>
+
+            {summaryNormal && (
+              <div className={styles.summaryBubble}>
+                <div className={styles.summaryBubbleHead}>
+                  <span className={styles.summaryTag}>📝 AI要約</span>
+                  <button type="button" className={styles.copyBtn} onClick={() => copySummary('normal')}>
+                    {copiedTone === 'normal' ? '✅ コピーしました' : '📋 コピー'}
+                  </button>
+                </div>
+                <p className={styles.summaryText}>{summaryNormal}</p>
+              </div>
+            )}
+            {summaryOjou && (
+              <div className={`${styles.summaryBubble} ${styles.summaryBubbleOjou}`}>
+                <div className={styles.summaryBubbleHead}>
+                  <span className={styles.summaryTag}>🎀 お嬢様風の要約</span>
+                  <button type="button" className={styles.copyBtn} onClick={() => copySummary('ojou')}>
+                    {copiedTone === 'ojou' ? '✅ コピーしました' : '📋 コピー'}
+                  </button>
+                </div>
+                <p className={styles.summaryText}>{summaryOjou}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className={styles.hint}>💡 AI要約は評価を保存した後、編集画面から利用できます</p>
+        )}
+
         <label className={styles.checkLabel}>
           <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)}/>
           コミュニティに公開する
@@ -593,7 +644,6 @@ export default function ReviewsPage() {
         <div className={styles.grid}>
           {list.map(r => (
             <ReviewTile key={r.id} r={r}
-              costNormal={costNormal} costOjou={costOjou}
               onEdit={() => { setEditTarget(r); setShowModal(true) }}
               onDelete={() => del(r.id)}/>
           ))}
@@ -602,6 +652,7 @@ export default function ReviewsPage() {
 
       {showModal && (
         <Modal userId={userId} initial={editTarget??undefined}
+          costNormal={costNormal} costOjou={costOjou}
           onClose={() => { setShowModal(false); setEditTarget(null) }}
           onSaved={() => { setShowModal(false); setEditTarget(null); load() }}/>
       )}
