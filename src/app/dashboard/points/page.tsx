@@ -5,12 +5,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import styles from './points.module.css'
 
-const PACKAGES = [
-  { pt: 2,  yen: 100,  label: 'お試し' },
-  { pt: 10, yen: 450,  label: 'お得' },
-  { pt: 30, yen: 1200, label: 'まとめ買い' },
-]
-
 const TYPE_LABEL: Record<string, string> = {
   monthly_grant: '月額プラン付与',
   purchase: 'ポイント購入',
@@ -24,24 +18,38 @@ function fmtDate(iso: string) {
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
+function fmtRemaining(iso: string): string {
+  const ms = new Date(iso).getTime() - Date.now()
+  if (ms <= 0) return '終了しました'
+  const days = Math.floor(ms / 86400000)
+  const hours = Math.floor((ms % 86400000) / 3600000)
+  if (days > 0) return `あと${days}日${hours}時間`
+  return `あと${hours}時間`
+}
+
 export default function PointsPage() {
   const supabase = createClient()
   const [isAdmin, setIsAdmin] = useState(false)
   const [points, setPoints] = useState<number | null>(null)
   const [ledger, setLedger] = useState<any[]>([])
+  const [packages, setPackages] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [comingSoon, setComingSoon] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setLoading(false); return }
-    const [{ data: profile }, { data: entries }] = await Promise.all([
+    const [{ data: profile }, { data: entries }, { data: pkgs }] = await Promise.all([
       supabase.from('profiles').select('is_admin,is_creator,points').eq('id', user.id).single(),
       supabase.from('points_ledger').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),
+      supabase.from('point_packages').select('*').eq('is_active', true).order('sort_order'),
     ])
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     setPoints(profile?.points ?? 0)
     setLedger(entries ?? [])
+    // 期間限定オファーは期限切れのものを除外して表示する
+    const now = Date.now()
+    setPackages((pkgs ?? []).filter(p => !p.is_limited || !p.limited_until || new Date(p.limited_until).getTime() > now))
     setLoading(false)
   }, [supabase])
 
@@ -70,30 +78,18 @@ export default function PointsPage() {
 
           {comingSoon && <div className={styles.comingSoonBanner}>🚧 {comingSoon}</div>}
 
-          {/* 月額プラン（モック） */}
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>📅 月額プラン</h2>
-            <div className={styles.planCard}>
-              <div>
-                <p className={styles.planName}>ティーノート プラス</p>
-                <p className={styles.planDesc}>毎月10pt付与。使い切れなかった分は翌月に最大10ptまで繰越可能（超過分は失効）。</p>
-              </div>
-              <button className={styles.planBtn}
-                onClick={() => showComingSoon('月額プランは準備中です。公開までしばらくお待ちください。')}>
-                登録する（準備中）
-              </button>
-            </div>
-          </section>
-
           {/* ポイント購入（モック） */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>🛒 ポイントを購入</h2>
             <div className={styles.packageGrid}>
-              {PACKAGES.map(p => (
-                <div key={p.pt} className={styles.packageCard}>
+              {packages.map(p => (
+                <div key={p.id} className={`${styles.packageCard} ${p.is_limited ? styles.packageCardLimited : ''}`}>
                   <span className={styles.packageBadge}>{p.label}</span>
-                  <span className={styles.packagePt}>{p.pt}pt</span>
-                  <span className={styles.packageYen}>¥{p.yen.toLocaleString()}</span>
+                  {p.is_limited && p.limited_until && (
+                    <span className={styles.packageLimitedNote}>⏰ {fmtRemaining(p.limited_until)}・お一人様1回限り</span>
+                  )}
+                  <span className={styles.packagePt}>{p.points}pt</span>
+                  <span className={styles.packageYen}>¥{p.price_yen.toLocaleString()}</span>
                   <button className={styles.packageBtn}
                     onClick={() => showComingSoon('ポイント購入機能は準備中です。決済連携完了後にご利用いただけます。')}>
                     購入する

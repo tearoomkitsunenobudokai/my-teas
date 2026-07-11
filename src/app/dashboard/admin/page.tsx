@@ -87,22 +87,26 @@ export default function AdminPage() {
   const [costs, setCosts] = useState<any[]>([])
   const [savingCosts, setSavingCosts] = useState(false)
   const [costsSaved, setCostsSaved] = useState(false)
-  const [pointPolicy, setPointPolicy] = useState({ initial: '5', monthly: '10', carryover: '10', loginDays: '5', loginPoints: '2' })
+  const [pointPolicy, setPointPolicy] = useState({ initial: '5', loginDays: '5', loginPoints: '2' })
   const [savingPolicy, setSavingPolicy] = useState(false)
   const [policySaved, setPolicySaved] = useState(false)
+  const [packages, setPackages] = useState<any[]>([])
+  const [deletedPackageIds, setDeletedPackageIds] = useState<string[]>([])
+  const [savingPackages, setSavingPackages] = useState(false)
+  const [packagesSaved, setPackagesSaved] = useState(false)
 
   useEffect(() => {
     supabase.from('feature_costs').select('feature,cost,label,sort_order').order('sort_order')
       .then(({ data }) => setCosts(data ?? []))
+    supabase.from('point_packages').select('*').order('sort_order')
+      .then(({ data }) => setPackages(data ?? []))
     supabase.from('app_settings').select('key,value')
-      .in('key', ['points_initial', 'points_monthly_grant', 'points_carryover_max', 'login_bonus_days', 'login_bonus_points'])
+      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points'])
       .then(({ data }) => {
         const m: any = {}
         for (const r of data ?? []) m[r.key] = r.value
         setPointPolicy({
           initial: m['points_initial'] ?? '5',
-          monthly: m['points_monthly_grant'] ?? '10',
-          carryover: m['points_carryover_max'] ?? '10',
           loginDays: m['login_bonus_days'] ?? '5',
           loginPoints: m['login_bonus_points'] ?? '2',
         })
@@ -113,14 +117,47 @@ export default function AdminPage() {
     setSavingPolicy(true)
     const { error } = await supabase.from('app_settings').upsert([
       { key: 'points_initial', value: pointPolicy.initial, updated_at: new Date().toISOString() },
-      { key: 'points_monthly_grant', value: pointPolicy.monthly, updated_at: new Date().toISOString() },
-      { key: 'points_carryover_max', value: pointPolicy.carryover, updated_at: new Date().toISOString() },
       { key: 'login_bonus_days', value: pointPolicy.loginDays, updated_at: new Date().toISOString() },
       { key: 'login_bonus_points', value: pointPolicy.loginPoints, updated_at: new Date().toISOString() },
     ])
     setSavingPolicy(false)
     if (error) { alert(error.message); return }
     setPolicySaved(true); setTimeout(() => setPolicySaved(false), 2000)
+  }
+
+  function addPackageRow() {
+    setPackages(prev => [...prev, {
+      id: `new-${Date.now()}`, label: '新しいプラン', points: 10, price_yen: 500,
+      sort_order: prev.length + 1, is_limited: false, limited_until: null, is_active: true, __isNew: true,
+    }])
+  }
+
+  function removePackageRow(id: string) {
+    setPackages(prev => prev.filter(p => p.id !== id))
+    if (!id.startsWith('new-')) setDeletedPackageIds(prev => [...prev, id])
+  }
+
+  async function savePackages() {
+    setSavingPackages(true)
+    // 新規行（__isNew）はidをDB側に生成させるため送らない
+    const rows = packages.map(p => {
+      const { __isNew, id, ...rest } = p
+      const base = { ...rest, limited_until: p.is_limited ? p.limited_until : null, updated_at: new Date().toISOString() }
+      return __isNew ? base : { ...base, id }
+    })
+    const [{ error: upsertErr }] = await Promise.all([
+      supabase.from('point_packages').upsert(rows),
+      deletedPackageIds.length
+        ? supabase.from('point_packages').delete().in('id', deletedPackageIds)
+        : Promise.resolve({ error: null }),
+    ])
+    setSavingPackages(false)
+    if (upsertErr) { alert(upsertErr.message); return }
+    setDeletedPackageIds([])
+    // 保存後に再取得してDB生成のIDを反映
+    const { data } = await supabase.from('point_packages').select('*').order('sort_order')
+    setPackages(data ?? [])
+    setPackagesSaved(true); setTimeout(() => setPackagesSaved(false), 2000)
   }
 
   async function saveCosts() {
@@ -501,7 +538,7 @@ export default function AdminPage() {
 
         <h2 className={styles.cardTitle} style={{ marginTop: 24 }}>💠 ポイント制度の設定</h2>
         <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
-          初期ポイント・毎月の付与数・繰越上限を設定します。月次付与と繰越上限は次回の月次処理から反映されます。
+          初期ポイントとログインボーナスの条件を設定します。
         </p>
         <div className={styles.settingsCard}>
           <div className={styles.settingRow}>
@@ -513,30 +550,6 @@ export default function AdminPage() {
               <input className={styles.settingInput} type="number" min={0} max={9999}
                 value={pointPolicy.initial}
                 onChange={e => setPointPolicy(p => ({ ...p, initial: e.target.value }))}/>
-              <span className={styles.settingUnit}>pt</span>
-            </div>
-          </div>
-          <div className={styles.settingRow}>
-            <div className={styles.settingInfo}>
-              <p className={styles.settingLabel}>毎月の付与ポイント</p>
-              <p className={styles.settingDesc}>課金ユーザーに毎月付与されるポイント数</p>
-            </div>
-            <div className={styles.settingControl}>
-              <input className={styles.settingInput} type="number" min={0} max={9999}
-                value={pointPolicy.monthly}
-                onChange={e => setPointPolicy(p => ({ ...p, monthly: e.target.value }))}/>
-              <span className={styles.settingUnit}>pt</span>
-            </div>
-          </div>
-          <div className={styles.settingRow}>
-            <div className={styles.settingInfo}>
-              <p className={styles.settingLabel}>繰越上限</p>
-              <p className={styles.settingDesc}>翌月に繰り越せるポイントの上限。超過分は失効します</p>
-            </div>
-            <div className={styles.settingControl}>
-              <input className={styles.settingInput} type="number" min={0} max={9999}
-                value={pointPolicy.carryover}
-                onChange={e => setPointPolicy(p => ({ ...p, carryover: e.target.value }))}/>
               <span className={styles.settingUnit}>pt</span>
             </div>
           </div>
@@ -569,6 +582,53 @@ export default function AdminPage() {
               {savingPolicy ? '保存中…' : '設定を保存'}
             </button>
             {policySaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
+          </div>
+        </div>
+
+        <h2 className={styles.cardTitle} style={{ marginTop: 24 }}>🛒 ポイント購入プラン</h2>
+        <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
+          購入ページに表示するプランを設定します。「期間限定」にチェックを入れると終了日時を設定でき、
+          お一人様1回限りの特別プランとして表示されます。終了日時を未来の日付に更新すると、再び購入ページに表示されます。
+        </p>
+        <div className={styles.settingsCard}>
+          {packages.map((p, i) => (
+            <div key={p.id} className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8 }}>
+              <div className={styles.settingInfo} style={{ flex: '1 1 100%', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <input className={styles.settingInput} style={{ width: 120 }} type="text"
+                  value={p.label} placeholder="プラン名"
+                  onChange={e => setPackages(prev => prev.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}/>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                  <input className={styles.settingInput} style={{ width: 70 }} type="number" min={1}
+                    value={p.points}
+                    onChange={e => setPackages(prev => prev.map((x, j) => j === i ? { ...x, points: parseInt(e.target.value) || 0 } : x))}/>
+                  pt
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                  ¥
+                  <input className={styles.settingInput} style={{ width: 90 }} type="number" min={0}
+                    value={p.price_yen}
+                    onChange={e => setPackages(prev => prev.map((x, j) => j === i ? { ...x, price_yen: parseInt(e.target.value) || 0 } : x))}/>
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                  <input type="checkbox" checked={!!p.is_limited}
+                    onChange={e => setPackages(prev => prev.map((x, j) => j === i ? { ...x, is_limited: e.target.checked } : x))}/>
+                  期間限定
+                </label>
+                {p.is_limited && (
+                  <input className={styles.settingInput} style={{ width: 190 }} type="datetime-local"
+                    value={p.limited_until ? new Date(p.limited_until).toISOString().slice(0,16) : ''}
+                    onChange={e => setPackages(prev => prev.map((x, j) => j === i ? { ...x, limited_until: e.target.value ? new Date(e.target.value).toISOString() : null } : x))}/>
+                )}
+                <button className={styles.cancelBtn} onClick={() => removePackageRow(p.id)}>削除</button>
+              </div>
+            </div>
+          ))}
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12, flexWrap: 'wrap' }}>
+            <button className={styles.cancelBtn} onClick={addPackageRow}>＋ プランを追加</button>
+            <button className={styles.saveBtn} onClick={savePackages} disabled={savingPackages}>
+              {savingPackages ? '保存中…' : 'プランを保存'}
+            </button>
+            {packagesSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
           </div>
         </div>
       </div>}

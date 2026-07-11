@@ -46,7 +46,7 @@ export default function UpdatePasswordPage() {
       <div className={styles.box}>
         <div className={styles.logo}>
           <span className={styles.logoIcon}>🍵</span>
-          TeaNote
+          My-Teas
         </div>
         <p className={styles.tagline}>新しいパスワードの設定</p>
 
