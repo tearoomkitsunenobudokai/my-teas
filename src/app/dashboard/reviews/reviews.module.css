@@ -184,3 +184,11 @@
   border-radius:6px; padding:3px 8px; cursor:pointer;
 }
 .copyBtn:hover { background:var(--bg-muted); color:var(--text); }
+
+.cardBtn {
+  width: 100%; font-size:13px; font-weight:600;
+  border:1px solid #8B6F47; background:#FBF5EC; color:#6B4F2A;
+  border-radius:8px; padding:10px 12px; cursor:pointer;
+}
+.cardBtn:hover { background:#F3E7D3; }
+.cardBtn:disabled { opacity:0.6; cursor:default; }

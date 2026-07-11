@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import { ReviewScores, SCORE_LABELS, SCORE_DESCRIPTIONS } from '@/types'
 import { isCommentClean } from '@/lib/moderation'
 import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
+import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import TeaCup from '@/components/TeaCup'
 import styles from './reviews.module.css'
 
@@ -71,8 +72,8 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
 }
 
 // ─── 評価入力モーダル ─────────────────────────────
-function Modal({ userId, initial, costNormal, costOjou, onClose, onSaved }: {
-  userId: string; initial?: any; costNormal: number; costOjou: number; onClose: () => void; onSaved: () => void
+function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSaved }: {
+  userId: string; initial?: any; costNormal: number; costOjou: number; costCard: number; onClose: () => void; onSaved: () => void
 }) {
   const supabase = createClient()
   const isEdit = !!initial
@@ -143,6 +144,37 @@ function Modal({ userId, initial, costNormal, costOjou, onClose, onSaved }: {
       setTimeout(() => setCopiedTone(null), 1500)
     } catch {
       alert('コピーに失敗しました。手動で選択してコピーしてください。')
+    }
+  }
+
+  const [makingCard, setMakingCard] = useState(false)
+
+  async function makeCard() {
+    if (!isEdit) return
+    if (!confirm(`${costCard}ptを消費して評価カード画像を作成します。よろしいですか？`)) return
+    setMakingCard(true)
+    try {
+      const { data: consumed, error } = await supabase.rpc('consume_points', {
+        p_amount: costCard, p_feature: 'tea_card',
+      })
+      if (error) { alert(error.message); return }
+      const row = Array.isArray(consumed) ? consumed[0] : consumed
+      if (row && row.success === false) { alert(row.message || 'ポイントが不足しています'); return }
+
+      const blob = await generateTeaCard({
+        tea_name: teaName, brand_name: brandName, shop_name: shopName, color_hex: colorHex,
+        comment, aroma_notes: aromaNotes, brew_method: brewMethod,
+        steep_seconds: steepSec ? parseInt(steepSec) : null,
+        tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
+        accompaniments: accs,
+        score_aroma: scores.score_aroma, score_astringency: scores.score_astringency,
+        score_richness: scores.score_richness, score_sweetness: scores.score_sweetness,
+      })
+      downloadBlob(blob, `${(teaName || 'tea').replace(/[/\\?%*:|"<>]/g, '_')}_card.png`)
+    } catch (e: any) {
+      alert(e?.message ?? 'カードの作成に失敗しました')
+    } finally {
+      setMakingCard(false)
     }
   }
 
@@ -420,6 +452,16 @@ function Modal({ userId, initial, costNormal, costOjou, onClose, onSaved }: {
               </button>
             </div>
 
+            <div style={{ marginTop: 10 }}>
+              <button type="button" className={styles.cardBtn} disabled={makingCard}
+                onClick={makeCard}>
+                {makingCard ? '作成中…' : `🖼️ 評価カード画像を作成（${costCard}pt）`}
+              </button>
+              <p className={styles.hint} style={{ marginTop: 4 }}>
+                水色・スコア・香りノートなどをまとめた画像を作成し、ダウンロードします。
+              </p>
+            </div>
+
             {summaryNormal && (
               <div className={styles.summaryBubble}>
                 <div className={styles.summaryBubbleHead}>
@@ -513,11 +555,13 @@ export default function ReviewsPage() {
   const [canExport,  setCanExport]  = useState(false)
   const [costNormal, setCostNormal] = useState(1)
   const [costOjou,   setCostOjou]   = useState(1)
+  const [costCard,   setCostCard]   = useState(1)
 
   useEffect(() => {
     const sb = createClient()
     sb.rpc('get_feature_cost', { p_feature: 'summary' }).then(({ data }) => { if (typeof data === 'number') setCostNormal(data) })
     sb.rpc('get_feature_cost', { p_feature: 'summary_ojou' }).then(({ data }) => { if (typeof data === 'number') setCostOjou(data) })
+    sb.rpc('get_feature_cost', { p_feature: 'tea_card' }).then(({ data }) => { if (typeof data === 'number') setCostCard(data) })
   }, [])
 
   const load = useCallback(async () => {
@@ -652,7 +696,7 @@ export default function ReviewsPage() {
 
       {showModal && (
         <Modal userId={userId} initial={editTarget??undefined}
-          costNormal={costNormal} costOjou={costOjou}
+          costNormal={costNormal} costOjou={costOjou} costCard={costCard}
           onClose={() => { setShowModal(false); setEditTarget(null) }}
           onSaved={() => { setShowModal(false); setEditTarget(null); load() }}/>
       )}
