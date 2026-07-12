@@ -14,7 +14,7 @@ const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr
 
 const INIT_SCORES: ReviewScores = { score_aroma: 3, score_astringency: 3, score_richness: 3, score_sweetness: 3 }
 const BREW_METHODS = ['リーフ','ティーバッグ','手鍋','粉末','希釈液','不明']
-const ACCOMPANIMENTS = ['蜂蜜','ミルク','砂糖','アイス（グラス）']
+const ACCOMPANIMENTS = ['なし（ストレート）','蜂蜜','ミルク','砂糖','アイス（グラス）']
 const MAX_AROMA = 3
 const MAX_COMMENT = 300
 
@@ -574,7 +574,16 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             <div className={styles.chips}>
               {ACCOMPANIMENTS.map(a => (
                 <button key={a} className={`${styles.chip} ${accs.includes(a)?styles.chipOn:''}`}
-                  onClick={() => setAccs(p => p.includes(a)?p.filter(x=>x!==a):[...p,a])}>{a}</button>
+                  onClick={() => setAccs(p => {
+                    const NONE = 'なし（ストレート）'
+                    if (a === NONE) {
+                      // 「なし」は他の添え物と同時選択しない（選択中なら解除、未選択なら他を全解除して選択）
+                      return p.includes(NONE) ? [] : [NONE]
+                    }
+                    // 通常の添え物を選ぶ場合は「なし」を自動的に外す
+                    const next = p.includes(a) ? p.filter(x=>x!==a) : [...p.filter(x=>x!==NONE), a]
+                    return next
+                  })}>{a}</button>
               ))}
             </div>
           </div>
