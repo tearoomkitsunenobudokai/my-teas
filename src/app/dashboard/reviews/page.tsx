@@ -211,6 +211,15 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [openGroup,   setOpenGroup]   = useState<string|null>(null)
   const [showColors,  setShowColors]  = useState(false)
   const [showDetail,  setShowDetail]  = useState(false)
+
+  // ステップ入力（ウィザード）: 新規登録時はデフォルトで1項目ずつの対話形式。
+  // 「全ての項目を一覧で表示」で従来の一覧形式へ切替可能。編集時は常に一覧形式。
+  const [wizard, setWizard] = useState(!isEdit)
+  const [step, setStep] = useState(0)
+  const WIZ_STEPS = ['お茶の名前・ブランド', '水色', '評価スコア', '香り分析', '飲んだ場所・日付', 'コメント・公開設定']
+  const WIZ_LAST = WIZ_STEPS.length - 1
+  // ウィザード中は該当ステップのみ表示。一覧形式では全表示
+  const show = (i: number) => !wizard || step === i
   const [shopInput,   setShopInput]   = useState(initial?.shop_name ?? '')
   const [showShops,   setShowShops]   = useState(false)
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null)
@@ -337,7 +346,18 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           <button className={styles.mClose} onClick={onClose}>✕</button>
         </div>
 
+        {/* ステップ入力バー（ウィザード時のみ） */}
+        {wizard && (
+          <div className={styles.wizBar}>
+            <span className={styles.wizStep}>STEP {step + 1}/{WIZ_STEPS.length}　{WIZ_STEPS[step]}</span>
+            <button type="button" className={styles.wizListBtn} onClick={() => setWizard(false)}>
+              全ての項目を一覧で表示
+            </button>
+          </div>
+        )}
+
         {/* お茶の名前（必須） */}
+        <div style={{ display: show(0) ? undefined : 'none' }}>
         <label className={styles.label}>☕ お茶の名前 <span className={styles.req}>*</span>
           <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--text-hint)', marginLeft: 6 }}>{teaName.length}/30</span>
         </label>
@@ -356,11 +376,13 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         <datalist id="brand-suggestions">
           {pastBrands.map(b => <option key={b} value={b}/>)}
         </datalist>
+        </div>
 
-        {/* 水色 + レーダーチャート横並び */}
-        <div className={styles.rowTwo}>
+        {/* 水色 + レーダーチャート横並び（ウィザードでは水色/スコアを別ステップ表示） */}
+        <div className={styles.rowTwo}
+          style={{ display: (show(1) || show(2)) ? undefined : 'none', justifyContent: wizard ? 'center' : undefined }}>
           {/* 水色 */}
-          <div className={styles.colorBlock}>
+          <div className={styles.colorBlock} style={{ display: show(1) ? undefined : 'none' }}>
             <p className={styles.label}>🍵 水色</p>
             <TeaCup hex={colorHex} size={72}/>
             {colorName && <p className={styles.colorName}>{colorName}</p>}
@@ -392,7 +414,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </div>
           </div>
           {/* チャート */}
-          <div className={styles.chartBlock}>
+          <div className={styles.chartBlock} style={{ display: show(2) ? undefined : 'none' }}>
             <p className={styles.label}>📊 評価スコア</p>
             <RadarChart scores={scores} size={160}/>
             <div className={styles.sliders}>
@@ -412,6 +434,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         </div>
 
         {/* 香り分析 */}
+        <div style={{ display: show(3) ? undefined : 'none' }}>
         <p className={styles.label}>🌸 香り分析 <span className={styles.sub}>({aromaNotes.length}/{MAX_AROMA})</span></p>
         {aromaNotes.length > 0 && (
           <div className={styles.selectedAroma}>
@@ -443,8 +466,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </div>
           ))}
         </div>
+        </div>
 
         {/* 飲んだ場所 */}
+        <div style={{ display: show(4) ? undefined : 'none' }}>
         <label className={styles.label}>🏪 飲んだ場所</label>
         <div className={styles.suggestWrap}>
           <input className={styles.input} value={shopInput}
@@ -467,6 +492,9 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
         <label className={styles.label}>📅 飲んだ日</label>
         <input type="date" className={styles.inputDate} value={drankAt} onChange={e => setDrankAt(e.target.value)}/>
+        </div>
+
+        <div style={{ display: show(5) ? undefined : 'none' }}>
         <label className={styles.label}>💬 コメント <span className={styles.sub}>({comment.length}/{MAX_COMMENT})</span></label>
         <textarea className={styles.textarea} rows={2} value={comment} maxLength={MAX_COMMENT}
           onChange={e => setComment(e.target.value.slice(0, MAX_COMMENT))} placeholder="感想・メモ…"/>
@@ -588,13 +616,34 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </div>
           </div>
         )}
-
-        <div className={styles.mFoot}>
-          <button className={styles.cancelBtn} onClick={onClose}>キャンセル</button>
-          <button className={styles.saveBtn} onClick={save} disabled={saving||!teaName.trim()}>
-            {saving?'保存中…':isEdit?'更新する':'評価を登録'}
-          </button>
         </div>
+
+        {wizard ? (
+          <div className={styles.mFoot}>
+            <button className={styles.cancelBtn}
+              onClick={() => step === 0 ? onClose() : setStep(s => s - 1)}>
+              {step === 0 ? 'キャンセル' : '← 戻る'}
+            </button>
+            {step < WIZ_LAST ? (
+              <button className={styles.saveBtn}
+                onClick={() => setStep(s => s + 1)}
+                disabled={step === 0 && !teaName.trim()}>
+                次へ →
+              </button>
+            ) : (
+              <button className={styles.saveBtn} onClick={save} disabled={saving || !teaName.trim()}>
+                {saving ? '保存中…' : '評価を登録'}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className={styles.mFoot}>
+            <button className={styles.cancelBtn} onClick={onClose}>キャンセル</button>
+            <button className={styles.saveBtn} onClick={save} disabled={saving||!teaName.trim()}>
+              {saving?'保存中…':isEdit?'更新する':'評価を登録'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
