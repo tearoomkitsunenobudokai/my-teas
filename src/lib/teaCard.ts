@@ -314,27 +314,36 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
   drawDamask(ctx)
+
+  // ── 左上: 水色の大円（フレーム内でトリミングして見切れさせる） ──
+  // 円自体は紙面より大きく描くが、内罫の内側でクリップすることで
+  // 「見切れる」構図とフレームの両立をはかる
+  const cupR = 290
+  const cupCx = 250, cupCy = 180
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(31, 31, W - 62, H - 62)
+  ctx.clip()
+  drawTeaCircle(ctx, cupCx, cupCy, cupR, data.color_hex ?? '#C8A96E')
+  ctx.restore()
+
+  // フレームは円の上から描き、金罫が縁として円をトリミングして見えるようにする
   drawFrame(ctx)
 
-  // ── My-Teas バッジ（左上・臙脂 + 細い金縁） ──
+  // ── My-Teas バッジ（左上・円の上に重ねる） ──
   ctx.fillStyle = ACCENT
-  ctx.fillRect(64, 52, 158, 40)
+  ctx.fillRect(56, 48, 158, 40)
   ctx.strokeStyle = 'rgba(201,169,110,0.9)'
   ctx.lineWidth = 1
-  ctx.strokeRect(68, 56, 150, 32)
+  ctx.strokeRect(60, 52, 150, 32)
   ctx.font = `700 20px ${SERIF}`
   ctx.fillStyle = '#F5EDE0'
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  ctx.fillText('My-Teas', 64 + 79, 52 + 21)
-
-  // ── 左上: 水色の円（枠内に収める） ──
-  const cupR = 172
-  const cupCx = 268, cupCy = 268
-  drawTeaCircle(ctx, cupCx, cupCy, cupR, data.color_hex ?? '#C8A96E')
+  ctx.fillText('My-Teas', 56 + 79, 48 + 21)
 
   // ── 円の下: ブランド → 紅茶名 → 飾り罫 → 茶園 ──
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'
-  let ny = cupCy + cupR + 48
+  let ny = cupCy + cupR + 40
   if (data.brand_name) {
     const bf = fitFontSize(ctx, data.brand_name, 28, 470, s => `italic 700 ${s}px ${SERIF}`)
     ctx.font = `italic 700 ${bf}px ${SERIF}`
