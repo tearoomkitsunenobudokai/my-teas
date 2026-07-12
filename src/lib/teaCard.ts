@@ -35,8 +35,24 @@ export interface TeaCardData {
 const W = 1274
 const H = 770
 
-const SERIF = 'Georgia, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", serif'
-const MINCHO = '"Hiragino Mincho ProN", "Yu Mincho", "Georgia", serif'
+// カードのフォント: いろはマル（MODI工場 / SIL Open Font License 1.1）
+// public/fonts/irohamaru/ に同梱。読み込み失敗時は従来のセリフ体にフォールバック。
+const SERIF = '"irohamaru", Georgia, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", serif'
+const MINCHO = '"irohamaru", "Hiragino Mincho ProN", "Yu Mincho", "Georgia", serif'
+
+let fontsLoaded = false
+async function ensureFonts(): Promise<void> {
+  if (fontsLoaded) return
+  try {
+    const regular = new FontFace('irohamaru', 'url(/fonts/irohamaru/irohamaru-Regular.woff2)', { weight: '400' })
+    const medium  = new FontFace('irohamaru', 'url(/fonts/irohamaru/irohamaru-Medium.woff2)',  { weight: '700' })
+    const loaded = await Promise.all([regular.load(), medium.load()])
+    loaded.forEach(f => (document.fonts as any).add(f))
+    fontsLoaded = true
+  } catch {
+    // 読み込み失敗時はフォールバックフォントで描画（機能自体は止めない）
+  }
+}
 
 const INK = '#4A3B2A'        // 本文の焦げ茶
 const INK_SOFT = '#7A6A55'   // 補助テキスト
@@ -230,6 +246,8 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
 }
 
 export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
+  // フォント読み込みを待ってから描画（未ロードだと代替フォントで焼き付いてしまうため）
+  await ensureFonts()
   const canvas = document.createElement('canvas')
   canvas.width = W; canvas.height = H
   const ctx = canvas.getContext('2d')!
