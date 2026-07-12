@@ -192,3 +192,64 @@
 }
 .cardBtn:hover { background:#F3E7D3; }
 .cardBtn:disabled { opacity:0.6; cursor:default; }
+
+/* ─── スマホ対応（〜768px） ───
+   ・モーダルを全画面表示にして操作領域を最大化
+   ・入力欄を16px以上にしてiOSの自動ズームを防止
+   ・ボタン/チップ/スライダーのタップ領域を拡大
+   ・フッター(キャンセル/登録)を画面下に固定 */
+@media (max-width: 768px) {
+  .overlay { padding: 0; align-items: stretch; }
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
+    gap: 12px;
+  }
+  .mTitle { font-size: 18px; }
+  .mClose { font-size: 24px; padding: 8px; }
+
+  .label { font-size: 14px; margin-top: 8px; }
+  .input, .textarea, .inputDate, .inputSm {
+    font-size: 16px;            /* 16px未満だとiOSがフォーカス時に拡大してしまう */
+    padding: 12px;
+    border-radius: 10px;
+  }
+  .inputSm { width: 140px; }
+  .textarea { min-height: 96px; }
+
+  /* 水色とチャートは縦積みに */
+  .rowTwo { flex-direction: column; align-items: center; gap: 12px; }
+  .colorBlock { width: auto; }
+
+  /* スライダー: つまみとバーを大きく */
+  .sliders { gap: 12px; }
+  .slider { height: 28px; }
+
+  /* チップ(香り分析・抽出方法・添え物): タップしやすく */
+  .chips { gap: 8px; }
+  .chip { padding: 10px 16px; font-size: 14px; }
+
+  /* フッターを画面下に固定 */
+  .mFoot {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-card);
+    margin: 0 -1rem calc(-1rem - env(safe-area-inset-bottom));
+    padding: 12px 1rem calc(12px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.06);
+  }
+  .cancelBtn, .saveBtn {
+    flex: 1;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  /* 一覧側: 編集/削除ボタンもタップしやすく */
+  .editBtn, .delBtn { padding: 8px 16px; font-size: 14px; }
+  .summaryBtn, .cardBtn { padding: 12px; font-size: 14px; }
+}

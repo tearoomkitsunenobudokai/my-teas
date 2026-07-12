@@ -29,3 +29,22 @@ input, select, textarea { font-family: inherit; }
 
 /* Utility */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* ─── スマホ共通対応（〜768px） ───
+   全ページ横断で、入力欄のiOS自動ズームを防止し、
+   タップ領域を確保する最低限のベースライン */
+@media (max-width: 768px) {
+  /* 16px未満の入力欄はiOSがフォーカス時に画面を拡大してしまうため一律16pxに */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+  /* チェックボックス・ラジオは指で押しやすく */
+  input[type="checkbox"], input[type="radio"] {
+    width: 20px;
+    height: 20px;
+  }
+  /* レンジスライダーのつまみを大きく */
+  input[type="range"] {
+    min-height: 28px;
+  }
+}
