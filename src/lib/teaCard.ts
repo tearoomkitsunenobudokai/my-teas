@@ -19,6 +19,7 @@ export interface TeaCardData {
   user_name?: string | null
   drank_at?: string | null
   color_hex?: string | null
+  color_name?: string | null
   comment?: string | null
   aroma_notes?: string[] | null
   brew_method?: string | null
@@ -76,6 +77,13 @@ function mix(a: [number, number, number], b: [number, number, number], t: number
   return [clamp(a[0] + (b[0] - a[0]) * t), clamp(a[1] + (b[1] - a[1]) * t), clamp(a[2] + (b[2] - a[2]) * t)]
 }
 const rgbStr = (c: [number, number, number]) => `rgb(${c[0]},${c[1]},${c[2]})`
+
+// hex表記を正規化（#付き・大文字・3/4桁は6/8桁に展開）。表示とパレット照合用
+export function normalizeHex(hex: string): string {
+  let h = hex.replace('#', '').trim()
+  if (h.length === 3 || h.length === 4) h = h.split('').map(c => c + c).join('')
+  return '#' + h.toUpperCase()
+}
 
 // ── 背景: ダマスク柄風の淡い植物装飾 ──────────────────────
 // 手前の情報を邪魔しないよう、ごく薄い琥珀色の線だけで描く
@@ -363,7 +371,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     [data.score_aroma, data.score_sweetness, data.score_richness, data.score_astringency],
     ['香り', '甘み', 'コク', '渋み'])
 
-  // ── レーダーの右横: 香りノート + 淹れ方 + 添え物 ──
+  // ── レーダーの右横: 香り分析 + 水色 + 淹れ方 + 添え物 ──
   // drawRadar内でtextAlignがcenterに変わっているため、必ず左揃えに戻す
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
@@ -378,10 +386,35 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.font = `400 17px ${MINCHO}`
     ctx.fillStyle = INK
     const used = wrapText(ctx, body, secX, sy, secW, 24, 3)
-    sy += used * 24 + 16
+    sy += used * 24 + 12
   }
   if (data.aroma_notes && data.aroma_notes.length) {
-    section('― 香りノート ―', data.aroma_notes.slice(0, 8).join('・'))
+    section('― 香り分析 ―', data.aroma_notes.slice(0, 8).join('・'))
+  }
+  // 水色: パレット登録色なら色名、未登録なら「カスタム」。右にカラーコードと色見本
+  if (data.color_hex) {
+    const hexNorm = normalizeHex(data.color_hex)
+    ctx.font = `700 17px ${MINCHO}`
+    ctx.fillStyle = GOLD_DEEP
+    ctx.fillText('― 水色 ―', secX, sy)
+    sy += 27
+    ctx.font = `400 17px ${MINCHO}`
+    ctx.fillStyle = INK
+    const label = `${data.color_name || 'カスタム'}　${hexNorm}`
+    ctx.fillText(label, secX, sy)
+    // ラベルの右に小さな色見本を描く
+    const labelW = ctx.measureText(label).width
+    const swX = secX + labelW + 10
+    if (swX + 20 <= W - 44) {
+      const [sr, sg, sb, sa] = parseHex(hexNorm)
+      const sbase = mix([sr, sg, sb], [248, 242, 230], 1 - sa)
+      ctx.fillStyle = rgbStr(sbase)
+      ctx.fillRect(swX, sy - 14, 18, 18)
+      ctx.strokeStyle = GOLD_DEEP
+      ctx.lineWidth = 1
+      ctx.strokeRect(swX, sy - 14, 18, 18)
+    }
+    sy += 24 + 12
   }
   const details: string[] = []
   if (data.brew_method) details.push(data.brew_method)

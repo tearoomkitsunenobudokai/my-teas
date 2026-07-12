@@ -165,6 +165,20 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       // カードに載せる名前（プロフィール名）を取得
       const { data: profile } = await supabase.from('profiles').select('name').eq('id', userId).single()
 
+      // 水色の色名をカラーパレットから照合（公式+自分の色。RLSで自動的に絞られる）
+      // 一致しない場合は「カスタム」としてカード側で表示される
+      let colorName: string | null = null
+      if (colorHex) {
+        const { data: paletteRows } = await supabase.from('tea_colors').select('name,hex')
+        const norm = (h: string) => {
+          let s = h.replace('#', '').trim()
+          if (s.length === 3 || s.length === 4) s = s.split('').map(c => c + c).join('')
+          return s.toUpperCase()
+        }
+        const hit = (paletteRows ?? []).find(c => norm(c.hex) === norm(colorHex))
+        colorName = hit?.name ?? null
+      }
+
       // 選択された文章ソース（メモ / AI要約 / お嬢様風）
       const cardText =
         cardSource === 'normal' && summaryNormal ? summaryNormal :
@@ -173,7 +187,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
       const blob = await generateTeaCard({
         tea_name: teaName, brand_name: brandName, shop_name: shopName,
-        user_name: profile?.name ?? null, drank_at: drankAt, color_hex: colorHex,
+        user_name: profile?.name ?? null, drank_at: drankAt, color_hex: colorHex, color_name: colorName,
         comment: cardText, aroma_notes: aromaNotes, brew_method: brewMethod,
         steep_seconds: steepSec ? parseInt(steepSec) : null,
         tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
