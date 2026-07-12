@@ -322,14 +322,20 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         </div>
 
         {/* お茶の名前（必須） */}
-        <label className={styles.label}>☕ お茶の名前 <span className={styles.req}>*</span></label>
-        <input className={styles.input} value={teaName} onChange={e => setTeaName(e.target.value)}
+        <label className={styles.label}>☕ お茶の名前 <span className={styles.req}>*</span>
+          <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--text-hint)', marginLeft: 6 }}>{teaName.length}/30</span>
+        </label>
+        <input className={styles.input} value={teaName} maxLength={30}
+          onChange={e => setTeaName(e.target.value.slice(0, 30))}
           placeholder="例: ダージリン ファーストフラッシュ"/>
 
         {/* ブランド名 */}
-        <label className={styles.label}>🏷 ブランド名</label>
-        <input className={styles.input} value={brandName} onChange={e => setBrandName(e.target.value)}
-          placeholder="例: Harney & Sons、ルピシア、Fortnum & Mason"
+        <label className={styles.label}>🏷 ブランド名
+          <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--text-hint)', marginLeft: 6 }}>{brandName.length}/30</span>
+        </label>
+        <input className={styles.input} value={brandName} maxLength={30}
+          onChange={e => setBrandName(e.target.value.slice(0, 30))}
+          placeholder="例: Harney & Sons、ルピシア"
           list="brand-suggestions"/>
         <datalist id="brand-suggestions">
           {pastBrands.map(b => <option key={b} value={b}/>)}
