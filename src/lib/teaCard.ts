@@ -173,7 +173,8 @@ function drawRadar(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius
   ctx.strokeStyle = GOLD_DEEP; ctx.lineWidth = 2.5; ctx.stroke()
 }
 
-function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number, maxLines: number): number {
+// 折り返し行を計算する（描画はしない）。収まりきらない場合は最終行を「…」化
+function computeLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, maxLines: number): string[] {
   const chars = text.split('')
   const lines: string[] = []
   let line = ''
@@ -182,10 +183,9 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   for (let i = 0; i < chars.length; i++) {
     const test = line + chars[i]
     if (ctx.measureText(test).width > maxWidth && line) {
-      // 現在の行が埋まった。これ以上行を増やせないなら、残りは入りきらない
       if (lines.length + 1 >= maxLines) {
         lines.push(line)
-        truncated = true      // まだ文字が残っている＝切り捨てが発生
+        truncated = true
         line = ''
         break
       }
@@ -197,14 +197,17 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   }
   if (line) lines.push(line)
 
-  // 実際に収まりきらなかった場合のみ末尾を「…」にする
   if (truncated && lines.length) {
     const last = lines.length - 1
     let s = lines[last]
     while (s && ctx.measureText(s + '…').width > maxWidth) s = s.slice(0, -1)
     lines[last] = s + '…'
   }
+  return lines
+}
 
+function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number, maxLines: number): number {
+  const lines = computeLines(ctx, text, maxWidth, maxLines)
   lines.forEach((l, i) => ctx.fillText(l, x, y + i * lineHeight))
   return lines.length
 }
@@ -306,14 +309,27 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }
 
   if (data.comment) {
-    ctx.font = `400 22px ${MINCHO}`
+    // レーダーチャート上端より手前までが本文エリア。
+    // コメントは最大300字。長さに応じて文字サイズを段階的に下げ、
+    // 300字でも省略されずに収まるサイズを自動選択する。
+    const radarTopY = H - 245 - 105 - 36   // レーダー中心 - 半径 - ラベル余白
+    const available = radarTopY - 14 - ty
+    const maxW = W - 48 - rightX
+    const candidates: Array<[number, number]> = [[22, 36], [20, 32], [18, 28], [16, 25], [15, 23], [14, 21]]
+    let chosen = candidates[candidates.length - 1]
+    for (const [fs, lh] of candidates) {
+      ctx.font = `400 ${fs}px ${MINCHO}`
+      const lines = computeLines(ctx, data.comment, maxW, 99)
+      if (lines.length * lh <= available) { chosen = [fs, lh]; break }
+    }
+    const [fs, lh] = chosen
+    ctx.font = `400 ${fs}px ${MINCHO}`
     ctx.fillStyle = INK
-    // 見出しが2行のときは本文を1行減らし、レーダーの上ラベルと重ならないようにする
-    wrapText(ctx, data.comment, rightX, ty, W - 48 - rightX, 36, headLines > 1 ? 4 : 5)
+    wrapText(ctx, data.comment, rightX, ty, maxW, lh, Math.max(1, Math.floor(available / lh)))
   }
 
   // ── 右下: レーダーチャート ──
-  drawRadar(ctx, W - 240, H - 280, 130,
+  drawRadar(ctx, W - 235, H - 245, 105,
     [data.score_aroma, data.score_sweetness, data.score_richness, data.score_astringency],
     ['香り', '甘み', 'コク', '渋み'])
 
