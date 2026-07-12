@@ -15,6 +15,7 @@
 export interface TeaCardData {
   tea_name: string
   brand_name?: string | null
+  tea_garden?: string | null
   shop_name?: string | null
   user_name?: string | null
   drank_at?: string | null
@@ -284,10 +285,10 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.fillText('My-Teas', 36 + 75, 34 + 20)
   ctx.letterSpacing = '0px' as any
 
-  // ── 円の下: 筆記体風ブランド → 大きな紅茶名 ──
+  // ── 円の下: 筆記体風ブランド → 大きな紅茶名 → 茶園 ──
   // どちらも最大30文字。1行に必ず収まるようフォントサイズを比例縮小する
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'
-  let ny = cupCy + cupR - 40
+  let ny = cupCy + cupR + 26   // カップ下端と被らないよう余白を確保
   if (data.brand_name) {
     const bf = fitFontSize(ctx, data.brand_name, 30, 520, s => `italic 700 ${s}px ${SERIF}`)
     ctx.font = `italic 700 ${bf}px ${SERIF}`
@@ -301,6 +302,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.fillStyle = '#3B2F20'
   ctx.fillText(teaNameText, 44, ny)
   ny += 24
+  if (data.tea_garden) {
+    ny += 28
+    const gf = fitFontSize(ctx, data.tea_garden, 19, 500, s => `400 ${s}px ${MINCHO}`, 13)
+    ctx.font = `400 ${gf}px ${MINCHO}`
+    ctx.fillStyle = INK_SOFT
+    ctx.fillText(data.tea_garden, 44, ny)
+    ny += 6
+  }
 
   // ── 右上: 紅茶名 → 評価者+飲んだ日 → 飲んだ場所 → メモ ──
   const rightX = 600

@@ -91,6 +91,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [isPublic,  setIsPublic]  = useState(initial?.is_public ?? false)
   const [drankAt,   setDrankAt]   = useState(initial?.drank_at ?? new Date().toISOString().slice(0,10))
   const [brewMethod,setBrewMethod]= useState(initial?.brew_method ?? '')
+  const [teaGarden, setTeaGarden] = useState(initial?.tea_garden ?? '')
   const [steepSec,  setSteepSec]  = useState(initial?.steep_seconds ? String(initial.steep_seconds) : '')
   const [teaGrams,  setTeaGrams]  = useState(initial?.tea_grams_per_100ml ? String(initial.tea_grams_per_100ml) : '')
   const [accs,      setAccs]      = useState<string[]>(initial?.accompaniments ?? [])
@@ -188,7 +189,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       const blob = await generateTeaCard({
         tea_name: teaName, brand_name: brandName, shop_name: shopName,
         user_name: profile?.name ?? null, drank_at: drankAt, color_hex: colorHex, color_name: colorName,
-        comment: cardText, aroma_notes: aromaNotes, brew_method: brewMethod,
+        comment: cardText, aroma_notes: aromaNotes, brew_method: brewMethod, tea_garden: teaGarden || null,
         steep_seconds: steepSec ? parseInt(steepSec) : null,
         tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
         accompaniments: accs,
@@ -301,6 +302,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       aroma_notes: aromaNotes.length ? aromaNotes : null,
       ...scores, comment: comment || null, is_public: effectiveIsPublic, drank_at: drankAt,
       brew_method: brewMethod || null,
+      tea_garden: teaGarden || null,
       steep_seconds: steepSec ? parseInt(steepSec) : null,
       tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
       accompaniments: accs.length ? accs : null,
@@ -545,6 +547,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         </button>
         {showDetail && (
           <div className={styles.detail}>
+            <p className={styles.label}>茶園</p>
+            <input className={styles.input} value={teaGarden} maxLength={30}
+              onChange={e => setTeaGarden(e.target.value.slice(0, 30))} placeholder="例: ニンバン茶園"/>
+
             <p className={styles.label}>抽出方法</p>
             <div className={styles.chips}>
               {BREW_METHODS.map(m => (
@@ -615,7 +621,7 @@ export default function ReviewsPage() {
     setUserId(user.id)
     const [{ data }, { data: profile }] = await Promise.all([
       supabase.from('reviews')
-        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_sweetness,comment,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou')
+        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_sweetness,comment,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden')
         .eq('user_id', user.id).order('drank_at', { ascending: false }),
       supabase.from('profiles').select('is_subscribed,is_admin,is_creator').eq('id', user.id).single(),
     ])
