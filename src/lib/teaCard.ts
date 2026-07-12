@@ -17,6 +17,7 @@ export interface TeaCardData {
   brand_name?: string | null
   shop_name?: string | null
   user_name?: string | null
+  drank_at?: string | null
   color_hex?: string | null
   comment?: string | null
   aroma_notes?: string[] | null
@@ -275,12 +276,12 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.fillText(teaNameText, 44, ny)
   ny += 24
 
-  // ── 右上: 見出し（紅茶名+ブランド） → By ユーザ名・店 → メモ ──
+  // ── 右上: 紅茶名 → 評価者+飲んだ日 → 飲んだ場所 → メモ ──
   const rightX = 600
   const rightW = W - 48 - rightX
   let ty = 76
-  const heading = [data.tea_name, data.brand_name].filter(Boolean).join(' ')
-  // 見出しは2行以内に必ず収まるサイズを選ぶ（30px→16pxまで段階縮小）
+  // 見出しは紅茶名のみ（ブランドは左側に表示済みのため重複させない）
+  const heading = data.tea_name || '（お茶の名前）'
   let headFont = 30
   for (const fs of [30, 28, 26, 24, 22, 20, 18, 16]) {
     ctx.font = `700 ${fs}px ${MINCHO}`
@@ -293,18 +294,30 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const headLines = wrapText(ctx, heading, rightX, ty, rightW, headLh, 2)
   ty += (headLines - 1) * headLh + 34
 
-  const byLine = [
-    data.user_name ? `By ${data.user_name}` : '',
-    data.shop_name ? `at ${data.shop_name}` : '',
-  ].filter(Boolean).join('　')
-  if (byLine) {
-    // By行も1行に収まるよう縮小（14px未満になる場合は末尾を…で省略）
-    const byf = fitFontSize(ctx, byLine, 21, rightW, s => `italic 400 ${s}px ${SERIF}`, 14)
-    ctx.font = `italic 400 ${byf}px ${SERIF}`
+  // 評価者（Tea taster ユーザ名）と、その右に飲んだ日 yyyy/mm/dd
+  const drankDate = data.drank_at ? data.drank_at.slice(0, 10).replace(/-/g, '/') : ''
+  const tasterLine = [
+    data.user_name ? `Tea taster ${data.user_name}` : '',
+    drankDate,
+  ].filter(Boolean).join('　　')
+  if (tasterLine) {
+    const tf = fitFontSize(ctx, tasterLine, 21, rightW, s => `italic 400 ${s}px ${SERIF}`, 14)
+    ctx.font = `italic 400 ${tf}px ${SERIF}`
     ctx.fillStyle = INK_SOFT
-    wrapText(ctx, byLine, rightX, ty, rightW, byf + 4, 1)
-    ty += 36
+    wrapText(ctx, tasterLine, rightX, ty, rightW, tf + 4, 1)
+    ty += 32
   }
+
+  // 飲んだ場所（未設定なら非表示）
+  if (data.shop_name) {
+    const shopLine = `at ${data.shop_name}`
+    const sf = fitFontSize(ctx, shopLine, 21, rightW, s => `italic 400 ${s}px ${SERIF}`, 14)
+    ctx.font = `italic 400 ${sf}px ${SERIF}`
+    ctx.fillStyle = INK_SOFT
+    wrapText(ctx, shopLine, rightX, ty, rightW, sf + 4, 1)
+    ty += 32
+  }
+  ty += 4
 
   if (data.comment) {
     // レーダーチャート上端より手前までが本文エリア。

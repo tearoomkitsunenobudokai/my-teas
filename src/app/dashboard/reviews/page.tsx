@@ -173,7 +173,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
       const blob = await generateTeaCard({
         tea_name: teaName, brand_name: brandName, shop_name: shopName,
-        user_name: profile?.name ?? null, color_hex: colorHex,
+        user_name: profile?.name ?? null, drank_at: drankAt, color_hex: colorHex,
         comment: cardText, aroma_notes: aromaNotes, brew_method: brewMethod,
         steep_seconds: steepSec ? parseInt(steepSec) : null,
         tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
