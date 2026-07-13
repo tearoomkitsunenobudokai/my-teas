@@ -1,76 +1,135 @@
-.wrap { max-width: 760px; margin: 0 auto; padding: 1.5rem; }
+.wrap { max-width: 780px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
 
-.greeting { font-size: 14px; color: var(--text-muted); margin-bottom: 1rem; }
-
+/* ─── ヒーロー ─── */
 .hero {
-  background: linear-gradient(135deg, var(--green-light), #fff);
+  text-align: center;
+  padding: 2.5rem 1.5rem 2.75rem;
+  margin-bottom: 2.5rem;
+  background: linear-gradient(160deg, #F3FAF7 0%, #FFFFFF 70%);
   border: 0.5px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 2rem 1.5rem;
-  text-align: center;
-  margin-bottom: 1.5rem;
 }
-.heroLead { font-size: 15px; color: var(--text-muted); margin-bottom: 14px; }
-.heroBtnRow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.heroBtn {
+.heroEyebrow {
   display: inline-block;
-  background: var(--green); color: #fff;
-  font-size: 17px; font-weight: 700;
-  padding: 14px 36px; border-radius: 999px;
-  box-shadow: 0 4px 14px rgba(29,158,117,0.3);
-  transition: transform 0.1s;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+  color: var(--green); margin-bottom: 10px;
 }
-.heroBtn:hover { transform: translateY(-1px); }
-.heroBtnSecondary {
-  display: inline-block;
-  background: #fff; color: var(--green-dark);
-  border: 1.5px solid var(--green);
-  font-size: 17px; font-weight: 700;
-  padding: 14px 36px; border-radius: 999px;
-  transition: transform 0.1s;
+.heroTitle {
+  font-size: 24px; font-weight: 700; color: var(--text);
+  margin-bottom: 6px; line-height: 1.4;
 }
-.heroBtnSecondary:hover { transform: translateY(-1px); background: var(--green-light); }
+.heroLead { font-size: 14px; color: var(--text-muted); margin-bottom: 22px; }
 
-.section { margin-bottom: 1.75rem; }
-.sectionTitle { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+.heroBtnRow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.btnPrimary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--green); color: #fff;
+  font-size: 15px; font-weight: 700;
+  padding: 13px 30px; border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(29,158,117,0.25);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.btnPrimary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(29,158,117,0.32); }
+.btnGhost {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fff; color: var(--green-dark);
+  border: 1px solid var(--green);
+  font-size: 15px; font-weight: 700;
+  padding: 12px 28px; border-radius: 999px;
+  transition: background 0.12s, transform 0.12s;
+}
+.btnGhost:hover { background: var(--green-light); transform: translateY(-1px); }
+
+/* ─── セクション共通 ─── */
+.section { margin-bottom: 2.5rem; }
+.sectionHead { display: flex; align-items: center; gap: 14px; margin-bottom: 1rem; }
+.sectionTitle {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--text); white-space: nowrap;
+}
+.rule { flex: 1; height: 1px; background: var(--border); }
 .hint { font-size: 13px; color: var(--text-hint); }
 
-.announceList { display: flex; flex-direction: column; gap: 10px; }
+/* ─── お知らせ ─── */
+.announceList { display: flex; flex-direction: column; }
 .announceItem {
-  background: var(--bg-card); border: 0.5px solid var(--border);
-  border-radius: var(--radius); padding: 12px 14px;
+  display: flex; gap: 20px;
+  padding: 16px 4px;
+  border-bottom: 0.5px solid var(--border);
 }
-.announceHead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.announceTitle { font-size: 14px; font-weight: 700; }
-.announceDate { font-size: 11px; color: var(--text-hint); white-space: nowrap; }
-.announceBody { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.6; white-space: pre-wrap; }
+.announceItem:last-child { border-bottom: none; }
+.announceDate {
+  flex-shrink: 0; width: 88px;
+  font-size: 12px; color: var(--text-hint);
+  padding-top: 2px; letter-spacing: 0.02em;
+}
+.announceMain { flex: 1; min-width: 0; }
+.announceTitle { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.announceBody {
+  font-size: 13px; color: var(--text-muted);
+  line-height: 1.75; white-space: pre-wrap;
+}
 
-.adGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.adCard {
+/* ─── My-Teasパートナー ─── */
+.partnerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+.partnerCard {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+}
+.partnerCard:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+.partnerBanner {
   display: flex; align-items: center; justify-content: center;
-  background: var(--bg-card); border: 0.5px dashed var(--border-strong);
-  border-radius: var(--radius); min-height: 90px; overflow: hidden;
-  color: var(--text-muted); font-size: 13px;
+  min-height: 120px; background: var(--bg-muted);
+  overflow: hidden;
 }
-.adImg { width: 100%; height: 100%; object-fit: cover; }
-.adLabel { padding: 8px 12px; }
+.partnerImg { width: 100%; height: 100%; object-fit: cover; display: block; }
+.partnerLabel {
+  padding: 20px; font-size: 14px; font-weight: 600;
+  color: var(--text-muted); text-align: center;
+}
+.partnerFoot { padding: 12px 14px 14px; }
+.partnerName {
+  display: block; font-size: 13px; font-weight: 600;
+  color: var(--text); margin-bottom: 8px;
+}
 
-.snsRow { display: flex; flex-wrap: wrap; gap: 10px; }
+/* SNSチップ（パートナーごと） */
+.snsRow { display: flex; flex-wrap: wrap; gap: 6px; }
 .snsChip {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--bg-card); border: 0.5px solid var(--border);
-  border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #fff;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 11px; font-weight: 600;
   color: var(--text);
+  transition: border-color 0.12s, color 0.12s;
 }
 .snsChip:hover { border-color: var(--green); color: var(--green-dark); }
-.snsChipDisabled {
-  opacity: 0.4; cursor: not-allowed; pointer-events: none;
+.snsIcon { font-size: 12px; }
+.snsChipOff {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: not-allowed;
 }
-.snsChipDisabled:hover { border-color: var(--border); color: var(--text); }
 
+/* ─── スマホ ─── */
 @media (max-width: 768px) {
-  .wrap { padding: 1rem; }
-  .hero { padding: 1.75rem 1.25rem; }
+  .wrap { padding: 1.25rem 1rem 2rem; }
+  .hero { padding: 2rem 1.25rem 2.25rem; margin-bottom: 2rem; }
+  .heroTitle { font-size: 20px; }
   .heroBtnRow { flex-direction: column; }
-  .heroBtn, .heroBtnSecondary { width: 100%; padding: 16px; font-size: 16px; }
+  .btnPrimary, .btnGhost { width: 100%; justify-content: center; padding: 15px; font-size: 15px; }
+
+  .announceItem { flex-direction: column; gap: 4px; }
+  .announceDate { width: auto; }
+
+  .partnerGrid { grid-template-columns: 1fr; gap: 16px; }
 }

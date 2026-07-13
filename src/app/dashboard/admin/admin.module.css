@@ -137,3 +137,10 @@
 .limitGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
 .limitCell { display: flex; flex-direction: column; gap: 4px; }
 .limitRoleLabel { font-size: 12px; color: var(--text-muted); }
+
+/* テキスト系の入力欄（お知らせ・URL等）は左揃えにする。
+   .settingInput は数値入力向けに中央揃えのため、併用して上書きする */
+.settingInputText {
+  text-align: left;
+  width: auto;
+}

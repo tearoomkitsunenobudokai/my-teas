@@ -42,14 +42,6 @@ export default function AdminPage() {
   const [linksSaved, setLinksSaved] = useState(false)
   const [uploadingAdId, setUploadingAdId] = useState<string | null>(null)
 
-  // SNS固定枠（X / Instagram / その他）
-  const [snsX, setSnsX] = useState('')
-  const [snsInstagram, setSnsInstagram] = useState('')
-  const [snsOther, setSnsOther] = useState('')
-  const [snsOtherLabel, setSnsOtherLabel] = useState('その他')
-  const [savingSns, setSavingSns] = useState(false)
-  const [snsSaved, setSnsSaved] = useState(false)
-
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth'); return }
@@ -124,16 +116,6 @@ export default function AdminPage() {
       .then(({ data }) => setAnnouncements(data ?? []))
     supabase.from('home_links').select('*').order('sort_order')
       .then(({ data }) => setHomeLinks(data ?? []))
-    supabase.from('app_settings').select('key,value')
-      .in('key', ['sns_x_url', 'sns_instagram_url', 'sns_other_url', 'sns_other_label'])
-      .then(({ data }) => {
-        const m: any = {}
-        for (const r of data ?? []) m[r.key] = r.value
-        setSnsX(m['sns_x_url'] ?? '')
-        setSnsInstagram(m['sns_instagram_url'] ?? '')
-        setSnsOther(m['sns_other_url'] ?? '')
-        setSnsOtherLabel(m['sns_other_label'] || 'その他')
-      })
     supabase.from('app_settings').select('key,value')
       .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points'])
       .then(({ data }) => {
@@ -230,7 +212,9 @@ export default function AdminPage() {
   function addAdRow() {
     setHomeLinks(prev => [...prev, {
       id: crypto.randomUUID(), kind: 'ad', label: '', url: '', image_url: null, icon: null,
-      start_at: null, end_at: null, sort_order: prev.length + 1, is_active: true, _new: true,
+      start_at: null, end_at: null,
+      sns_x_url: '', sns_instagram_url: '', sns_other_url: '', sns_other_label: '',
+      sort_order: prev.length + 1, is_active: true, _new: true,
     }])
   }
   function removeLinkRow(id: string, isNew: boolean) {
@@ -243,6 +227,10 @@ export default function AdminPage() {
       id: l.id, kind: l.kind, label: l.label, url: l.url,
       image_url: l.image_url || null, icon: l.icon || null,
       start_at: l.start_at || null, end_at: l.end_at || null,
+      sns_x_url: l.sns_x_url || null,
+      sns_instagram_url: l.sns_instagram_url || null,
+      sns_other_url: l.sns_other_url || null,
+      sns_other_label: l.sns_other_label || null,
       sort_order: l.sort_order, is_active: l.is_active, updated_at: new Date().toISOString(),
     }))
     const [{ error }] = await Promise.all([
@@ -275,19 +263,6 @@ export default function AdminPage() {
     } finally {
       setUploadingAdId(null)
     }
-  }
-
-  async function saveSns() {
-    setSavingSns(true)
-    const { error } = await supabase.from('app_settings').upsert([
-      { key: 'sns_x_url', value: snsX.trim(), updated_at: new Date().toISOString() },
-      { key: 'sns_instagram_url', value: snsInstagram.trim(), updated_at: new Date().toISOString() },
-      { key: 'sns_other_url', value: snsOther.trim(), updated_at: new Date().toISOString() },
-      { key: 'sns_other_label', value: snsOtherLabel.trim() || 'その他', updated_at: new Date().toISOString() },
-    ])
-    setSavingSns(false)
-    if (error) { alert(error.message); return }
-    setSnsSaved(true); setTimeout(() => setSnsSaved(false), 2000)
   }
 
   async function saveCosts() {
@@ -777,7 +752,7 @@ export default function AdminPage() {
           {announcements.map((a, i) => (
             <div key={a.id} className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8, alignItems: 'flex-start' }}>
               <div className={styles.settingInfo} style={{ flex: '1 1 100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <input className={styles.settingInput} style={{ width: '100%' }} type="text"
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: '100%' }} type="text"
                   value={a.title} placeholder="タイトル"
                   onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, title: e.target.value } : x))}/>
                 <label style={{ fontSize: 11, color: 'var(--text-hint)' }}>
@@ -785,13 +760,13 @@ export default function AdminPage() {
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <span style={{ fontSize: 12 }}>開始</span>
-                  <input className={styles.settingInput} style={{ width: 190 }} type="datetime-local"
+                  <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 190 }} type="datetime-local"
                     value={a.published_at ? new Date(a.published_at).toISOString().slice(0,16) : ''}
                     onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i
                       ? { ...x, published_at: e.target.value ? new Date(e.target.value).toISOString() : new Date().toISOString() }
                       : x))}/>
                   <span style={{ fontSize: 12 }}>終了</span>
-                  <input className={styles.settingInput} style={{ width: 190 }} type="datetime-local"
+                  <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 190 }} type="datetime-local"
                     value={a.expires_at ? new Date(a.expires_at).toISOString().slice(0,16) : ''}
                     onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i
                       ? { ...x, expires_at: e.target.value ? new Date(e.target.value).toISOString() : null }
@@ -803,7 +778,7 @@ export default function AdminPage() {
                     </button>
                   )}
                 </div>
-                <textarea className={styles.settingInput} style={{ width: '100%', minHeight: 60 }}
+                <textarea className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: '100%', minHeight: 60 }}
                   value={a.body ?? ''} placeholder="本文（任意）"
                   onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, body: e.target.value } : x))}/>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -839,11 +814,11 @@ export default function AdminPage() {
           {homeLinks.filter(l => l.kind === 'ad').map((l) => (
             <div key={l.id} className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8 }}>
               <div className={styles.settingInfo} style={{ flex: '1 1 100%', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-                <input className={styles.settingInput} style={{ width: 160 }} type="text" value={l.label} placeholder="パートナー名"
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 160 }} type="text" value={l.label} placeholder="パートナー名"
                   onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, label: e.target.value } : x))}/>
-                <input className={styles.settingInput} style={{ width: 260 }} type="text" value={l.url} placeholder="リンク先URL"
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 260 }} type="text" value={l.url} placeholder="リンク先URL"
                   onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, url: e.target.value } : x))}/>
-                <input className={styles.settingInput} style={{ width: 260 }} type="text" value={l.image_url ?? ''} placeholder="バナー画像URL（任意・下のアップロードでも自動入力）"
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 260 }} type="text" value={l.image_url ?? ''} placeholder="バナー画像URL（任意・下のアップロードでも自動入力）"
                   onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, image_url: e.target.value } : x))}/>
                 <label className={styles.cancelBtn} style={{ cursor: 'pointer' }}>
                   {uploadingAdId === l.id ? 'アップロード中…' : '🖼 画像を選択'}
@@ -855,13 +830,31 @@ export default function AdminPage() {
 
                 <label style={{ fontSize: 11, color: 'var(--text-hint)', width: '100%' }}>掲載期間（未設定はそれぞれ無期限）</label>
                 <span style={{ fontSize: 12 }}>開始</span>
-                <input className={styles.settingInput} style={{ width: 190 }} type="datetime-local"
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 190 }} type="datetime-local"
                   value={l.start_at ? new Date(l.start_at).toISOString().slice(0,16) : ''}
                   onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, start_at: e.target.value ? new Date(e.target.value).toISOString() : null } : x))}/>
                 <span style={{ fontSize: 12 }}>終了</span>
-                <input className={styles.settingInput} style={{ width: 190 }} type="datetime-local"
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 190 }} type="datetime-local"
                   value={l.end_at ? new Date(l.end_at).toISOString().slice(0,16) : ''}
                   onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, end_at: e.target.value ? new Date(e.target.value).toISOString() : null } : x))}/>
+
+                <label style={{ fontSize: 11, color: 'var(--text-hint)', width: '100%' }}>
+                  SNSリンク（このパートナーのバナー下に表示。未入力のボタンはグレーアウトします）
+                </label>
+                <span style={{ fontSize: 12, width: 24 }}>𝕏</span>
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 250 }} type="text"
+                  value={l.sns_x_url ?? ''} placeholder="https://x.com/..."
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, sns_x_url: e.target.value } : x))}/>
+                <span style={{ fontSize: 12, width: 24 }}>📷</span>
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 250 }} type="text"
+                  value={l.sns_instagram_url ?? ''} placeholder="https://instagram.com/..."
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, sns_instagram_url: e.target.value } : x))}/>
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 90 }} type="text"
+                  value={l.sns_other_label ?? ''} placeholder="その他"
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, sns_other_label: e.target.value } : x))}/>
+                <input className={`${styles.settingInput} ${styles.settingInputText}`} style={{ width: 250 }} type="text"
+                  value={l.sns_other_url ?? ''} placeholder="https://..."
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, sns_other_url: e.target.value } : x))}/>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
                   <input type="checkbox" checked={l.is_active}
@@ -878,36 +871,6 @@ export default function AdminPage() {
               {savingLinks ? '保存中…' : 'パートナー情報を保存'}
             </button>
             {linksSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
-          </div>
-        </div>
-
-        <h2 className={styles.cardTitle} style={{ marginTop: 24 }}>🔗 SNSリンク</h2>
-        <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
-          ホーム画面のバナー下に、X・Instagram・その他の3つの小さいボタンとして常に表示されます。
-          URLを空にしておくと、その場ではクリックできない薄い表示になります。
-        </p>
-        <div className={styles.settingsCard}>
-          <div className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8 }}>
-            <span style={{ width: 90, fontSize: 13 }}>𝕏 X</span>
-            <input className={styles.settingInput} style={{ width: 320 }} type="text" value={snsX}
-              onChange={e => setSnsX(e.target.value)} placeholder="https://x.com/..."/>
-          </div>
-          <div className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8 }}>
-            <span style={{ width: 90, fontSize: 13 }}>📷 Instagram</span>
-            <input className={styles.settingInput} style={{ width: 320 }} type="text" value={snsInstagram}
-              onChange={e => setSnsInstagram(e.target.value)} placeholder="https://instagram.com/..."/>
-          </div>
-          <div className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8 }}>
-            <input className={styles.settingInput} style={{ width: 90 }} type="text" value={snsOtherLabel}
-              onChange={e => setSnsOtherLabel(e.target.value)} placeholder="その他"/>
-            <input className={styles.settingInput} style={{ width: 320 }} type="text" value={snsOther}
-              onChange={e => setSnsOther(e.target.value)} placeholder="https://..."/>
-          </div>
-          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12 }}>
-            <button className={styles.saveBtn} onClick={saveSns} disabled={savingSns}>
-              {savingSns ? '保存中…' : 'SNSリンクを保存'}
-            </button>
-            {snsSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
           </div>
         </div>
       </div>}
