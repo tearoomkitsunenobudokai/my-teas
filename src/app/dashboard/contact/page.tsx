@@ -124,7 +124,7 @@ export default function ContactPage() {
           <p className={styles.note}>
             {entryId
               ? 'フォームにはあなたのユーザーIDが自動で入力されます（変更しないでください）。回答時にどなたからのお問い合わせか確認するために使用します。'
-              : ''}
+              : '下記の「あなたのユーザーID」をコピーして、フォーム内に貼り付けてください。'}
           </p>
         </>
       ) : (
@@ -133,7 +133,7 @@ export default function ContactPage() {
         </div>
       )}
 
-      {userId && entryId && (
+      {userId && (
         <div className={styles.idBox}>
           <span className={styles.idLabel}>あなたのユーザーID</span>
           <code className={styles.idValue}>{userId}</code>
@@ -141,7 +141,9 @@ export default function ContactPage() {
             {copied ? 'コピーしました' : 'コピー'}
           </button>
           <p className={styles.idHint}>
-            ※フォームに自動で入りますが、うまく入らない場合はこのIDを本文に貼り付けてください。
+            {entryId
+              ? '※フォームに自動で入りますが、うまく入らない場合はこのIDを本文に貼り付けてください。'
+              : '※お問い合わせフォーム内で、どなたからのお問い合わせか分かるようこのIDを貼り付けてください。'}
           </p>
         </div>
       )}
