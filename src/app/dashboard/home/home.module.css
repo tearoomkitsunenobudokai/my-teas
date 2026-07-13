@@ -63,6 +63,10 @@
   color: var(--text);
 }
 .snsChip:hover { border-color: var(--green); color: var(--green-dark); }
+.snsChipDisabled {
+  opacity: 0.4; cursor: not-allowed; pointer-events: none;
+}
+.snsChipDisabled:hover { border-color: var(--border); color: var(--text); }
 
 @media (max-width: 768px) {
   .wrap { padding: 1rem; }

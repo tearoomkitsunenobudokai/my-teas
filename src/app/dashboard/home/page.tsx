@@ -15,26 +15,47 @@ export default function HomePage() {
   const [name, setName] = useState('')
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [ads, setAds] = useState<any[]>([])
-  const [sns, setSns] = useState<any[]>([])
+  const [snsX, setSnsX] = useState('')
+  const [snsInstagram, setSnsInstagram] = useState('')
+  const [snsOther, setSnsOther] = useState('')
+  const [snsOtherLabel, setSnsOtherLabel] = useState('その他')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      const [{ data: profile }, { data: ann }, { data: links }] = await Promise.all([
+      const now = new Date().toISOString()
+      const [{ data: profile }, { data: ann }, { data: links }, { data: settings }] = await Promise.all([
         user ? supabase.from('profiles').select('name').eq('id', user.id).single() : Promise.resolve({ data: null }),
         supabase.from('announcements').select('*').eq('is_active', true)
-          .lte('published_at', new Date().toISOString())
+          .lte('published_at', now)
+          .or(`expires_at.is.null,expires_at.gte.${now}`)
           .order('published_at', { ascending: false }),
-        supabase.from('home_links').select('*').eq('is_active', true).order('sort_order'),
+        supabase.from('home_links').select('*').eq('kind', 'ad').eq('is_active', true).order('sort_order'),
+        supabase.from('app_settings').select('key,value')
+          .in('key', ['sns_x_url', 'sns_instagram_url', 'sns_other_url', 'sns_other_label']),
       ])
       setName(profile?.name ?? '')
       setAnnouncements(ann ?? [])
-      setAds((links ?? []).filter(l => l.kind === 'ad'))
-      setSns((links ?? []).filter(l => l.kind === 'sns'))
+      // 掲載期間内（開始日時が過去 または 未設定、終了日時が未来 または 未設定）のものだけ表示
+      setAds((links ?? []).filter(l =>
+        (!l.start_at || l.start_at <= now) && (!l.end_at || l.end_at >= now)
+      ))
+      const m: Record<string, string> = {}
+      for (const r of settings ?? []) m[r.key] = r.value
+      setSnsX(m['sns_x_url'] ?? '')
+      setSnsInstagram(m['sns_instagram_url'] ?? '')
+      setSnsOther(m['sns_other_url'] ?? '')
+      setSnsOtherLabel(m['sns_other_label'] || 'その他')
       setLoading(false)
     })()
   }, [supabase])
+
+  const snsItems = [
+    { label: 'X', icon: '𝕏', url: snsX },
+    { label: 'Instagram', icon: '📷', url: snsInstagram },
+    { label: snsOtherLabel, icon: '🔗', url: snsOther },
+  ]
 
   return (
     <div className={styles.wrap}>
@@ -76,10 +97,10 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* 広告掲載欄 */}
+      {/* My-Teasパートナー（広告バナー） */}
       {ads.length > 0 && (
         <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>🎗 スポンサー</h2>
+          <h2 className={styles.sectionTitle}>🎗 My-Teasパートナー</h2>
           <div className={styles.adGrid}>
             {ads.map(ad => (
               <a key={ad.id} href={ad.url} target="_blank" rel="noopener noreferrer" className={styles.adCard}>
@@ -92,19 +113,20 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* SNSリンク */}
-      {sns.length > 0 && (
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>🔗 公式リンク</h2>
-          <div className={styles.snsRow}>
-            {sns.map(s => (
-              <a key={s.id} href={s.url} target="_blank" rel="noopener noreferrer" className={styles.snsChip}>
-                {s.icon && <span>{s.icon}</span>} {s.label}
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* SNSリンク（X / Instagram / その他 固定枠。未設定はクリック不可でグレー表示） */}
+      <div className={styles.snsRow}>
+        {snsItems.map(s => (
+          s.url ? (
+            <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" className={styles.snsChip}>
+              <span>{s.icon}</span> {s.label}
+            </a>
+          ) : (
+            <span key={s.label} className={`${styles.snsChip} ${styles.snsChipDisabled}`} aria-disabled="true">
+              <span>{s.icon}</span> {s.label}
+            </span>
+          )
+        ))}
+      </div>
     </div>
   )
 }

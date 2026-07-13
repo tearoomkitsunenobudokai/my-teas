@@ -41,3 +41,41 @@ export async function resizeImage(file: File): Promise<Blob> {
     )
   })
 }
+
+// バナー画像用: アスペクト比を保ったまま、幅の上限のみでリサイズ（トリミングしない）
+const BANNER_MAX_WIDTH = 1200
+
+export async function resizeImageKeepAspect(file: File): Promise<Blob> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(new Error('画像の読み込みに失敗しました'))
+    reader.readAsDataURL(file)
+  })
+
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('画像を開けませんでした'))
+    image.src = dataUrl
+  })
+
+  const scale = Math.min(1, BANNER_MAX_WIDTH / img.width)
+  const w = Math.round(img.width * scale)
+  const h = Math.round(img.height * scale)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('画像処理に失敗しました')
+  ctx.drawImage(img, 0, 0, w, h)
+
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      blob => blob ? resolve(blob) : reject(new Error('画像の変換に失敗しました')),
+      'image/jpeg',
+      QUALITY
+    )
+  })
+}
