@@ -56,6 +56,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           {review.shop_name
             ? <span className={styles.tileShop}>🏪 {review.shop_name}</span>
             : <span className={styles.tilePlaceholder}>🏪 店舗未設定</span>}
+          {review.tea_garden && <span className={styles.tileShop}>🌱 {review.tea_garden}</span>}
         </div>
       </div>
       {/* タイル本体：左=水色+香り / 右=チャート */}
@@ -111,7 +112,7 @@ export default function CommunityPage() {
   const load = useCallback(async () => {
     const { data } = await supabase
       .from('reviews')
-      .select('id, tea_name, brand_name, shop_name, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_sweetness, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, accompaniments')
+      .select('id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_sweetness, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, accompaniments')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
 
@@ -224,6 +225,7 @@ export default function CommunityPage() {
                 <p className={styles.modalTitle}>{selected.tea_name ?? '不明'}</p>
                 {selected.brand_name && <p className={styles.hint}>🏷 {selected.brand_name}</p>}
                 {selected.shop_name && <p className={styles.hint}>🏪 {selected.shop_name}</p>}
+                {selected.tea_garden && <p className={styles.hint}>🌱 {selected.tea_garden}</p>}
               </div>
               <button className={styles.closeBtn} onClick={() => setSelected(null)}>✕</button>
             </div>
