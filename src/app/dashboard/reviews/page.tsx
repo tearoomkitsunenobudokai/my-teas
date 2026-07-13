@@ -15,7 +15,7 @@ const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr
 
 const INIT_SCORES: ReviewScores = { score_aroma: 3, score_astringency: 3, score_richness: 3, score_sweetness: 3 }
 const BREW_METHODS = ['リーフ','ティーバッグ','手鍋','粉末','希釈液','不明']
-const ACCOMPANIMENTS = ['なし（ストレート）','蜂蜜','ミルク','砂糖','アイス（グラス）']
+const ACCOMPANIMENTS = ['なし（ストレート）','蜂蜜','ミルク','砂糖','レモン','アイス（グラス）']
 const MAX_AROMA = 3
 const MAX_COMMENT = 300
 
