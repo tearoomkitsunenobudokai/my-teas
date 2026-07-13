@@ -23,7 +23,9 @@ export default function HomePage() {
       const { data: { user } } = await supabase.auth.getUser()
       const [{ data: profile }, { data: ann }, { data: links }] = await Promise.all([
         user ? supabase.from('profiles').select('name').eq('id', user.id).single() : Promise.resolve({ data: null }),
-        supabase.from('announcements').select('*').eq('is_active', true).order('sort_order').order('created_at', { ascending: false }),
+        supabase.from('announcements').select('*').eq('is_active', true)
+          .lte('published_at', new Date().toISOString())
+          .order('published_at', { ascending: false }),
         supabase.from('home_links').select('*').eq('is_active', true).order('sort_order'),
       ])
       setName(profile?.name ?? '')
@@ -42,9 +44,14 @@ export default function HomePage() {
       {/* メインCTA */}
       <section className={styles.hero}>
         <p className={styles.heroLead}>今日飲んだ紅茶を記録しませんか？</p>
-        <Link href="/dashboard/reviews?new=1" className={styles.heroBtn}>
-          🍵 お茶を評価する
-        </Link>
+        <div className={styles.heroBtnRow}>
+          <Link href="/dashboard/reviews?new=1" className={styles.heroBtn}>
+            🍵 お茶を評価する
+          </Link>
+          <Link href="/dashboard/certified-shops" className={styles.heroBtnSecondary}>
+            🏪 紅茶の美味しいお店を探す
+          </Link>
+        </div>
       </section>
 
       {/* お知らせ */}
@@ -60,7 +67,7 @@ export default function HomePage() {
               <div key={a.id} className={styles.announceItem}>
                 <div className={styles.announceHead}>
                   <span className={styles.announceTitle}>{a.title}</span>
-                  <span className={styles.announceDate}>{fmtDate(a.created_at)}</span>
+                  <span className={styles.announceDate}>{fmtDate(a.published_at)}</span>
                 </div>
                 {a.body && <p className={styles.announceBody}>{a.body}</p>}
               </div>

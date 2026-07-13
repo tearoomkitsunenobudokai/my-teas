@@ -179,7 +179,8 @@ export default function AdminPage() {
   // ── お知らせ ──
   function addAnnRow() {
     setAnnouncements(prev => [...prev, {
-      id: crypto.randomUUID(), title: '', body: '', sort_order: prev.length + 1, is_active: true, _new: true,
+      id: crypto.randomUUID(), title: '', body: '', sort_order: prev.length + 1, is_active: true,
+      published_at: new Date().toISOString(), _new: true,
     }])
   }
   function removeAnnRow(id: string, isNew: boolean) {
@@ -190,7 +191,7 @@ export default function AdminPage() {
     setSavingAnn(true)
     const rows = announcements.map(a => ({
       id: a.id, title: a.title, body: a.body || null, sort_order: a.sort_order,
-      is_active: a.is_active, updated_at: new Date().toISOString(),
+      is_active: a.is_active, published_at: a.published_at, updated_at: new Date().toISOString(),
     }))
     const [{ error }] = await Promise.all([
       supabase.from('announcements').upsert(rows),
@@ -724,6 +725,14 @@ export default function AdminPage() {
                 <input className={styles.settingInput} style={{ width: '100%' }} type="text"
                   value={a.title} placeholder="タイトル"
                   onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, title: e.target.value } : x))}/>
+                <label style={{ fontSize: 11, color: 'var(--text-hint)' }}>
+                  掲載日時（未来の日時にすると、その日時まで非公開の予約投稿になります）
+                </label>
+                <input className={styles.settingInput} style={{ width: 220 }} type="datetime-local"
+                  value={a.published_at ? new Date(a.published_at).toISOString().slice(0,16) : ''}
+                  onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i
+                    ? { ...x, published_at: e.target.value ? new Date(e.target.value).toISOString() : new Date().toISOString() }
+                    : x))}/>
                 <textarea className={styles.settingInput} style={{ width: '100%', minHeight: 60 }}
                   value={a.body ?? ''} placeholder="本文（任意）"
                   onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, body: e.target.value } : x))}/>
