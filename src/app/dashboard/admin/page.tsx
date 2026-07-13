@@ -200,7 +200,7 @@ export default function AdminPage() {
   function addAnnRow() {
     setAnnouncements(prev => [...prev, {
       id: crypto.randomUUID(), title: '', body: '', sort_order: prev.length + 1, is_active: true,
-      published_at: new Date().toISOString(), expires_at: null, _new: true,
+      published_at: new Date().toISOString(), _new: true,
     }])
   }
   function removeAnnRow(id: string, isNew: boolean) {
@@ -211,8 +211,7 @@ export default function AdminPage() {
     setSavingAnn(true)
     const rows = announcements.map(a => ({
       id: a.id, title: a.title, body: a.body || null, sort_order: a.sort_order,
-      is_active: a.is_active, published_at: a.published_at, expires_at: a.expires_at || null,
-      updated_at: new Date().toISOString(),
+      is_active: a.is_active, published_at: a.published_at, updated_at: new Date().toISOString(),
     }))
     const [{ error }] = await Promise.all([
       supabase.from('announcements').upsert(rows),
@@ -781,28 +780,13 @@ export default function AdminPage() {
                   value={a.title} placeholder="タイトル"
                   onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, title: e.target.value } : x))}/>
                 <label style={{ fontSize: 11, color: 'var(--text-hint)' }}>
-                  掲載期間（開始日時を未来にすると予約投稿。終了日時は未設定なら無期限）
+                  掲載日時（未来の日時にすると、その日時まで非公開の予約投稿になります）
                 </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 12 }}>開始</span>
-                  <input className={styles.settingInput} style={{ width: 190 }} type="datetime-local"
-                    value={a.published_at ? new Date(a.published_at).toISOString().slice(0,16) : ''}
-                    onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i
-                      ? { ...x, published_at: e.target.value ? new Date(e.target.value).toISOString() : new Date().toISOString() }
-                      : x))}/>
-                  <span style={{ fontSize: 12 }}>終了</span>
-                  <input className={styles.settingInput} style={{ width: 190 }} type="datetime-local"
-                    value={a.expires_at ? new Date(a.expires_at).toISOString().slice(0,16) : ''}
-                    onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i
-                      ? { ...x, expires_at: e.target.value ? new Date(e.target.value).toISOString() : null }
-                      : x))}/>
-                  {a.expires_at && (
-                    <button type="button" className={styles.cancelBtn}
-                      onClick={() => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, expires_at: null } : x))}>
-                      終了日をクリア
-                    </button>
-                  )}
-                </div>
+                <input className={styles.settingInput} style={{ width: 220 }} type="datetime-local"
+                  value={a.published_at ? new Date(a.published_at).toISOString().slice(0,16) : ''}
+                  onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i
+                    ? { ...x, published_at: e.target.value ? new Date(e.target.value).toISOString() : new Date().toISOString() }
+                    : x))}/>
                 <textarea className={styles.settingInput} style={{ width: '100%', minHeight: 60 }}
                   value={a.body ?? ''} placeholder="本文（任意）"
                   onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, body: e.target.value } : x))}/>
