@@ -16,7 +16,9 @@ export default function OmikujiCollectionPage() {
   const [selected, setSelected] = useState<OmikujiEntry | null>(null)
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user ?? null
     if (!user) { setLoading(false); return }
     try {
       const raw = window.localStorage.getItem(collectionKey(user.id))

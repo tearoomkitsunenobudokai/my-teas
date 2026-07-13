@@ -33,7 +33,7 @@ input, select, textarea { font-family: inherit; }
 /* ─── スマホ共通対応（〜768px） ───
    全ページ横断で、入力欄のiOS自動ズームを防止し、
    タップ領域を確保する最低限のベースライン */
-@media (max-width: 768px) {
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   /* 16px未満の入力欄はiOSがフォーカス時に画面を拡大してしまうため一律16pxに */
   input, select, textarea {
     font-size: 16px !important;

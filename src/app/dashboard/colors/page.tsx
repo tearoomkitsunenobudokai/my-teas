@@ -266,7 +266,9 @@ export default function ColorsPage() {
   const canEditColor = (c: any) => isAdmin || (!c.is_official && c.created_by === userId)
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user ?? null
     if (!user) return
     setUserId(user.id)
     const { data: profile } = await supabase.from('profiles').select('is_admin,is_creator').eq('id', user.id).single()

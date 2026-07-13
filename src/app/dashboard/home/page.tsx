@@ -44,7 +44,9 @@ export default function HomePage() {
 
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
+      const { data: { session } } = await supabase.auth.getSession()
+      const user = session?.user ?? null
       const now = new Date().toISOString()
       const [{ data: profile }, { data: ann }, { data: links }] = await Promise.all([
         user ? supabase.from('profiles').select('name').eq('id', user.id).single() : Promise.resolve({ data: null }),

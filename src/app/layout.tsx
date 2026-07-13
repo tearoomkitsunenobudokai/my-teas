@@ -30,8 +30,19 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Supabaseへの接続（DNS解決・TLS確立）をページ読み込みと並行して先回りする。
+  // 各ページ最初のAPI呼び出しが100〜300ms程度速くなる。
+  const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
   return (
     <html lang="ja">
+      <head>
+        {supabaseOrigin && (
+          <>
+            <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
+            <link rel="dns-prefetch" href={supabaseOrigin} />
+          </>
+        )}
+      </head>
       <body>{children}</body>
     </html>
   )

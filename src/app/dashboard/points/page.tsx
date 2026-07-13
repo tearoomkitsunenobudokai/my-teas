@@ -58,7 +58,9 @@ export default function PointsPage() {
   const [comingSoon, setComingSoon] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user ?? null
     if (!user) { setLoading(false); return }
     const [{ data: profile }, { data: entries }, { data: pkgs }, { data: claims }, { data: costs }] = await Promise.all([
       supabase.from('profiles').select('is_admin,is_creator,points').eq('id', user.id).single(),

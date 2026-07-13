@@ -224,7 +224,7 @@
 .mapCloseBtn { display: none; }
 .mapScrim { display: none; }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   /* 左右2カラム → リストを縦フル幅に。地図は overlay として重ねる */
   .pageWrap { flex-direction: column; height: calc(100vh - 56px); margin: -1rem; }
   .leftPane { width: 100%; }

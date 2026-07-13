@@ -31,7 +31,9 @@ export default function DashboardPage() {
   const [avgScores, setAvgScores] = useState<any>(null)
 
   const load = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user ?? null
     if (!user) return
 
     const { data: reviews } = await supabase

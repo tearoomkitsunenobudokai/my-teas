@@ -131,7 +131,9 @@ export default function CommunityPage() {
     setReviews(reviewRows.map((r: any) => ({ ...r, profiles: profileMap[r.user_id] ?? null })))
 
     // ログインユーザーと、その「飲みたい」登録を取得
-    const { data: { user } } = await supabase.auth.getUser()
+    // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
+    const { data: { session } } = await supabase.auth.getSession()
+    const user = session?.user ?? null
     setUserId(user?.id ?? null)
     if (user) {
       const { data: myWants } = await supabase

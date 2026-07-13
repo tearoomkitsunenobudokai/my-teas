@@ -21,10 +21,11 @@ export default function ContactPage() {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      setUserId(data.user?.id ?? null)
-      if (!data.user) return
-      const { data: profile } = await supabase.from('profiles').select('is_creator').eq('id', data.user.id).single()
+    supabase.auth.getSession().then(async ({ data }) => {
+      const user = data.session?.user ?? null
+      setUserId(user?.id ?? null)
+      if (!user) return
+      const { data: profile } = await supabase.from('profiles').select('is_creator').eq('id', user.id).single()
       setIsCreator(profile?.is_creator ?? false)
     })
     supabase.from('app_settings').select('key,value').in('key', ['contact_form_base_url', 'contact_form_entry_id'])
