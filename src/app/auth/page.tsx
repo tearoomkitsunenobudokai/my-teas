@@ -35,7 +35,7 @@ export default function AuthPage() {
       email: form.email, password: form.password,
     })
     if (error) { setError('メールアドレスまたはパスワードが違います'); setLoading(false); return }
-    router.push('/dashboard')
+    router.push('/dashboard/home')
   }
 
   async function handleSignup() {

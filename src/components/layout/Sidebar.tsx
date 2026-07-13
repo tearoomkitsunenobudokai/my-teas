@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation'
 import styles from './Sidebar.module.css'
 
 const NAV = [
-  { href: '/dashboard', label: 'ダッシュボード', icon: '🏠' },
+  { href: '/dashboard/home', label: 'ホーム', icon: '🏠' },
+  { href: '/dashboard', label: 'ダッシュボード', icon: '📊' },
   { href: '/dashboard/reviews', label: '自分の評価', icon: '⭐' },
   { href: '/dashboard/community', label: 'コミュニティ', icon: '👥' },
   { href: '/dashboard/certified-shops', label: '認定店', icon: '🏅' },

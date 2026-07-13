@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import dynamic from 'next/dynamic'
 import { ReviewScores, SCORE_LABELS, SCORE_DESCRIPTIONS } from '@/types'
@@ -652,6 +653,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 // ─── メインページ ─────────────────────────────────
 export default function ReviewsPage() {
   const supabase = createClient()
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [reviews, setReviews] = useState<any[]>([])
   const [userId,  setUserId]  = useState('')
   const [loading, setLoading] = useState(true)
@@ -662,6 +665,16 @@ export default function ReviewsPage() {
   const [showModal,  setShowModal]  = useState(false)
   const [editTarget, setEditTarget] = useState<any>(null)
   const [canExport,  setCanExport]  = useState(false)
+
+  // ホーム画面の「お茶を評価する」ボタン（?new=1）から遷移した場合、
+  // 新規登録モーダルを自動的に開く
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setEditTarget(null)
+      setShowModal(true)
+      router.replace('/dashboard/reviews')
+    }
+  }, [searchParams, router])
   const [costNormal, setCostNormal] = useState(1)
   const [costOjou,   setCostOjou]   = useState(1)
   const [costCard,   setCostCard]   = useState(1)

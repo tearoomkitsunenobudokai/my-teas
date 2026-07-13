@@ -22,13 +22,23 @@ export default function AdminPage() {
   const router = useRouter()
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [isCreator, setIsCreator] = useState(false)
-  const [activeTab, setActiveTab] = useState<'aroma'|'settings'|'users'|'points'>('aroma')
+  const [activeTab, setActiveTab] = useState<'aroma'|'settings'|'users'|'points'|'home'>('aroma')
   const [presets, setPresets] = useState<any[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ group_name: '', itemsText: '' })
   const [showAdd, setShowAdd] = useState(false)
   const [addForm, setAddForm] = useState({ group_name: '', itemsText: '' })
   const [saving, setSaving] = useState(false)
+
+  // ホーム設定（お知らせ・広告/SNSリンク）
+  const [announcements, setAnnouncements] = useState<any[]>([])
+  const [deletedAnnIds, setDeletedAnnIds] = useState<string[]>([])
+  const [savingAnn, setSavingAnn] = useState(false)
+  const [annSaved, setAnnSaved] = useState(false)
+  const [homeLinks, setHomeLinks] = useState<any[]>([])
+  const [deletedLinkIds, setDeletedLinkIds] = useState<string[]>([])
+  const [savingLinks, setSavingLinks] = useState(false)
+  const [linksSaved, setLinksSaved] = useState(false)
 
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -100,6 +110,10 @@ export default function AdminPage() {
       .then(({ data }) => setCosts(data ?? []))
     supabase.from('point_packages').select('*').order('sort_order')
       .then(({ data }) => setPackages(data ?? []))
+    supabase.from('announcements').select('*').order('sort_order')
+      .then(({ data }) => setAnnouncements(data ?? []))
+    supabase.from('home_links').select('*').order('sort_order')
+      .then(({ data }) => setHomeLinks(data ?? []))
     supabase.from('app_settings').select('key,value')
       .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points'])
       .then(({ data }) => {
@@ -160,6 +174,64 @@ export default function AdminPage() {
     const { data } = await supabase.from('point_packages').select('*').order('sort_order')
     setPackages(data ?? [])
     setPackagesSaved(true); setTimeout(() => setPackagesSaved(false), 2000)
+  }
+
+  // ── お知らせ ──
+  function addAnnRow() {
+    setAnnouncements(prev => [...prev, {
+      id: crypto.randomUUID(), title: '', body: '', sort_order: prev.length + 1, is_active: true, _new: true,
+    }])
+  }
+  function removeAnnRow(id: string, isNew: boolean) {
+    setAnnouncements(prev => prev.filter(a => a.id !== id))
+    if (!isNew) setDeletedAnnIds(prev => [...prev, id])
+  }
+  async function saveAnnouncements() {
+    setSavingAnn(true)
+    const rows = announcements.map(a => ({
+      id: a.id, title: a.title, body: a.body || null, sort_order: a.sort_order,
+      is_active: a.is_active, updated_at: new Date().toISOString(),
+    }))
+    const [{ error }] = await Promise.all([
+      supabase.from('announcements').upsert(rows),
+      deletedAnnIds.length ? supabase.from('announcements').delete().in('id', deletedAnnIds) : Promise.resolve({ error: null }),
+    ])
+    setSavingAnn(false)
+    if (error) { alert(error.message); return }
+    setDeletedAnnIds([])
+    const { data } = await supabase.from('announcements').select('*').order('sort_order')
+    setAnnouncements(data ?? [])
+    setAnnSaved(true); setTimeout(() => setAnnSaved(false), 2000)
+  }
+
+  // ── 広告掲載欄・SNSリンク ──
+  function addLinkRow(kind: 'ad' | 'sns') {
+    setHomeLinks(prev => [...prev, {
+      id: crypto.randomUUID(), kind, label: '', url: '', image_url: null, icon: null,
+      sort_order: prev.length + 1, is_active: true, _new: true,
+    }])
+  }
+  function removeLinkRow(id: string, isNew: boolean) {
+    setHomeLinks(prev => prev.filter(l => l.id !== id))
+    if (!isNew) setDeletedLinkIds(prev => [...prev, id])
+  }
+  async function saveHomeLinks() {
+    setSavingLinks(true)
+    const rows = homeLinks.map(l => ({
+      id: l.id, kind: l.kind, label: l.label, url: l.url,
+      image_url: l.image_url || null, icon: l.icon || null,
+      sort_order: l.sort_order, is_active: l.is_active, updated_at: new Date().toISOString(),
+    }))
+    const [{ error }] = await Promise.all([
+      supabase.from('home_links').upsert(rows),
+      deletedLinkIds.length ? supabase.from('home_links').delete().in('id', deletedLinkIds) : Promise.resolve({ error: null }),
+    ])
+    setSavingLinks(false)
+    if (error) { alert(error.message); return }
+    setDeletedLinkIds([])
+    const { data } = await supabase.from('home_links').select('*').order('sort_order')
+    setHomeLinks(data ?? [])
+    setLinksSaved(true); setTimeout(() => setLinksSaved(false), 2000)
   }
 
   async function saveCosts() {
@@ -285,6 +357,10 @@ export default function AdminPage() {
         <button className={`${styles.tab} ${activeTab==='users' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('users')}>
           👥 ユーザー管理
+        </button>
+        <button className={`${styles.tab} ${activeTab==='home' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('home')}>
+          🏠 ホーム設定
         </button>
         {isCreator && (
           <button className={`${styles.tab} ${activeTab==='points' ? styles.tabActive : ''}`}
@@ -631,6 +707,100 @@ export default function AdminPage() {
               {savingPackages ? '保存中…' : 'プランを保存'}
             </button>
             {packagesSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
+          </div>
+        </div>
+      </div>}
+
+      {/* ─── ホーム設定 ─── */}
+      {activeTab === 'home' && <div className={styles.section}>
+        <h2 className={styles.cardTitle}>📣 お知らせ</h2>
+        <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
+          ホーム画面（ログイン後の最初の画面）に表示されるお知らせを管理します。
+        </p>
+        <div className={styles.settingsCard}>
+          {announcements.map((a, i) => (
+            <div key={a.id} className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8, alignItems: 'flex-start' }}>
+              <div className={styles.settingInfo} style={{ flex: '1 1 100%', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <input className={styles.settingInput} style={{ width: '100%' }} type="text"
+                  value={a.title} placeholder="タイトル"
+                  onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, title: e.target.value } : x))}/>
+                <textarea className={styles.settingInput} style={{ width: '100%', minHeight: 60 }}
+                  value={a.body ?? ''} placeholder="本文（任意）"
+                  onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, body: e.target.value } : x))}/>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                    <input type="checkbox" checked={a.is_active}
+                      onChange={e => setAnnouncements(prev => prev.map((x, j) => j === i ? { ...x, is_active: e.target.checked } : x))}/>
+                    公開する
+                  </label>
+                  <button className={styles.cancelBtn} onClick={() => removeAnnRow(a.id, !!a._new)}>削除</button>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12, flexWrap: 'wrap' }}>
+            <button className={styles.cancelBtn} onClick={addAnnRow}>＋ お知らせを追加</button>
+            <button className={styles.saveBtn} onClick={saveAnnouncements} disabled={savingAnn}>
+              {savingAnn ? '保存中…' : 'お知らせを保存'}
+            </button>
+            {annSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
+          </div>
+        </div>
+
+        <h2 className={styles.cardTitle} style={{ marginTop: 24 }}>🎗 広告掲載欄</h2>
+        <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
+          スポンサーがついた際、ホーム画面下部に表示するバナー・リンクです。画像URLを空にすると、ラベル文字のみのカードになります。
+        </p>
+        <div className={styles.settingsCard}>
+          {homeLinks.filter(l => l.kind === 'ad').map((l) => (
+            <div key={l.id} className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8 }}>
+              <div className={styles.settingInfo} style={{ flex: '1 1 100%', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <input className={styles.settingInput} style={{ width: 160 }} type="text" value={l.label} placeholder="スポンサー名"
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, label: e.target.value } : x))}/>
+                <input className={styles.settingInput} style={{ width: 260 }} type="text" value={l.url} placeholder="リンク先URL"
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, url: e.target.value } : x))}/>
+                <input className={styles.settingInput} style={{ width: 260 }} type="text" value={l.image_url ?? ''} placeholder="バナー画像URL（任意）"
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, image_url: e.target.value } : x))}/>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                  <input type="checkbox" checked={l.is_active}
+                    onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, is_active: e.target.checked } : x))}/>
+                  公開する
+                </label>
+                <button className={styles.cancelBtn} onClick={() => removeLinkRow(l.id, !!l._new)}>削除</button>
+              </div>
+            </div>
+          ))}
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12, flexWrap: 'wrap' }}>
+            <button className={styles.cancelBtn} onClick={() => addLinkRow('ad')}>＋ 広告枠を追加</button>
+          </div>
+        </div>
+
+        <h2 className={styles.cardTitle} style={{ marginTop: 24 }}>🔗 SNSリンク</h2>
+        <div className={styles.settingsCard}>
+          {homeLinks.filter(l => l.kind === 'sns').map((l) => (
+            <div key={l.id} className={styles.settingRow} style={{ flexWrap: 'wrap', rowGap: 8 }}>
+              <div className={styles.settingInfo} style={{ flex: '1 1 100%', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <input className={styles.settingInput} style={{ width: 60 }} type="text" value={l.icon ?? ''} placeholder="🔗"
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, icon: e.target.value } : x))}/>
+                <input className={styles.settingInput} style={{ width: 160 }} type="text" value={l.label} placeholder="表示名（例: 公式X）"
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, label: e.target.value } : x))}/>
+                <input className={styles.settingInput} style={{ width: 300 }} type="text" value={l.url} placeholder="リンク先URL"
+                  onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, url: e.target.value } : x))}/>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                  <input type="checkbox" checked={l.is_active}
+                    onChange={e => setHomeLinks(prev => prev.map(x => x.id === l.id ? { ...x, is_active: e.target.checked } : x))}/>
+                  公開する
+                </label>
+                <button className={styles.cancelBtn} onClick={() => removeLinkRow(l.id, !!l._new)}>削除</button>
+              </div>
+            </div>
+          ))}
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12, flexWrap: 'wrap' }}>
+            <button className={styles.cancelBtn} onClick={() => addLinkRow('sns')}>＋ SNSリンクを追加</button>
+            <button className={styles.saveBtn} onClick={saveHomeLinks} disabled={savingLinks}>
+              {savingLinks ? '保存中…' : '広告・SNSリンクを保存'}
+            </button>
+            {linksSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
           </div>
         </div>
       </div>}

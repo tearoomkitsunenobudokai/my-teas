@@ -28,9 +28,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/auth', request.url))
   }
 
-  // ログイン済みで /auth へのアクセスは /dashboard へリダイレクト
+  // ログイン済みで /auth へのアクセスは /dashboard/home へリダイレクト
   if (user && request.nextUrl.pathname === '/auth') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/dashboard/home', request.url))
   }
 
   return supabaseResponse
