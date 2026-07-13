@@ -27,11 +27,30 @@ function fmtRemaining(iso: string): string {
   return `あと${hours}時間`
 }
 
+// 履歴の表示テキストを組み立てる。
+//  ・消費（consumption）: description に機能キー（'summary'等）が入っているので、
+//    feature_costs のラベルに変換して「AI要約（通常）」のように表示する
+//  ・購入（purchase）: description に既にプラン名が入っている（例: 「お試しプラン（無料配布）」）ので
+//    そのまま使う
+//  ・その他: 種別名 + 補足があれば括弧で付記
+function formatLedgerEntry(e: any, featureLabels: Record<string, string>): string {
+  if (e.type === 'consumption') {
+    const label = e.description ? (featureLabels[e.description] ?? e.description) : null
+    return label ? `ポイント消費・${label}` : 'ポイント消費'
+  }
+  if (e.type === 'purchase') {
+    return e.description ? `ポイント購入・${e.description}` : 'ポイント購入'
+  }
+  const base = TYPE_LABEL[e.type] ?? e.type
+  return e.description ? `${base}・${e.description}` : base
+}
+
 export default function PointsPage() {
   const supabase = createClient()
   const [isAdmin, setIsAdmin] = useState(false)
   const [points, setPoints] = useState<number | null>(null)
   const [ledger, setLedger] = useState<any[]>([])
+  const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({})
   const [packages, setPackages] = useState<any[]>([])
   const [claimedKeys, setClaimedKeys] = useState<Set<string>>(new Set())
   const [claiming, setClaiming] = useState<string | null>(null)
@@ -41,15 +60,19 @@ export default function PointsPage() {
   const load = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setLoading(false); return }
-    const [{ data: profile }, { data: entries }, { data: pkgs }, { data: claims }] = await Promise.all([
+    const [{ data: profile }, { data: entries }, { data: pkgs }, { data: claims }, { data: costs }] = await Promise.all([
       supabase.from('profiles').select('is_admin,is_creator,points').eq('id', user.id).single(),
       supabase.from('points_ledger').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),
       supabase.from('point_packages').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('point_package_claims').select('package_id,period_key').eq('user_id', user.id),
+      supabase.from('feature_costs').select('feature,label'),
     ])
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     setPoints(profile?.points ?? 0)
     setLedger(entries ?? [])
+    const fm: Record<string, string> = {}
+    for (const c of costs ?? []) fm[c.feature] = c.label
+    setFeatureLabels(fm)
     // 期間限定オファーは期限切れのものを除外して表示する
     const now = Date.now()
     setPackages((pkgs ?? []).filter(p => !p.is_limited || !p.limited_until || new Date(p.limited_until).getTime() > now))
@@ -142,7 +165,7 @@ export default function PointsPage() {
                 {ledger.map(e => (
                   <div key={e.id} className={styles.ledgerRow}>
                     <div className={styles.ledgerLeft}>
-                      <span className={styles.ledgerType}>{TYPE_LABEL[e.type] ?? e.type}</span>
+                      <span className={styles.ledgerType}>{formatLedgerEntry(e, featureLabels)}</span>
                       <span className={styles.ledgerDate}>{fmtDate(e.created_at)}</span>
                     </div>
                     <span className={`${styles.ledgerAmount} ${e.amount >= 0 ? styles.ledgerPlus : styles.ledgerMinus}`}>
