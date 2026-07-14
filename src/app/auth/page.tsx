@@ -123,6 +123,13 @@ export default function AuthPage() {
             </button>
           </div>
         )}
+        <p style={{ fontSize: 11, color: 'var(--text-hint)', textAlign: 'center', marginTop: 20 }}>
+          ご登録・ご利用により
+          <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--green-dark)' }}>利用規約</a>
+          および
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--green-dark)' }}>プライバシーポリシー</a>
+          に同意したものとみなされます。
+        </p>
       </div>
     </div>
   )
