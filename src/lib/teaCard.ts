@@ -12,6 +12,8 @@
 // フォント: いろはマル（SIL OFL 1.1 / public/fonts/irohamaru に同梱）
 // ─────────────────────────────────────────────────────────
 
+import { brewIconPath, accompanimentIconPath } from './icons'
+
 export interface TeaCardData {
   tea_name: string
   brand_name?: string | null
@@ -300,6 +302,17 @@ function sectionTitle(ctx: CanvasRenderingContext2D, title: string, x: number, y
   ctx.stroke()
 }
 
+// 画像の読み込みを試みる。存在しない（404等）場合はnullを返す＝呼び出し側で
+// 従来の文字表示にフォールバックできる。DB登録不要でアイコンを差し込むための仕組み。
+function tryLoadImage(src: string): Promise<HTMLImageElement | null> {
+  return new Promise(resolve => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => resolve(null)
+    img.src = src
+  })
+}
+
 export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // フォント読み込みを待ってから描画（未ロードだと代替フォントで焼き付いてしまうため）
   await ensureFonts()
@@ -460,6 +473,25 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const used = wrapText(ctx, body, secX, sy, secW, 24, 2)
     sy += used * 24 + 12
   }
+  // アイコン画像があれば絵、無ければ従来の文字のみで表示（DB登録不要・画像を置くだけで自動切替）
+  const sectionWithIcons = async (title: string, iconPaths: (string | null)[], body: string) => {
+    sectionTitle(ctx, title, secX, sy)
+    sy += 27
+    const icons = (await Promise.all(iconPaths.filter((p): p is string => !!p).map(tryLoadImage)))
+      .filter((img): img is HTMLImageElement => !!img)
+    let bx = secX
+    for (const img of icons.slice(0, 6)) {
+      ctx.drawImage(img, bx, sy - 18, 22, 22)
+      bx += 26
+    }
+    if (icons.length) sy += 4
+    ctx.font = `400 17px ${MINCHO}`
+    ctx.fillStyle = INK
+    const bodyX = icons.length ? secX : secX
+    const bodyY = icons.length ? sy + 20 : sy
+    const used = wrapText(ctx, body, bodyX, icons.length ? bodyY : sy, secW, 24, 2)
+    sy += (icons.length ? 20 : 0) + used * 24 + 12
+  }
   if (data.aroma_notes && data.aroma_notes.length) {
     section('香り分析', data.aroma_notes.slice(0, 8).join('・'))
   }
@@ -490,10 +522,11 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   if (data.tea_grams_per_100ml) details.push(`${data.tea_grams_per_100ml}g/100ml`)
   if (data.steep_seconds) details.push(`${data.steep_seconds}秒`)
   if (details.length) {
-    section('淹れ方', details.join(' / '))
+    await sectionWithIcons('淹れ方', [data.brew_method ? brewIconPath(data.brew_method) : null], details.join(' / '))
   }
   if (data.accompaniments && data.accompaniments.length) {
-    section('添え物', data.accompaniments.slice(0, 5).join('・'))
+    const accList = data.accompaniments.slice(0, 5)
+    await sectionWithIcons('添え物', accList.map(accompanimentIconPath), accList.join('・'))
   }
 
   // ── 左下: フッター（上に細罫を敷く） ──

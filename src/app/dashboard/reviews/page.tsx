@@ -8,6 +8,7 @@ import { ReviewScores, SCORE_LABELS, SCORE_DESCRIPTIONS } from '@/types'
 import { isCommentClean } from '@/lib/moderation'
 import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
+import { brewIconPath, accompanimentIconPath } from '@/lib/icons'
 import TeaCup from '@/components/TeaCup'
 import styles from './reviews.module.css'
 
@@ -16,6 +17,22 @@ const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr
 const INIT_SCORES: ReviewScores = { score_aroma: 3, score_astringency: 3, score_richness: 3, score_sweetness: 3 }
 const BREW_METHODS = ['リーフ','ティーバッグ','手鍋','粉末','希釈液','不明']
 const ACCOMPANIMENTS = ['なし（ストレート）','蜂蜜','ミルク','砂糖','レモン','アイス（グラス）']
+
+// チップの中身。指定パスに画像があればアイコン表示、無ければ（404）文字表示にフォールバックする。
+// → 画像をpublicフォルダに置くだけで自動的に絵が使われ、コード修正は不要。
+function ChipContent({ iconPath, label }: { iconPath: string | null; label: string }) {
+  const [imgOk, setImgOk] = useState(!!iconPath)
+  if (iconPath && imgOk) {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <img src={iconPath} alt="" style={{ width: 20, height: 20, objectFit: 'contain' }}
+          onError={() => setImgOk(false)}/>
+        {label}
+      </span>
+    )
+  }
+  return <>{label}</>
+}
 const MAX_AROMA = 3
 const MAX_COMMENT = 300
 
@@ -584,7 +601,9 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             <div className={styles.chips}>
               {BREW_METHODS.map(m => (
                 <button key={m} className={`${styles.chip} ${brewMethod===m?styles.chipOn:''}`}
-                  onClick={() => setBrewMethod(brewMethod===m?'':m)}>{m}</button>
+                  onClick={() => setBrewMethod(brewMethod===m?'':m)}>
+                  <ChipContent iconPath={brewIconPath(m)} label={m}/>
+                </button>
               ))}
             </div>
             <div className={styles.detailRow}>
@@ -612,7 +631,9 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                     // 通常の添え物を選ぶ場合は「なし」を自動的に外す
                     const next = p.includes(a) ? p.filter(x=>x!==a) : [...p.filter(x=>x!==NONE), a]
                     return next
-                  })}>{a}</button>
+                  })}>
+                  <ChipContent iconPath={accompanimentIconPath(a)} label={a}/>
+                </button>
               ))}
             </div>
           </div>
