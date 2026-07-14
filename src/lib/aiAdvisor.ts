@@ -185,9 +185,109 @@ export type TeaRecommendation = {
   reason: string       // 提案理由
 }
 
+// ─── 診断アンケート（好みプロファイル） ───
+// 紅茶のフローチャート診断を参考に、APIへ渡す前にユーザーの好みを詳細化する。
+// 「こだわらない」= 未指定として扱う。
+export type TastePreferences = {
+  style: 'ストレート' | 'ミルクティー' | 'アイスティー' | ''   // 飲み方
+  mood: 'すっきり爽快' | 'リラックス・コク深め' | ''            // 今の気分
+  sweetAroma: '好き' | '苦手' | ''                              // 甘い香り
+  aromaLikes: string[]                                          // 好きな香りの系統（複数）
+  astringency: 'キリッとしっかり' | '控えめ・まろやか' | ''      // 渋みの好み
+  body: '濃厚' | '軽やか' | ''                                   // コク・味の濃さ
+  freeText: string                                               // その他の希望（任意）
+}
+
+export const AROMA_LIKE_OPTIONS = [
+  'はちみつ・甘い花',
+  'レモン・柑橘',
+  'りんご・フルーティー',
+  '若草・グリーン',
+  'ビスケット・香ばしい',
+  'スイートポテト・甘い根菜',
+  'ミント・ハーブ',
+  '燻製・スモーキー',
+]
+
+export function emptyPreferences(): TastePreferences {
+  return { style: '', mood: '', sweetAroma: '', aromaLikes: [], astringency: '', body: '', freeText: '' }
+}
+
+// 本番API接続時にそのまま使える形で、診断内容+過去の評価傾向を1つのプロンプト文に組み立てる。
+// モック実装の間も、この関数の出力が「APIへ渡す予定の内容」のプレビューとして機能する。
+export function buildRecommendationPrompt(reviews: ReviewLike[], prefs: TastePreferences): string {
+  const stats = analyzePreference(reviews)
+  const lines: string[] = []
+
+  lines.push('あなたは紅茶のソムリエです。以下のユーザーの好みと評価履歴をもとに、次に飲むべき紅茶を1つ提案し、その理由を説明してください。')
+  lines.push('')
+  lines.push('【今回の希望】')
+  if (prefs.style) lines.push(`・飲み方: ${prefs.style}`)
+  if (prefs.mood) lines.push(`・気分: ${prefs.mood}`)
+  if (prefs.sweetAroma) lines.push(`・甘い香り: ${prefs.sweetAroma}`)
+  if (prefs.aromaLikes.length) lines.push(`・好きな香りの系統: ${prefs.aromaLikes.join('、')}`)
+  if (prefs.astringency) lines.push(`・渋みの好み: ${prefs.astringency}`)
+  if (prefs.body) lines.push(`・コク、味の濃さ: ${prefs.body}`)
+  if (prefs.freeText.trim()) lines.push(`・その他の希望: ${prefs.freeText.trim()}`)
+  if (lines[lines.length - 1] === '【今回の希望】') lines.push('・特に指定なし')
+
+  lines.push('')
+  lines.push('【過去の評価傾向】')
+  if (reviews.length === 0) {
+    lines.push('・まだ評価データなし')
+  } else {
+    lines.push(`・評価件数: ${reviews.length}件`)
+    lines.push(`・平均スコア: 香り${stats.avg.aroma.toFixed(1)} / 渋み${stats.avg.astringency.toFixed(1)} / コク${stats.avg.richness.toFixed(1)} / 甘味${stats.avg.sweetness.toFixed(1)}（5段階）`)
+    if (stats.topAroma) lines.push(`・よく選ぶ香りノート: ${stats.topAroma}（${stats.topAromaCount}件）`)
+    if (stats.topTea) lines.push(`・よく飲む茶葉: ${stats.topTea}`)
+  }
+  return lines.join('\n')
+}
+
 // MOCK実装：好みの傾向から「次に飲むべき一杯」を提案する
-// （本番ではここを外部AI APIのレスポンスに置き換える想定）
-export function generateRecommendation(reviews: ReviewLike[]): TeaRecommendation {
+// （本番ではbuildRecommendationPromptの出力を外部AI APIに渡し、レスポンスに置き換える想定）
+export function generateRecommendation(reviews: ReviewLike[], prefs?: TastePreferences): TeaRecommendation {
+  const p = prefs ?? emptyPreferences()
+
+  // 診断回答があればフローチャートに沿って優先的に判定する（モック簡易ロジック）
+  if (p.style === 'ミルクティー') {
+    if (p.sweetAroma === '好き') {
+      return {
+        title: p.aromaLikes.includes('スイートポテト・甘い根菜')
+          ? 'アッサム（甘い芋のような香りのミルクティー向き茶葉）'
+          : 'ケニアCTCやアッサムなど、甘みとコクのミルクティー向き茶葉',
+        reason: 'ミルクティー派で甘い香りがお好きとのことなので、濃厚なコクと自然な甘みを持つ茶葉がよく合います。しっかり濃いめに淹れてミルクをたっぷり注ぐのがおすすめです。',
+      }
+    }
+    return {
+      title: p.aromaLikes.includes('ミント・ハーブ')
+        ? 'ウバ（メントール様の爽快な香りのミルクティー）'
+        : 'ウバやディンブラなど、キレのあるミルクティー向き茶葉',
+      reason: 'ミルクティー派で甘い香りは控えめがお好みとのこと。渋みとキレのある茶葉なら、ミルクと合わせても味がぼやけず、すっきりした後味が楽しめます。',
+    }
+  }
+  if (p.style === 'ストレート' || p.mood === 'すっきり爽快') {
+    if (p.aromaLikes.includes('レモン・柑橘')) {
+      return { title: 'ヌワラエリヤ（柑橘のような爽やかな高地産セイロン）', reason: 'ストレートで柑橘系の香りがお好みなら、「セイロンティーのシャンパン」と呼ばれる爽快な香りのヌワラエリヤがぴったりです。' }
+    }
+    if (p.aromaLikes.includes('燻製・スモーキー')) {
+      return { title: 'キーマン（スモーキーな香りの中国紅茶）', reason: '燻製系の香りがお好きなら、独特のスモーキーさとほのかな甘みを持つキーマンをストレートでどうぞ。' }
+    }
+    if (p.aromaLikes.includes('はちみつ・甘い花')) {
+      return { title: 'ダージリン セカンドフラッシュ', reason: 'はちみつや花のような香りがお好みなら、マスカテルフレーバーで名高いダージリンの夏摘みが最有力です。' }
+    }
+    if (p.aromaLikes.includes('若草・グリーン')) {
+      return { title: 'ニルギリまたはダージリン ファーストフラッシュ', reason: '若草のような瑞々しい香りがお好きなら、春摘みの爽やかなタイプがおすすめです。' }
+    }
+  }
+  if (p.mood === 'リラックス・コク深め' || p.body === '濃厚') {
+    if (p.astringency === '控えめ・まろやか') {
+      return { title: 'キャンディやルフナなど、渋み控えめでコクのあるセイロン', reason: 'コクがありつつ渋みは穏やかなタイプをお探しなら、低地産セイロンのまろやかな甘みがよく合います。' }
+    }
+    return { title: 'アッサムやウバなど、コクと深みのある茶葉', reason: 'リラックスしたい気分の時は、深いコクのある茶葉をゆっくり楽しむのがおすすめです。' }
+  }
+
+  // 診断未回答の場合は従来通り、過去の評価傾向から判定
   if (reviews.length === 0) {
     return {
       title: 'まずは気になる一杯から',

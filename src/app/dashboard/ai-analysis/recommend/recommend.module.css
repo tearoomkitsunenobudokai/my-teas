@@ -35,3 +35,50 @@
 .resultLabel { font-size: 11px; font-weight: 700; color: var(--green); }
 .resultTitle { font-size: 16px; font-weight: 700; }
 .resultReason { font-size: 13px; line-height: 1.7; color: var(--text-muted); }
+
+/* ─── 診断アンケート ─── */
+.quiz {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.quizLead { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+.quizGroup { margin-bottom: 14px; }
+.quizGroup:last-child { margin-bottom: 0; }
+.quizLabel { font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.quizChips { display: flex; flex-wrap: wrap; gap: 8px; }
+.quizChip {
+  background: var(--bg-muted);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+.quizChip:hover { border-color: var(--green); }
+.quizChipOn {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+  font-weight: 600;
+}
+.quizInput {
+  width: 100%;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg-card);
+  color: var(--text);
+  outline: none;
+}
+.quizInput:focus { border-color: var(--green); }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .quizChip { padding: 10px 16px; font-size: 14px; }
+  .quizInput { font-size: 16px; padding: 12px; }
+}

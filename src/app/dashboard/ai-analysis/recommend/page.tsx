@@ -3,7 +3,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { generateRecommendation, TeaRecommendation } from '@/lib/aiAdvisor'
+import {
+  generateRecommendation, TeaRecommendation,
+  TastePreferences, emptyPreferences, AROMA_LIKE_OPTIONS, buildRecommendationPrompt,
+} from '@/lib/aiAdvisor'
 import styles from '../ai-analysis.module.css'
 import recStyles from './recommend.module.css'
 
@@ -23,6 +26,7 @@ export default function RecommendPage() {
   const [loading, setLoading] = useState(true)
   const [thinking, setThinking] = useState(false)
   const [result, setResult] = useState<TeaRecommendation | null>(null)
+  const [prefs, setPrefs] = useState<TastePreferences>(emptyPreferences())
 
   const load = useCallback(async () => {
     // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
@@ -65,7 +69,10 @@ export default function RecommendPage() {
     }
 
     setTimeout(() => {
-      setResult(generateRecommendation(reviews))
+      // 本番API接続時は buildRecommendationPrompt の出力をそのままAPIへ渡す。
+      // モックの間はコンソールに内容を出力して確認できるようにしておく。
+      console.log('[AI API送信予定の内容]\n' + buildRecommendationPrompt(reviews, prefs))
+      setResult(generateRecommendation(reviews, prefs))
       setThinking(false)
     }, 800)
   }
@@ -83,6 +90,56 @@ export default function RecommendPage() {
         <p className={recStyles.hint}>読み込み中…</p>
       ) : (
         <>
+          {/* 診断アンケート: フローチャート式に好みを聞き、AIへ渡す情報を詳細化する */}
+          <div className={recStyles.quiz}>
+            <p className={recStyles.quizLead}>いくつかの質問に答えると、より好みに合った提案ができます（すべて任意）</p>
+
+            {([
+              { key: 'style', label: '☕ 飲み方は？', options: ['ストレート', 'ミルクティー', 'アイスティー'] },
+              { key: 'mood', label: '🍃 今の気分は？', options: ['すっきり爽快', 'リラックス・コク深め'] },
+              { key: 'sweetAroma', label: '🌸 甘い香りは？', options: ['好き', '苦手'] },
+              { key: 'astringency', label: '🍵 渋みの好みは？', options: ['キリッとしっかり', '控えめ・まろやか'] },
+              { key: 'body', label: '🫖 コク・味の濃さは？', options: ['濃厚', '軽やか'] },
+            ] as const).map(q => (
+              <div key={q.key} className={recStyles.quizGroup}>
+                <p className={recStyles.quizLabel}>{q.label}</p>
+                <div className={recStyles.quizChips}>
+                  {q.options.map(o => (
+                    <button key={o} type="button"
+                      className={`${recStyles.quizChip} ${(prefs as any)[q.key] === o ? recStyles.quizChipOn : ''}`}
+                      onClick={() => setPrefs(p => ({ ...p, [q.key]: (p as any)[q.key] === o ? '' : o }))}>
+                      {o}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className={recStyles.quizGroup}>
+              <p className={recStyles.quizLabel}>👃 好きな香りの系統は？（複数選択可）</p>
+              <div className={recStyles.quizChips}>
+                {AROMA_LIKE_OPTIONS.map(o => (
+                  <button key={o} type="button"
+                    className={`${recStyles.quizChip} ${prefs.aromaLikes.includes(o) ? recStyles.quizChipOn : ''}`}
+                    onClick={() => setPrefs(p => ({
+                      ...p,
+                      aromaLikes: p.aromaLikes.includes(o) ? p.aromaLikes.filter(x => x !== o) : [...p.aromaLikes, o],
+                    }))}>
+                    {o}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={recStyles.quizGroup}>
+              <p className={recStyles.quizLabel}>💬 その他の希望（任意）</p>
+              <input className={recStyles.quizInput} type="text" maxLength={100}
+                value={prefs.freeText}
+                onChange={e => setPrefs(p => ({ ...p, freeText: e.target.value.slice(0, 100) }))}
+                placeholder="例: 夜に飲むのでカフェイン控えめだと嬉しい"/>
+            </div>
+          </div>
+
           <button className={recStyles.runBtn} onClick={run} disabled={thinking}>
             {thinking ? '考え中…' : `☕ おすすめを提案してもらう（${isAdmin ? '消費なし' : `${RECOMMEND_COST}pt`}）`}
           </button>
