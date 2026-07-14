@@ -269,7 +269,8 @@ function drawRadar(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius
     ctx.lineTo(cx + radius * Math.cos(a), cy + radius * Math.sin(a))
     ctx.strokeStyle = 'rgba(168,135,63,0.30)'; ctx.lineWidth = 1; ctx.stroke()
     ctx.fillStyle = INK
-    ctx.fillText(labels[i], cx + (radius + 32) * Math.cos(a), cy + (radius + 32) * Math.sin(a))
+    const lx = cx + (radius + 22) * Math.cos(a), ly = cy + (radius + 22) * Math.sin(a)
+    ctx.fillText(labels[i], lx, ly)
   }
 
   ctx.beginPath()
@@ -372,15 +373,16 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // ── 右上: TASTING CARD → 紅茶名 → 評価者/飲んだ日 → 場所 → 罫 → メモ ──
   const rightX = 560
   const rightW = W - 64 - rightX
+  const indentX = rightX + 10   // Tea taster / at 行のインデント（半角スペース1個分程度）
   // アイライン（小さな英字見出し）
   ctx.font = `700 13px ${SERIF}`
   ctx.fillStyle = GOLD_DEEP
-  ctx.fillText('T A S T I N G   C A R D', rightX, 84)
+  ctx.fillText('T A S T I N G   C A R D', rightX, 78)
 
-  let ty = 118
+  let ty = 122
   const heading = data.tea_name || '（お茶の名前）'
-  let headFont = 30
-  for (const fs of [30, 28, 26, 24, 22, 20, 18, 16]) {
+  let headFont = 34
+  for (const fs of [34, 32, 30, 28, 26, 24, 22, 20, 18]) {
     ctx.font = `700 ${fs}px ${MINCHO}`
     if (computeLines(ctx, heading, rightW, 99).length <= 2) { headFont = fs; break }
     headFont = fs
@@ -397,18 +399,18 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     drankDate,
   ].filter(Boolean).join('　　')
   if (tasterLine) {
-    const tf = fitFontSize(ctx, tasterLine, 20, rightW, s => `italic 400 ${s}px ${SERIF}`, 14)
+    const tf = fitFontSize(ctx, tasterLine, 20, rightW - 10, s => `italic 400 ${s}px ${SERIF}`, 14)
     ctx.font = `italic 400 ${tf}px ${SERIF}`
     ctx.fillStyle = INK_SOFT
-    wrapText(ctx, tasterLine, rightX, ty, rightW, tf + 4, 1)
+    wrapText(ctx, tasterLine, indentX, ty, rightW - 10, tf + 4, 1)
     ty += 28
   }
   if (data.shop_name) {
     const shopLine = `at ${data.shop_name}`
-    const sf = fitFontSize(ctx, shopLine, 20, rightW, s => `italic 400 ${s}px ${SERIF}`, 14)
+    const sf = fitFontSize(ctx, shopLine, 20, rightW - 10, s => `italic 400 ${s}px ${SERIF}`, 14)
     ctx.font = `italic 400 ${sf}px ${SERIF}`
     ctx.fillStyle = INK_SOFT
-    wrapText(ctx, shopLine, rightX, ty, rightW, sf + 4, 1)
+    wrapText(ctx, shopLine, indentX, ty, rightW - 10, sf + 4, 1)
     ty += 28
   }
   // メモの前に細い罫線
@@ -419,12 +421,12 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // ── レーダー配置（先に決めて本文エリアの下限に使う） ──
   const radarCx = 745
-  const radarCy = H - 235
-  const radarR = 100
+  const radarCy = H - 245
+  const radarR = 110
 
   if (data.comment) {
     // コメントは最大300字。長さに応じて文字サイズを自動選択して必ず収める
-    const radarTopY = radarCy - radarR - 32
+    const radarTopY = radarCy - radarR - 22
     const available = radarTopY - 14 - ty
     const candidates: Array<[number, number]> = [[22, 36], [20, 32], [18, 28], [16, 25], [15, 23], [14, 21], [13, 19]]
     let chosen = candidates[candidates.length - 1]
@@ -447,9 +449,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // ── レーダーの右横: 香り分析 + 水色 + 淹れ方 + 添え物 ──
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
-  const secX = radarCx + radarR + 32 + 52
+  const secX = radarCx + radarR + 22 + 52
   const secW = W - 64 - secX
-  let sy = radarCy - radarR - 26
+  let sy = radarCy - radarR - 16
   const section = (title: string, body: string) => {
     sectionTitle(ctx, title, secX, sy)
     sy += 27
