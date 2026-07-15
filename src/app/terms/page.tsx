@@ -151,6 +151,9 @@ export default function TermsPage() {
       <section className={styles.section}>
         <h2>第14条（お問い合わせ）</h2>
         <p>
+          運営者：My-Teas運営者（HibinoMamu）
+        </p>
+        <p>
           本規約に関するお問い合わせは、アプリ内の「お問い合わせ」フォームよりご連絡ください。
         </p>
       </section>

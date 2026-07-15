@@ -121,6 +121,9 @@ export default function PrivacyPage() {
       <section className={styles.section}>
         <h2>11. お問い合わせ窓口</h2>
         <p>
+          運営者：My-Teas運営者（HibinoMamu）
+        </p>
+        <p>
           本ポリシーに関するお問い合わせは、アプリ内の「お問い合わせ」フォームよりご連絡ください。
         </p>
       </section>
