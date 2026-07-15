@@ -54,16 +54,16 @@ const WATERMARK_TEXT = '© My-Teas'
 
 // canvasの右下に、デザインの邪魔にならない薄さでウォーターマークを描く
 function drawWatermark(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  const fontSize = Math.max(10, Math.round(Math.min(w, h) * 0.045))
+  const fontSize = Math.max(8, Math.round(Math.min(w, h) * 0.02))
   ctx.font = `600 ${fontSize}px sans-serif`
   ctx.textAlign = 'right'
   ctx.textBaseline = 'bottom'
-  const pad = Math.round(fontSize * 0.6)
-  // 縁取り（暗い背景・明るい背景どちらでも視認できるように）
-  ctx.lineWidth = Math.max(1, fontSize * 0.12)
-  ctx.strokeStyle = 'rgba(0,0,0,0.25)'
+  const pad = Math.round(fontSize * 0.8)
+  // 縁取り（暗い背景・明るい背景どちらでも視認できるように、ごく薄く）
+  ctx.lineWidth = Math.max(0.5, fontSize * 0.1)
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)'
   ctx.strokeText(WATERMARK_TEXT, w - pad, h - pad)
-  ctx.fillStyle = 'rgba(255,255,255,0.55)'
+  ctx.fillStyle = 'rgba(255,255,255,0.35)'
   ctx.fillText(WATERMARK_TEXT, w - pad, h - pad)
 }
 
