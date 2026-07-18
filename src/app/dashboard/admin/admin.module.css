@@ -144,3 +144,16 @@
   text-align: left;
   width: auto;
 }
+
+/* ─── ポイント付与・調整モーダル ─── */
+.pointModalOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 1rem;
+}
+.pointModal {
+  background: var(--bg-card); border-radius: var(--radius-lg);
+  width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto;
+  padding: 1.5rem;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}

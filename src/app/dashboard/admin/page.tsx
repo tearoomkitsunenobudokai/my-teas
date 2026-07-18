@@ -305,8 +305,18 @@ export default function AdminPage() {
   }
   const [users, setUsers] = useState<any[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
+  const [userSearch, setUserSearch] = useState('')
   const [usersLoaded, setUsersLoaded] = useState(false)
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
+
+  // 管理者による手動ポイント付与・調整
+  const [pointAdjustTarget, setPointAdjustTarget] = useState<any>(null) // 対象ユーザー（nullなら非表示）
+  const [adjustAmount, setAdjustAmount] = useState('')
+  const [adjustKind, setAdjustKind] = useState<'free' | 'paid'>('paid')
+  const [adjustReason, setAdjustReason] = useState('')
+  const [adjustExpiresAt, setAdjustExpiresAt] = useState('') // free付与時のみ、任意で期限を上書き
+  const [adjusting, setAdjusting] = useState(false)
+  const [adjustResult, setAdjustResult] = useState<string | null>(null)
 
   const loadUsers = useCallback(async () => {
     setLoadingUsers(true)
@@ -364,6 +374,38 @@ export default function AdminPage() {
       ? { ...u, is_admin: newIsAdmin, is_subscribed: newIsSubscribed }
       : u))
     setUpdatingUserId(null)
+  }
+
+  // ポイント付与・調整モーダルを開く
+  function openPointAdjust(u: any) {
+    setPointAdjustTarget(u)
+    setAdjustAmount('')
+    setAdjustKind('paid')
+    setAdjustReason('')
+    setAdjustExpiresAt('')
+    setAdjustResult(null)
+  }
+
+  async function submitPointAdjust() {
+    if (!pointAdjustTarget) return
+    const n = parseInt(adjustAmount, 10)
+    if (!n || n === 0) { setAdjustResult('数値を入力してください（付与は+、減算は-）'); return }
+    setAdjusting(true)
+    setAdjustResult(null)
+    const { data, error } = await supabase.rpc('admin_adjust_points', {
+      p_user_id: pointAdjustTarget.id,
+      p_delta: n,
+      p_kind: adjustKind,
+      p_reason: adjustReason || null,
+      p_expires_at: adjustExpiresAt ? new Date(adjustExpiresAt).toISOString() : null,
+    })
+    setAdjusting(false)
+    if (error) { setAdjustResult('エラー: ' + error.message); return }
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row?.success) { setAdjustResult(row?.message ?? '失敗しました'); return }
+    setUsers(prev => prev.map(u => u.id === pointAdjustTarget.id ? { ...u, points: row.new_balance } : u))
+    setAdjustResult(`✓ ${row.message}（残高: ${row.new_balance}pt）`)
+    setAdjustAmount('')
   }
 
   // 現在の区分を求める（優先順位: 管理者 > 課金 > 一般）
@@ -537,6 +579,12 @@ export default function AdminPage() {
         {loadingUsers ? (
           <p className={styles.sectionDesc}>読み込み中…</p>
         ) : (
+          <>
+          <div style={{ marginBottom: 12 }}>
+            <input type="text" className={styles.settingInputText} placeholder="🔍 ユーザー名またはユーザーIDで検索"
+              value={userSearch} onChange={e => setUserSearch(e.target.value)}
+              style={{ width: '100%', maxWidth: 360, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-strong)', fontSize: 14 }}/>
+          </div>
           <div className={styles.tableWrap}>
             <table className={styles.userTable}>
               <thead>
@@ -552,7 +600,11 @@ export default function AdminPage() {
                   <th>アカウント制限</th>                </tr>
               </thead>
               <tbody>
-                {users.map(u => (
+                {users.filter(u => {
+                  const q = userSearch.trim().toLowerCase()
+                  if (!q) return true
+                  return (u.name ?? '').toLowerCase().includes(q) || u.id.toLowerCase().includes(q)
+                }).map(u => (
                   <tr key={u.id}>
                     <td>{u.name || '（未設定）'}</td>
                     <td><span className={styles.userId} title={u.id}>{u.id}</span></td>
@@ -589,6 +641,11 @@ export default function AdminPage() {
                           <span style={{ display: 'block', fontSize: 10.5, color: 'var(--text-hint)', fontWeight: 400 }}>
                             🎁{u.points_free ?? 0} ／ 💳{u.points_paid ?? 0}
                           </span>
+                          <button type="button" className={styles.cancelBtn}
+                            style={{ marginTop: 4, padding: '2px 8px', fontSize: 11 }}
+                            onClick={() => openPointAdjust(u)}>
+                            調整
+                          </button>
                         </span>
                       )}
                     </td>
@@ -618,6 +675,7 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>}
 
@@ -895,6 +953,68 @@ export default function AdminPage() {
           </div>
         </div>
       </div>}
+
+      {/* ─── ポイント付与・調整モーダル ─── */}
+      {pointAdjustTarget && (
+        <div className={styles.pointModalOverlay} onClick={() => setPointAdjustTarget(null)}>
+          <div className={styles.pointModal} onClick={e => e.stopPropagation()}>
+            <h3 style={{ marginBottom: 4 }}>💎 ポイント付与・調整</h3>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+              対象: <strong>{pointAdjustTarget.name || '（未設定）'}</strong>
+              <span style={{ display: 'block', fontSize: 11, color: 'var(--text-hint)' }}>{pointAdjustTarget.id}</span>
+              現在の残高: {pointAdjustTarget.points ?? 0}pt（🎁{pointAdjustTarget.points_free ?? 0} ／ 💳{pointAdjustTarget.points_paid ?? 0}）
+            </p>
+
+            <label className={styles.settingLabel} style={{ display: 'block', marginBottom: 4 }}>
+              増減ポイント（付与は正の数、減算は負の数。例: 10 / -5）
+            </label>
+            <input type="number" className={styles.settingInputText}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-strong)', fontSize: 14, marginBottom: 12 }}
+              value={adjustAmount} onChange={e => setAdjustAmount(e.target.value)} placeholder="10"/>
+
+            <label className={styles.settingLabel} style={{ display: 'block', marginBottom: 4 }}>
+              種別（付与時のみ）
+            </label>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+              <button type="button" className={styles.cancelBtn}
+                style={{ background: adjustKind === 'free' ? 'var(--green)' : undefined, color: adjustKind === 'free' ? '#fff' : undefined }}
+                onClick={() => setAdjustKind('free')}>🎁 無料（期限あり）</button>
+              <button type="button" className={styles.cancelBtn}
+                style={{ background: adjustKind === 'paid' ? 'var(--green)' : undefined, color: adjustKind === 'paid' ? '#fff' : undefined }}
+                onClick={() => setAdjustKind('paid')}>💳 課金扱い（無期限）</button>
+            </div>
+
+            {adjustKind === 'free' && (
+              <>
+                <label className={styles.settingLabel} style={{ display: 'block', marginBottom: 4 }}>
+                  期限を個別指定（任意・空欄なら通常の無料ポイント設定日数に従う）
+                </label>
+                <input type="date" className={styles.settingInputText}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-strong)', fontSize: 14, marginBottom: 12 }}
+                  value={adjustExpiresAt} onChange={e => setAdjustExpiresAt(e.target.value)}/>
+              </>
+            )}
+
+            <label className={styles.settingLabel} style={{ display: 'block', marginBottom: 4 }}>理由（履歴に残ります）</label>
+            <input type="text" className={styles.settingInputText}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-strong)', fontSize: 14, marginBottom: 16 }}
+              value={adjustReason} onChange={e => setAdjustReason(e.target.value)} placeholder="例: 不具合のお詫び、キャンペーン付与 など"/>
+
+            {adjustResult && (
+              <p style={{ fontSize: 13, marginBottom: 12, color: adjustResult.startsWith('✓') ? 'var(--green)' : '#B00020' }}>
+                {adjustResult}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button className={styles.cancelBtn} onClick={() => setPointAdjustTarget(null)}>閉じる</button>
+              <button className={styles.saveBtn} onClick={submitPointAdjust} disabled={adjusting}>
+                {adjusting ? '実行中…' : '実行する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
