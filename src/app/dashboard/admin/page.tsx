@@ -311,7 +311,7 @@ export default function AdminPage() {
   const loadUsers = useCallback(async () => {
     setLoadingUsers(true)
     const [{ data: profiles }, { data: reviews }, { data: visits }, { data: signIns }] = await Promise.all([
-      supabase.from('profiles').select('id,name,is_admin,is_creator,is_subscribed,account_status,points,created_at').order('created_at', { ascending: true }),
+      supabase.from('profiles').select('id,name,is_admin,is_creator,is_subscribed,account_status,points,points_free,points_paid,created_at').order('created_at', { ascending: true }),
       supabase.from('reviews').select('user_id,is_public'),
       supabase.from('shop_visits').select('user_id'),
       supabase.rpc('get_users_last_sign_in'),
@@ -584,7 +584,12 @@ export default function AdminPage() {
                       {(u.is_admin || u.is_creator) ? (
                         <span className={styles.statusExempt}>消費なし</span>
                       ) : (
-                        <span className={styles.pointsCell}>💎 {u.points ?? 0}pt</span>
+                        <span className={styles.pointsCell}>
+                          💎 {u.points ?? 0}pt
+                          <span style={{ display: 'block', fontSize: 10.5, color: 'var(--text-hint)', fontWeight: 400 }}>
+                            🎁{u.points_free ?? 0} ／ 💳{u.points_paid ?? 0}
+                          </span>
+                        </span>
                       )}
                     </td>
                     <td className={styles.lastSignIn}>
