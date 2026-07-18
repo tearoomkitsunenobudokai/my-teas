@@ -101,7 +101,7 @@ export default function AdminPage() {
   const [costs, setCosts] = useState<any[]>([])
   const [savingCosts, setSavingCosts] = useState(false)
   const [costsSaved, setCostsSaved] = useState(false)
-  const [pointPolicy, setPointPolicy] = useState({ initial: '5', loginDays: '5', loginPoints: '2' })
+  const [pointPolicy, setPointPolicy] = useState({ initial: '5', loginDays: '5', loginPoints: '2', freeExpiryDays: '60' })
   const [savingPolicy, setSavingPolicy] = useState(false)
   const [policySaved, setPolicySaved] = useState(false)
   const [packages, setPackages] = useState<any[]>([])
@@ -119,7 +119,7 @@ export default function AdminPage() {
     supabase.from('home_links').select('*').order('sort_order')
       .then(({ data }) => setHomeLinks(data ?? []))
     supabase.from('app_settings').select('key,value')
-      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points'])
+      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days'])
       .then(({ data }) => {
         const m: any = {}
         for (const r of data ?? []) m[r.key] = r.value
@@ -127,6 +127,7 @@ export default function AdminPage() {
           initial: m['points_initial'] ?? '5',
           loginDays: m['login_bonus_days'] ?? '5',
           loginPoints: m['login_bonus_points'] ?? '2',
+          freeExpiryDays: m['points_free_expiry_days'] ?? '60',
         })
       })
   }, [supabase])
@@ -137,6 +138,7 @@ export default function AdminPage() {
       { key: 'points_initial', value: pointPolicy.initial, updated_at: new Date().toISOString() },
       { key: 'login_bonus_days', value: pointPolicy.loginDays, updated_at: new Date().toISOString() },
       { key: 'login_bonus_points', value: pointPolicy.loginPoints, updated_at: new Date().toISOString() },
+      { key: 'points_free_expiry_days', value: pointPolicy.freeExpiryDays, updated_at: new Date().toISOString() },
     ])
     setSavingPolicy(false)
     if (error) { alert(error.message); return }
@@ -686,6 +688,18 @@ export default function AdminPage() {
                 value={pointPolicy.loginPoints}
                 onChange={e => setPointPolicy(p => ({ ...p, loginPoints: e.target.value }))}/>
               <span className={styles.settingUnit}>pt</span>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>無料ポイントの有効期限</p>
+              <p className={styles.settingDesc}>初回特典・ログインボーナス・無料配布ポイントが失効するまでの日数（購入ポイントは無期限）</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={1} max={999}
+                value={pointPolicy.freeExpiryDays}
+                onChange={e => setPointPolicy(p => ({ ...p, freeExpiryDays: e.target.value }))}/>
+              <span className={styles.settingUnit}>日</span>
             </div>
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12 }}>

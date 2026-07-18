@@ -55,3 +55,21 @@
 .ledgerAmount { font-size: 14px; font-weight: 700; white-space: nowrap; }
 .ledgerPlus { color: var(--green); }
 .ledgerMinus { color: #B45309; }
+
+/* ─── 無料/課金ポイントの内訳・有効期限表示 ─── */
+.balanceBreakdown {
+  display: flex; gap: 18px; flex-wrap: wrap;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 0.5px solid var(--border);
+  font-size: 13px; color: var(--text-muted);
+}
+.breakdownItem b { color: var(--text); font-weight: 700; }
+
+.expiryNote {
+  margin-top: 10px; padding: 10px 12px;
+  background: var(--bg-muted); border-radius: 8px;
+  font-size: 12.5px; color: var(--text-muted);
+}
+.expiryList { margin: 6px 0 6px 1.2em; padding: 0; }
+.expiryList li { margin-bottom: 2px; }
+.expiryHint { display: block; font-size: 11.5px; color: var(--text-hint); margin-top: 4px; }

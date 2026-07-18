@@ -9,7 +9,7 @@ const TYPE_LABEL: Record<string, string> = {
   monthly_grant: '月額プラン付与',
   purchase: 'ポイント購入',
   consumption: 'AI分析で消費',
-  carryover_expiry: '繰越上限による失効',
+  carryover_expiry: 'ポイント失効',
   admin_adjust: '管理者による調整',
 }
 
@@ -49,6 +49,9 @@ export default function PointsPage() {
   const supabase = createClient()
   const [isAdmin, setIsAdmin] = useState(false)
   const [points, setPoints] = useState<number | null>(null)
+  const [pointsFree, setPointsFree] = useState(0)
+  const [pointsPaid, setPointsPaid] = useState(0)
+  const [expiringLots, setExpiringLots] = useState<any[]>([])
   const [ledger, setLedger] = useState<any[]>([])
   const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({})
   const [packages, setPackages] = useState<any[]>([])
@@ -62,15 +65,21 @@ export default function PointsPage() {
     const { data: { session } } = await supabase.auth.getSession()
     const user = session?.user ?? null
     if (!user) { setLoading(false); return }
-    const [{ data: profile }, { data: entries }, { data: pkgs }, { data: claims }, { data: costs }] = await Promise.all([
-      supabase.from('profiles').select('is_admin,is_creator,points').eq('id', user.id).single(),
+    // 表示前に、自分の期限切れ無料ポイントを整理しておく（残高表示のズレを防ぐ）
+    await supabase.rpc('sweep_expired_free_points', { p_user_id: user.id })
+    const [{ data: profile }, { data: entries }, { data: pkgs }, { data: claims }, { data: costs }, { data: lots }] = await Promise.all([
+      supabase.from('profiles').select('is_admin,is_creator,points,points_free,points_paid').eq('id', user.id).single(),
       supabase.from('points_ledger').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),
       supabase.from('point_packages').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('point_package_claims').select('package_id,period_key').eq('user_id', user.id),
       supabase.from('feature_costs').select('feature,label'),
+      supabase.from('point_lots').select('amount,expires_at,source').eq('user_id', user.id).eq('kind', 'free').gt('amount', 0).order('expires_at', { ascending: true }),
     ])
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     setPoints(profile?.points ?? 0)
+    setPointsFree(profile?.points_free ?? 0)
+    setPointsPaid(profile?.points_paid ?? 0)
+    setExpiringLots(lots ?? [])
     setLedger(entries ?? [])
     const fm: Record<string, string> = {}
     for (const c of costs ?? []) fm[c.feature] = c.label
@@ -120,6 +129,26 @@ export default function PointsPage() {
             <span className={styles.balanceLabel}>現在の所持ポイント</span>
             <span className={styles.balanceNum}>{isAdmin ? '∞' : points}<span className={styles.balanceUnit}>pt</span></span>
             {isAdmin && <span className={styles.balanceNote}>管理者・製作者はポイント消費なしで全機能を利用できます</span>}
+            {!isAdmin && (
+              <div className={styles.balanceBreakdown}>
+                <span className={styles.breakdownItem}>🎁 無料ポイント　<b>{pointsFree}pt</b></span>
+                <span className={styles.breakdownItem}>💳 購入ポイント（無期限）　<b>{pointsPaid}pt</b></span>
+              </div>
+            )}
+            {!isAdmin && expiringLots.length > 0 && (
+              <div className={styles.expiryNote}>
+                ⏳ 無料ポイントの有効期限
+                <ul className={styles.expiryList}>
+                  {expiringLots.map((l, i) => (
+                    <li key={i}>
+                      {l.amount}pt — {new Date(l.expires_at).toLocaleDateString('ja-JP')}まで
+                      {l.source ? `（${l.source}）` : ''}
+                    </li>
+                  ))}
+                </ul>
+                <span className={styles.expiryHint}>※ ポイント消費時は、無料ポイントから先に使われます。</span>
+              </div>
+            )}
           </div>
 
           {comingSoon && <div className={styles.comingSoonBanner}>🚧 {comingSoon}</div>}
