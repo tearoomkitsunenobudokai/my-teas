@@ -20,10 +20,24 @@ export default function OmikujiCollectionPage() {
     const { data: { session } } = await supabase.auth.getSession()
     const user = session?.user ?? null
     if (!user) { setLoading(false); return }
+
+    // 旧バージョンの端末内データが残っていれば、サーバーへ引き継いでから削除する
     try {
-      const raw = window.localStorage.getItem(collectionKey(user.id))
-      setCollection(raw ? JSON.parse(raw) : [])
-    } catch { /* noop */ }
+      const legacy = window.localStorage.getItem(collectionKey(user.id))
+      if (legacy) {
+        const nums: number[] = JSON.parse(legacy)
+        if (Array.isArray(nums) && nums.length > 0) {
+          await supabase.rpc('merge_omikuji_collection', { p_numbers: nums })
+        }
+        window.localStorage.removeItem(collectionKey(user.id))
+      }
+    } catch { /* 移行に失敗しても以降のDB取得は続行する */ }
+
+    const { data } = await supabase
+      .from('omikuji_draws')
+      .select('omikuji_no')
+      .eq('user_id', user.id)
+    setCollection((data ?? []).map(r => r.omikuji_no))
     setLoading(false)
   }, [supabase])
 

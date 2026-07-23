@@ -35,7 +35,6 @@ function ResultCard({ entry }: { entry: OmikujiEntry }) {
 
 export default function FortunePage() {
   const supabase = createClient()
-  const [userId, setUserId] = useState('')
   const [loading, setLoading] = useState(true)
   const [revealing, setRevealing] = useState(false)
   const [result, setResult] = useState<OmikujiEntry | null>(null)
@@ -46,14 +45,26 @@ export default function FortunePage() {
     const { data: { session } } = await supabase.auth.getSession()
     const user = session?.user ?? null
     if (!user) { setLoading(false); return }
-    setUserId(user.id)
 
-    // コレクション状況をローカルから復元
-    // （端末内保存・βのためサーバー保存はしていません）
+    // 旧バージョンで端末内(localStorage)に保存されていたコレクションがあれば、
+    // 一度だけサーバーへ引き継いでから削除する（機種変更・キャッシュ削除での消失を防ぐ）
     try {
-      const rawC = window.localStorage.getItem(collectionKey(user.id))
-      setCollection(rawC ? JSON.parse(rawC) : [])
-    } catch { /* noop */ }
+      const legacy = window.localStorage.getItem(collectionKey(user.id))
+      if (legacy) {
+        const nums: number[] = JSON.parse(legacy)
+        if (Array.isArray(nums) && nums.length > 0) {
+          await supabase.rpc('merge_omikuji_collection', { p_numbers: nums })
+        }
+        window.localStorage.removeItem(collectionKey(user.id))
+      }
+    } catch { /* 移行に失敗しても以降のDB取得は続行する */ }
+
+    // コレクションをサーバーから取得
+    const { data } = await supabase
+      .from('omikuji_draws')
+      .select('omikuji_no')
+      .eq('user_id', user.id)
+    setCollection((data ?? []).map(r => r.omikuji_no))
 
     setLoading(false)
   }, [supabase])
@@ -62,14 +73,14 @@ export default function FortunePage() {
 
   function draw() {
     setRevealing(true)
-    setTimeout(() => {
+    setTimeout(async () => {
       const drawn = generateFortune()
       setResult(drawn)
-      setCollection(prev => {
-        const next = addToCollection(prev, drawn.no)
-        try { window.localStorage.setItem(collectionKey(userId), JSON.stringify(next)) } catch {}
-        return next
-      })
+      setCollection(prev => addToCollection(prev, drawn.no))
+      // サーバーに記録（失敗しても画面表示は継続する）
+      try {
+        await supabase.rpc('record_omikuji_draw', { p_omikuji_no: drawn.no })
+      } catch { /* noop */ }
       setRevealing(false)
     }, 800)
   }
