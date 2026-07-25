@@ -219,26 +219,42 @@ function drawTeaCircle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   const deep = mix(base, [30, 12, 4], 0.35)
   const edge = mix(base, [255, 238, 205], 0.5)
 
+  // カップの白い縁の幅。実際のティーカップのように、金の縁と茶液の間に
+  // 白磁の見切りを作る（茶液は縁より内側に収まる）。
+  const rim = Math.round(r * 0.075)
+  const rl = r - rim // 茶液の半径
+
+  // 白磁のカップ（縁の部分として見える）
+  const cupGrad = ctx.createRadialGradient(cx - r * 0.15, cy - r * 0.2, r * 0.6, cx, cy, r)
+  cupGrad.addColorStop(0, '#FFFFFF')
+  cupGrad.addColorStop(1, '#F0E9DC')
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.fillStyle = cupGrad; ctx.fill()
+
   // 液面
-  const grad = ctx.createRadialGradient(cx - r * 0.1, cy - r * 0.15, r * 0.05, cx, cy, r)
+  const grad = ctx.createRadialGradient(cx - rl * 0.1, cy - rl * 0.15, rl * 0.05, cx, cy, rl)
   grad.addColorStop(0, rgbStr(deep))
   grad.addColorStop(0.5, rgbStr(mix(deep, base, 0.6)))
   grad.addColorStop(0.85, rgbStr(base))
   grad.addColorStop(1, rgbStr(edge))
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.beginPath(); ctx.arc(cx, cy, rl, 0, Math.PI * 2)
   ctx.fillStyle = grad; ctx.fill()
 
   // 液面下部の照り返し
-  const sheen = ctx.createRadialGradient(cx + r * 0.25, cy + r * 0.45, 0, cx + r * 0.25, cy + r * 0.45, r * 0.6)
+  const sheen = ctx.createRadialGradient(cx + rl * 0.25, cy + rl * 0.45, 0, cx + rl * 0.25, cy + rl * 0.45, rl * 0.6)
   sheen.addColorStop(0, 'rgba(255,225,170,0.35)')
   sheen.addColorStop(1, 'rgba(255,225,170,0)')
   ctx.save()
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip()
+  ctx.beginPath(); ctx.arc(cx, cy, rl, 0, Math.PI * 2); ctx.clip()
   ctx.fillStyle = sheen
-  ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
+  ctx.fillRect(cx - rl, cy - rl, rl * 2, rl * 2)
   ctx.restore()
 
-  // 金の二重リング
+  // 茶液のふち（白磁との境目に細い陰影を入れて液体の存在感を出す）
+  ctx.beginPath(); ctx.arc(cx, cy, rl, 0, Math.PI * 2)
+  ctx.strokeStyle = 'rgba(120,80,40,0.28)'; ctx.lineWidth = 2; ctx.stroke()
+
+  // 金の二重リング（カップの縁）
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2)
   ctx.strokeStyle = GOLD_DEEP; ctx.lineWidth = 4; ctx.stroke()
   ctx.beginPath(); ctx.arc(cx, cy, r + 8, 0, Math.PI * 2)
