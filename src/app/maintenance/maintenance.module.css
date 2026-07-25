@@ -1,0 +1,68 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: linear-gradient(160deg, #F3FAF7 0%, #FFFFFF 70%);
+}
+
+.card {
+  width: 100%;
+  max-width: 460px;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 1.75rem;
+  text-align: center;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+
+.icon { font-size: 42px; display: block; margin-bottom: 12px; }
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.message {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.8;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--green-dark);
+  background: var(--green-light);
+  border-radius: 8px;
+  padding: 10px 12px;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.sub {
+  font-size: 12px;
+  color: var(--text-hint);
+  line-height: 1.7;
+  margin-bottom: 22px;
+}
+
+.btn {
+  display: inline-block;
+  background: var(--green);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 30px;
+  border-radius: 999px;
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .card { padding: 2rem 1.25rem; }
+  .btn { width: 100%; }
+}

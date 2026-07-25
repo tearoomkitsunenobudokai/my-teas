@@ -24,7 +24,13 @@ export default function AdminPage() {
   const router = useRouter()
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
   const [isCreator, setIsCreator] = useState(false)
-  const [activeTab, setActiveTab] = useState<'aroma'|'settings'|'users'|'points'|'home'>('aroma')
+
+  // メンテナンスモード（製作者のみ操作可）
+  const [maintMode, setMaintMode] = useState<'off' | 'readonly' | 'full'>('off')
+  const [maintMessage, setMaintMessage] = useState('')
+  const [savingMaint, setSavingMaint] = useState(false)
+  const [maintSaved, setMaintSaved] = useState(false)
+  const [activeTab, setActiveTab] = useState<'aroma'|'settings'|'users'|'points'|'home'|'maintenance'>('aroma')
   const [presets, setPresets] = useState<any[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ group_name: '', itemsText: '' })
@@ -120,7 +126,7 @@ export default function AdminPage() {
     supabase.from('home_links').select('*').order('sort_order')
       .then(({ data }) => setHomeLinks(data ?? []))
     supabase.from('app_settings').select('key,value')
-      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days'])
+      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days', 'maintenance_mode', 'maintenance_message'])
       .then(({ data }) => {
         const m: any = {}
         for (const r of data ?? []) m[r.key] = r.value
@@ -130,8 +136,27 @@ export default function AdminPage() {
           loginPoints: m['login_bonus_points'] ?? '2',
           freeExpiryDays: m['points_free_expiry_days'] ?? '60',
         })
+        setMaintMode((m['maintenance_mode'] ?? 'off') as 'off' | 'readonly' | 'full')
+        setMaintMessage(m['maintenance_message'] ?? '')
       })
   }, [supabase])
+
+  // メンテナンスモードの切り替え（DB側の関数で製作者かを再確認している）
+  async function saveMaintenance(mode: 'off' | 'readonly' | 'full') {
+    const label = mode === 'off' ? '通常運転に戻す'
+      : mode === 'readonly' ? '閲覧のみモードにする'
+      : '全面停止にする（一般ユーザーは強制ログアウト）'
+    if (!confirm(`${label}\n\nよろしいですか？`)) return
+    setSavingMaint(true)
+    const { error } = await supabase.rpc('set_maintenance_mode', {
+      p_mode: mode,
+      p_message: maintMessage || null,
+    })
+    setSavingMaint(false)
+    if (error) { alert(error.message); return }
+    setMaintMode(mode)
+    setMaintSaved(true); setTimeout(() => setMaintSaved(false), 2500)
+  }
 
   async function savePointPolicy() {
     setSavingPolicy(true)
@@ -444,6 +469,12 @@ export default function AdminPage() {
           <button className={`${styles.tab} ${activeTab==='points' ? styles.tabActive : ''}`}
             onClick={() => setActiveTab('points')}>
             💎 ポイント設定
+          </button>
+        )}
+        {isCreator && (
+          <button className={`${styles.tab} ${activeTab==='maintenance' ? styles.tabActive : ''}`}
+            onClick={() => setActiveTab('maintenance')}>
+            🔧 メンテナンス
           </button>
         )}
       </div>
@@ -1016,6 +1047,77 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* ─── メンテナンス（製作者のみ） ─── */}
+      {activeTab === 'maintenance' && isCreator && <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>🔧 メンテナンスモード</h2>
+          <p className={styles.sectionDesc}>
+            メンテナンス作業中に、一般ユーザーの利用を制限します。製作者・管理者は制限を受けません。
+            事前に「🏠 ホーム設定」のお知らせで日時を告知してから切り替えてください。
+          </p>
+        </div>
+
+        <div className={styles.settingsCard}>
+          <p className={styles.settingLabel} style={{ marginBottom: 8 }}>
+            現在の状態：{' '}
+            <span style={{
+              color: maintMode === 'off' ? 'var(--green)' : '#B00020',
+              fontWeight: 700,
+            }}>
+              {maintMode === 'off' ? '通常運転'
+                : maintMode === 'readonly' ? '閲覧のみ（書き込み不可）'
+                : '全面停止（一般ユーザーは強制ログアウト）'}
+            </span>
+          </p>
+          {maintSaved && <p style={{ fontSize: 12, color: 'var(--green)' }}>✓ 切り替えました</p>}
+
+          <label className={styles.settingLabel} style={{ display: 'block', marginTop: 16, marginBottom: 4 }}>
+            メンテナンス中に表示するメッセージ
+          </label>
+          <textarea
+            className={`${styles.settingInput} ${styles.settingInputText}`}
+            style={{ width: '100%', minHeight: 70 }}
+            value={maintMessage}
+            onChange={e => setMaintMessage(e.target.value)}
+            placeholder="例: システム更新のため、7/26 2:00〜4:00の間サービスを停止します。"
+          />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 18 }}>
+            <div>
+              <button className={styles.saveBtn} disabled={savingMaint || maintMode === 'off'}
+                onClick={() => saveMaintenance('off')}>
+                ✅ 通常運転に戻す
+              </button>
+              <p className={styles.settingDesc} style={{ marginTop: 4 }}>
+                すべての制限を解除します。
+              </p>
+            </div>
+            <div>
+              <button className={styles.cancelBtn} disabled={savingMaint || maintMode === 'readonly'}
+                onClick={() => saveMaintenance('readonly')}>
+                👀 閲覧のみモードにする
+              </button>
+              <p className={styles.settingDesc} style={{ marginTop: 4 }}>
+                ログインしたまま閲覧はできますが、評価の登録・編集・削除、AI機能の利用ができなくなります
+                （データベース側で拒否するため、確実に止まります）。
+              </p>
+            </div>
+            <div>
+              <button className={styles.cancelBtn}
+                style={{ borderColor: '#B00020', color: '#B00020' }}
+                disabled={savingMaint || maintMode === 'full'}
+                onClick={() => saveMaintenance('full')}>
+                🚫 全面停止にする（強制ログアウト）
+              </button>
+              <p className={styles.settingDesc} style={{ marginTop: 4 }}>
+                一般ユーザーはアプリを開けなくなり、メンテナンス画面へ移動して<strong>自動的にログアウト</strong>されます。
+                評価データは保持されます。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>}
 
       {/* 内部確認用のバージョン表示（製作者・管理者のみが見る画面） */}
       <p className={styles.versionNote}>
