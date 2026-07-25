@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { resizeImageKeepAspect } from '@/lib/resizeImage'
+import { versionLabel } from '@/lib/version'
 import styles from './admin.module.css'
 
 const LIMIT_ROLES: { key: string; label: string }[] = [
@@ -1015,6 +1016,11 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* 内部確認用のバージョン表示（製作者・管理者のみが見る画面） */}
+      <p className={styles.versionNote}>
+        アプリバージョン: {versionLabel()}
+      </p>
     </div>
   )
 }

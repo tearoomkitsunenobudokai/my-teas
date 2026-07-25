@@ -20,6 +20,10 @@ const securityHeaders = [
 ]
 
 const nextConfig = {
+  // ビルド時刻を埋め込む（デプロイが反映されたかの確認に使う）
+  env: {
+    NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
+  },
   async headers() {
     return [
       {

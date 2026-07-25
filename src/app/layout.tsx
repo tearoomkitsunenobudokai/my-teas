@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { APP_VERSION, BUILD_COMMIT, BUILD_TIME } from '@/lib/version'
 
 export const metadata: Metadata = {
   title: 'My-Teas — 紅茶評価アプリ',
@@ -36,6 +37,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <head>
+        {/* 内部確認用: ページのソースを表示すると、どのバージョンが動いているか分かる */}
+        <meta name="app-version" content={APP_VERSION} />
+        <meta name="app-build" content={`${BUILD_COMMIT} ${BUILD_TIME}`} />
         {supabaseOrigin && (
           <>
             <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
