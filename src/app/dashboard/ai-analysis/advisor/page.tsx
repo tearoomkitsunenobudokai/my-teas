@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase'
 import {
   generateAdvisorComment, analyzePreference,
   ADVISOR_TIERS, getAdvisorTier, isTierUnlocked, getTierByKey,
-  pruneHistory, AdvisorTierKey, AdvisorHistoryEntry,
+  AdvisorTierKey, AdvisorHistoryEntry,
 } from '@/lib/aiAdvisor'
 import styles from '../ai-analysis.module.css'
 import advisorStyles from './advisor.module.css'
@@ -20,7 +20,6 @@ function fmtTime(iso: string) {
 
 export default function AdvisorPage() {
   const supabase = createClient()
-  const [userId, setUserId] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const [points, setPoints] = useState<number | null>(null)
   const [reviews, setReviews] = useState<any[]>([])
@@ -36,7 +35,6 @@ export default function AdvisorPage() {
     const { data: { session } } = await supabase.auth.getSession()
     const user = session?.user ?? null
     if (!user) { setLoading(false); return }
-    setUserId(user.id)
 
     const [{ data }, { data: profile }] = await Promise.all([
       supabase.from('reviews')
@@ -48,16 +46,31 @@ export default function AdvisorPage() {
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     setPoints(profile?.points ?? 0)
 
-    // 直近1週間の分析履歴をローカルから復元（端末内保存・βのためサーバー保存はしていません）
+    // 旧バージョンで端末内(localStorage)に保存されていた履歴があれば、
+    // 一度だけサーバーへ引き継いでから削除する（機種変更・キャッシュ削除での消失を防ぐ）
     try {
-      const raw = window.localStorage.getItem(historyKey(user.id))
-      const parsed: AdvisorHistoryEntry[] = raw ? JSON.parse(raw) : []
-      const pruned = pruneHistory(parsed)
-      setHistory(pruned)
-      if (pruned.length !== parsed.length) {
-        window.localStorage.setItem(historyKey(user.id), JSON.stringify(pruned))
+      const legacy = window.localStorage.getItem(historyKey(user.id))
+      if (legacy) {
+        const parsed = JSON.parse(legacy)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          await supabase.rpc('merge_advisor_history', { p_entries: parsed })
+        }
+        window.localStorage.removeItem(historyKey(user.id))
       }
-    } catch { /* localStorageが使えない環境では履歴機能を無効化するだけにする */ }
+    } catch { /* 移行に失敗しても以降のDB取得は続行する */ }
+
+    // 分析履歴をサーバーから取得（新しい順）
+    const { data: rows } = await supabase
+      .from('advisor_history')
+      .select('id,tier_key,comment,created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+    setHistory((rows ?? []).map(r => ({
+      id: r.id,
+      tierKey: r.tier_key as AdvisorTierKey,
+      comment: r.comment,
+      createdAt: r.created_at,
+    })))
 
     setLoading(false)
   }, [supabase])
@@ -103,18 +116,19 @@ export default function AdvisorPage() {
     }
 
     // 実際のAI API呼び出しを想定し、わざと少し待ってから結果を表示（UXのプロトタイプ確認用）
-    setTimeout(() => {
+    setTimeout(async () => {
+      const comment = generateAdvisorComment(reviews, tier.key)
       const entry: AdvisorHistoryEntry = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         tierKey: tier.key,
-        comment: generateAdvisorComment(reviews, tier.key),
+        comment,
         createdAt: new Date().toISOString(),
       }
-      setHistory(prev => {
-        const next = pruneHistory([entry, ...prev])
-        try { window.localStorage.setItem(historyKey(userId), JSON.stringify(next)) } catch {}
-        return next
-      })
+      setHistory(prev => [entry, ...prev])
+      // サーバーに保存（失敗しても画面表示は継続する）
+      try {
+        await supabase.rpc('add_advisor_history', { p_tier_key: tier.key, p_comment: comment })
+      } catch { /* noop */ }
       setAnalyzing(false)
     }, 900)
   }
