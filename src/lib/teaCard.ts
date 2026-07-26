@@ -197,10 +197,11 @@ async function drawDamask(ctx: CanvasRenderingContext2D) {
     ctx.drawImage(pat, cx - size / 2, cy - (size * ratio) / 2, size, size * ratio)
     ctx.restore()
   }
-  // 元の花模様と同じ3箇所・同程度の濃さ（コントラスト差 約20）で配置
-  place(W * 0.52, H * 0.50, 260, 0.36)
-  place(W * 0.68, H * 0.26, 150, 0.30)
-  place(W * 0.88, H * 0.82, 110, 0.30)
+  // レーダーチャート（中心 745,525 付近）を避けて配置する。
+  // 右下隅・右上隅を主役に、中央上は薄めに。
+  place(W * 0.92, H * 0.83, 130, 0.30)   // 右下隅
+  place(W * 0.93, H * 0.28, 105, 0.28)   // 右上隅
+  place(W * 0.38, H * 0.52, 180, 0.14)   // 中央左（薄め・カップとレーダーの間）
 }
 
 // ── 水色の円（金の二重リング付き・枠内に収める構図） ──
