@@ -35,6 +35,7 @@ function ChipContent({ iconPath, label }: { iconPath: string | null; label: stri
 }
 const MAX_AROMA = 3
 const MAX_COMMENT = 300
+const MAX_NOTES = 300
 
 function hexToRgba(hex: string, a = 0.78): string {
   const h = (hex ?? '').replace('#','').slice(0,6)
@@ -106,6 +107,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         score_richness: initial.score_richness??3, score_color_depth: initial.score_color_depth??3 }
     : INIT_SCORES)
   const [comment,   setComment]   = useState(initial?.comment ?? '')
+  const [notes,     setNotes]     = useState(initial?.notes ?? '')
   const [isPublic,  setIsPublic]  = useState(initial?.is_public ?? false)
   const [drankAt,   setDrankAt]   = useState(initial?.drank_at ?? new Date().toISOString().slice(0,10))
   const [brewMethod,setBrewMethod]= useState(initial?.brew_method ?? '')
@@ -327,7 +329,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       brand_name: brandName.trim() || null,
       shop_name: shopName || null, color_hex: colorHex || null,
       aroma_notes: aromaNotes.length ? aromaNotes : null,
-      ...scores, comment: comment || null, is_public: effectiveIsPublic, drank_at: drankAt,
+      ...scores, comment: comment || null, notes: notes || null, is_public: effectiveIsPublic, drank_at: drankAt,
       brew_method: brewMethod || null,
       tea_garden: teaGarden || null,
       steep_seconds: steepSec ? parseInt(steepSec) : null,
@@ -513,6 +515,14 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         </div>
 
         <div style={{ display: show(5) ? undefined : 'none' }}>
+        <label className={styles.label}>📝 その他の情報 <span className={styles.sub}>({notes.length}/{MAX_NOTES})</span></label>
+        <textarea className={styles.textarea} rows={2} value={notes} maxLength={MAX_NOTES}
+          onChange={e => setNotes(e.target.value.slice(0, MAX_NOTES))}
+          placeholder="産地・グレード・購入場所・淹れ方の工夫など、自由にメモできます"/>
+        <p className={styles.notesHint}>
+          ここに書いた内容は、AI要約（まとめる）を作るときの判断材料にも使われます。
+        </p>
+
         <label className={styles.label}>💬 コメント <span className={styles.sub}>({comment.length}/{MAX_COMMENT})</span></label>
         <textarea className={styles.textarea} rows={2} value={comment} maxLength={MAX_COMMENT}
           onChange={e => setComment(e.target.value.slice(0, MAX_COMMENT))} placeholder="感想・メモ…"/>
@@ -715,7 +725,7 @@ export default function ReviewsPage() {
     setUserId(user.id)
     const [{ data }, { data: profile }] = await Promise.all([
       supabase.from('reviews')
-        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden')
+        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden')
         .eq('user_id', user.id).order('drank_at', { ascending: false }),
       supabase.from('profiles').select('is_subscribed,is_admin,is_creator').eq('id', user.id).single(),
     ])
@@ -743,7 +753,7 @@ export default function ReviewsPage() {
       '飲んだ日', '紅茶名', 'ブランド', '認定店', '色',
       '香り', '渋み', 'コク', '水色の濃さ',
       '抽出方法', '淹れ時間(秒)', '茶葉量(g/100ml)', '添え物',
-      'コメント', '公開', '登録日時',
+      'コメント', 'その他の情報', '公開', '登録日時',
     ]
     const rows = reviews.map(r => [
       r.drank_at ?? r.created_at?.slice(0, 10) ?? '',
@@ -757,6 +767,7 @@ export default function ReviewsPage() {
       r.tea_grams_per_100ml ?? '',
       Array.isArray(r.accompaniments) ? r.accompaniments.join('・') : '',
       r.comment ?? '',
+      r.notes ?? '',
       r.is_public ? '公開' : '非公開',
       r.created_at ?? '',
     ].map(esc).join(','))

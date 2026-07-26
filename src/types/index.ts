@@ -19,6 +19,7 @@ export interface Review {
   score_astringency: number // 渋み  1(弱)〜5(強)
   score_richness: number    // コク  1(少ない)〜5(多い)
   score_color_depth: number // 水色  1(薄い)〜5(濃い)
+  notes: string | null      // その他の情報（自由記述・300文字まで）
   comment: string | null
   is_public: boolean
   drank_at: string | null
