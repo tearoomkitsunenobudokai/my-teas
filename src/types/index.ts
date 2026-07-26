@@ -35,16 +35,16 @@ export interface ReviewScores {
 
 export const SCORE_LABELS: Record<keyof ReviewScores, string> = {
   score_aroma:       '香り',
-  score_astringency: '渋み',
   score_richness:    'コク',
   score_color_depth: '水色',
+  score_astringency: '渋み',
 }
 
 export const SCORE_DESCRIPTIONS: Record<keyof ReviewScores, { weak: string; strong: string; note?: string }> = {
   score_aroma:       { weak: '弱', strong: '強' },
-  score_astringency: { weak: '弱', strong: '強' },
   score_richness:    { weak: '少', strong: '多' },
   score_color_depth: { weak: '薄い', strong: '濃い', note: '抽出した紅茶の水色の濃さ。ミルクティーにしたときの色残りの目安にもなります' },
+  score_astringency: { weak: '弱', strong: '強' },
 }
 
 // 香り分析のプリセット
