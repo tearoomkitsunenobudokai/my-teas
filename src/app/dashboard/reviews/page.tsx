@@ -377,10 +377,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         {/* お茶の名前（必須） */}
         <div style={{ display: show(0) ? undefined : 'none' }}>
         <label className={styles.label}>☕ お茶の名前 <span className={styles.req}>*</span>
-          <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--text-hint)', marginLeft: 6 }}>{teaName.length}/30</span>
+          <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--text-hint)', marginLeft: 6 }}>{teaName.length}/20</span>
         </label>
-        <input className={styles.input} value={teaName} maxLength={30}
-          onChange={e => setTeaName(e.target.value.slice(0, 30))}
+        <input className={styles.input} value={teaName} maxLength={20}
+          onChange={e => setTeaName(e.target.value.slice(0, 20))}
           placeholder="例: ダージリン ファーストフラッシュ"/>
 
         {/* ブランド名 */}
