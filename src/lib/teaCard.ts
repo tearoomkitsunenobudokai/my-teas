@@ -185,54 +185,31 @@ function drawFrame(ctx: CanvasRenderingContext2D) {
 }
 
 // ── 装飾: ダマスク柄風の淡い植物模様（背景） ──
-// ── 背景の飾り模様（6弁のロゼッタ） ──
-// 薄い金の細線で、主張しすぎない程度に配置する
-function drawRosette(ctx: CanvasRenderingContext2D, cx: number, cy: number, R: number, alpha: number) {
-  const n = 6
-  ctx.save()
-  ctx.strokeStyle = `rgba(201,169,110,${alpha})`
-  ctx.lineWidth = 1
-  ctx.lineJoin = 'round'
-
-  // 花弁（レンズ形）を1枚描く。a=内側の起点, b=外側の先端, spread=膨らみ
-  const petal = (angle: number, a: number, b: number, spread: number) => {
-    const ax = cx + a * Math.cos(angle), ay = cy + a * Math.sin(angle)
-    const bx = cx + b * Math.cos(angle), by = cy + b * Math.sin(angle)
-    const mx = (ax + bx) / 2, my = (ay + by) / 2
-    const px = Math.cos(angle + Math.PI / 2), py = Math.sin(angle + Math.PI / 2)
-    ctx.beginPath()
-    ctx.moveTo(ax, ay)
-    ctx.quadraticCurveTo(mx + px * spread, my + py * spread, bx, by)
-    ctx.quadraticCurveTo(mx - px * spread, my - py * spread, ax, ay)
-    ctx.stroke()
-  }
-
-  // 外側の大きな花弁と、その中の円
-  for (let i = 0; i < n; i++) {
-    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n
-    petal(a, R * 0.16, R, R * 0.42)
-    ctx.beginPath()
-    ctx.arc(cx + R * 0.58 * Math.cos(a), cy + R * 0.58 * Math.sin(a), R * 0.30, 0, Math.PI * 2)
-    ctx.stroke()
-  }
-  // 中間の花弁（30度ずらして星形をつくる）
-  for (let i = 0; i < n; i++) {
-    const a = -Math.PI / 2 + ((i + 0.5) * 2 * Math.PI) / n
-    petal(a, R * 0.06, R * 0.52, R * 0.17)
-  }
-  // 中心の小さな花弁と中心円
-  for (let i = 0; i < n; i++) {
-    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n
-    petal(a, R * 0.02, R * 0.22, R * 0.075)
-  }
-  ctx.beginPath(); ctx.arc(cx, cy, R * 0.055, 0, Math.PI * 2); ctx.stroke()
-  ctx.restore()
-}
-
 function drawDamask(ctx: CanvasRenderingContext2D) {
-  drawRosette(ctx, W * 0.52, H * 0.50, 110, 0.13)
-  drawRosette(ctx, W * 0.68, H * 0.26, 62, 0.11)
-  drawRosette(ctx, W * 0.88, H * 0.82, 44, 0.11)
+  ctx.save()
+  ctx.strokeStyle = 'rgba(180,150,100,0.08)'
+  ctx.fillStyle = 'rgba(180,150,100,0.04)'
+  ctx.lineWidth = 2
+
+  const flower = (cx: number, cy: number, r: number) => {
+    for (let k = 0; k < 8; k++) {
+      const a = (k * Math.PI) / 4
+      ctx.beginPath()
+      ctx.ellipse(cx + r * 0.62 * Math.cos(a), cy + r * 0.62 * Math.sin(a),
+        r * 0.42, r * 0.2, a, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+    }
+    ctx.beginPath(); ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2); ctx.fill(); ctx.stroke()
+  }
+  const vine = (x1: number, y1: number, cx: number, cy: number, x2: number, y2: number) => {
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(cx, cy, x2, y2); ctx.stroke()
+  }
+  flower(W * 0.52, H * 0.50, 110)
+  flower(W * 0.68, H * 0.26, 62)
+  flower(W * 0.88, H * 0.82, 44)
+  vine(W * 0.46, H * 0.84, W * 0.52, H * 0.58, W * 0.63, H * 0.40)
+  ctx.restore()
 }
 
 // ── 水色の円（金の二重リング付き・枠内に収める構図） ──
