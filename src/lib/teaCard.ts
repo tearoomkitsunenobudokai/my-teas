@@ -572,6 +572,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ]
   footer.forEach((line, i) => ctx.fillText(line, nameX, H - 110 + i * 19))
 
+  // フッター右のQRコード。public/card/qr.png を差し替えるだけで変更できる
+  // （画像が無い場合は何も描画しないので、カード生成は失敗しない）
+  const qr = await tryLoadImage('/card/qr.png')
+  if (qr) {
+    const qrSize = 84
+    ctx.drawImage(qr, nameX + 320, H - 132 + 6, qrSize, qrSize)
+  }
+
   return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/png', 0.95))
 }
 
