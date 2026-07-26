@@ -38,7 +38,7 @@ export default function AdvisorPage() {
 
     const [{ data }, { data: profile }] = await Promise.all([
       supabase.from('reviews')
-        .select('tea_name,shop_name,aroma_notes,score_aroma,score_astringency,score_richness,score_sweetness')
+        .select('tea_name,shop_name,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth')
         .eq('user_id', user.id),
       supabase.from('profiles').select('is_admin,is_creator,points').eq('id', user.id).single(),
     ])

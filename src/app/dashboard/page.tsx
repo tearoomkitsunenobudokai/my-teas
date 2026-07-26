@@ -38,7 +38,7 @@ export default function DashboardPage() {
 
     const { data: reviews } = await supabase
       .from('reviews')
-      .select('tea_name, shop_name, aroma_notes, color_hex, score_aroma, score_astringency, score_richness, score_sweetness, is_public, drank_at, created_at')
+      .select('tea_name, shop_name, aroma_notes, color_hex, score_aroma, score_astringency, score_richness, score_color_depth, is_public, drank_at, created_at')
       .eq('user_id', user.id)
 
     // 所持ポイント（管理者・製作者は消費なし＝無制限扱い）
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         aroma: avg('score_aroma'),
         astringency: avg('score_astringency'),
         richness: avg('score_richness'),
-        sweetness: avg('score_sweetness'),
+        colorDepth: avg('score_color_depth'),
       })
     }
 
@@ -273,7 +273,7 @@ export default function DashboardPage() {
                   { label: '香り', key: 'aroma', weak: '弱', strong: '強' },
                   { label: '渋み', key: 'astringency', weak: '弱', strong: '強' },
                   { label: 'コク', key: 'richness', weak: '少', strong: '多' },
-                  { label: '甘味', key: 'sweetness', weak: '弱', strong: '強' },
+                  { label: '水色', key: 'colorDepth', weak: '薄い', strong: '濃い' },
                 ].map(s => (
                   <div key={s.key} className={styles.scoreRow}>
                     <span className={styles.scoreLabel}>{s.label}</span>
@@ -293,13 +293,14 @@ export default function DashboardPage() {
                   const a = parseFloat(avgScores.aroma)
                   const r = parseFloat(avgScores.richness)
                   const t = parseFloat(avgScores.astringency)
-                  const s = parseFloat(avgScores.sweetness)
+                  const c = parseFloat(avgScores.colorDepth)
                   const parts = []
                   if (a >= 3.5) parts.push('香り豊か')
                   if (r >= 3.5) parts.push('コクがある')
                   if (t >= 3.5) parts.push('渋みが強い')
                   if (t <= 2.5) parts.push('渋みが少ない')
-                  if (s >= 3.5) parts.push('甘みがある')
+                  if (c >= 3.5) parts.push('水色が濃い')
+                  if (c <= 2.5) parts.push('水色が薄い')
                   if (parts.length === 0) parts.push('バランスの良い')
                   return `好みの傾向: ${parts.join('・')}お茶`
                 })()}

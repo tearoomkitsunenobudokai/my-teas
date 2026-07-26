@@ -28,7 +28,7 @@ export type ReviewForSummary = {
   score_aroma?: number | null
   score_astringency?: number | null
   score_richness?: number | null
-  score_sweetness?: number | null
+  score_color_depth?: number | null
   aroma_notes?: string[] | null
 }
 
@@ -49,18 +49,18 @@ export async function summarizeReview(review: ReviewForSummary, tone: SummaryTon
   const aroma = level(review.score_aroma, '華やかな香り', '穏やかな香り', '控えめな香り')
   const astr = level(review.score_astringency, 'しっかりとした渋み', 'ほどよい渋み', 'やわらかな口当たり')
   const rich = level(review.score_richness, '深いコク', '程よいコク', '軽やかな味わい')
-  const sweet = level(review.score_sweetness, 'やさしい甘み', 'さっぱりとした後味', 'すっきりとした後味')
+  const colorDepth = level(review.score_color_depth, '濃いめの水色', 'ほどよい水色の濃さ', '澄んだ淡い水色')
   const notes = (review.aroma_notes ?? []).slice(0, 2).join('・')
 
   if (tone === 'ojou') {
     let s = `まあ、${name}ですって！ ${aroma}がふわりと立ちのぼり、${astr}がなんとも上品ですこと。`
-    s += `${rich}に${sweet}が寄り添って、それはそれは優雅な一杯ですわ。`
+    s += `${rich}を感じる、${colorDepth}の一杯で、それはそれは優雅ですわ。`
     if (notes) s += ` ${notes}の風情も、たいそう心を躍らせてくれますのよ。`
     return s
   }
 
   // normal
-  let s = `${name}は${aroma}が印象的な一杯。${astr}と${rich}のバランスがよく、${sweet}が楽しめます。`
+  let s = `${name}は${aroma}が印象的な一杯。${astr}と${rich}のバランスがよく、${colorDepth}が楽しめます。`
   if (notes) s += ` ${notes}のニュアンスも感じられ、落ち着いて味わいたい紅茶です。`
   return s
 }

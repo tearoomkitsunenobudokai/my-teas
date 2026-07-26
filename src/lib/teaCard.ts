@@ -32,7 +32,7 @@ export interface TeaCardData {
   score_aroma: number
   score_astringency: number
   score_richness: number
-  score_sweetness: number
+  score_color_depth: number
 }
 
 // 名刺比率 91:55
@@ -473,8 +473,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // ── 右下: レーダーチャート ──
   drawRadar(ctx, radarCx, radarCy, radarR,
-    [data.score_aroma, data.score_sweetness, data.score_richness, data.score_astringency],
-    ['香り', '甘み', 'コク', '渋み'])
+    [data.score_aroma, data.score_richness, data.score_color_depth, data.score_astringency],
+    ['香り', 'コク', '水色', '渋み'])
 
   // ── レーダーの右横: 香り分析 + 水色 + 淹れ方 + 添え物 ──
   ctx.textAlign = 'left'

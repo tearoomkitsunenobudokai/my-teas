@@ -14,7 +14,7 @@ import styles from './reviews.module.css'
 
 const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr: false })
 
-const INIT_SCORES: ReviewScores = { score_aroma: 3, score_astringency: 3, score_richness: 3, score_sweetness: 3 }
+const INIT_SCORES: ReviewScores = { score_aroma: 3, score_astringency: 3, score_richness: 3, score_color_depth: 3 }
 const BREW_METHODS = ['リーフ','ティーバッグ','手鍋','粉末','希釈液','不明']
 const ACCOMPANIMENTS = ['なし（ストレート）','蜂蜜','ミルク','砂糖','レモン','アイス（グラス）']
 
@@ -49,7 +49,7 @@ function fmtDate(d?: string) { return d ? d.slice(0,10).replace(/-/g,'/') : '' }
 function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDelete: () => void }) {
   const scores: ReviewScores = {
     score_aroma: r.score_aroma ?? 3, score_astringency: r.score_astringency ?? 3,
-    score_richness: r.score_richness ?? 3, score_sweetness: r.score_sweetness ?? 3,
+    score_richness: r.score_richness ?? 3, score_color_depth: r.score_color_depth ?? 3,
   }
 
   return (
@@ -103,7 +103,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [aromaNotes,setAromaNotes]= useState<string[]>(initial?.aroma_notes ?? [])
   const [scores,    setScores]    = useState<ReviewScores>(isEdit
     ? { score_aroma: initial.score_aroma??3, score_astringency: initial.score_astringency??3,
-        score_richness: initial.score_richness??3, score_sweetness: initial.score_sweetness??3 }
+        score_richness: initial.score_richness??3, score_color_depth: initial.score_color_depth??3 }
     : INIT_SCORES)
   const [comment,   setComment]   = useState(initial?.comment ?? '')
   const [isPublic,  setIsPublic]  = useState(initial?.is_public ?? false)
@@ -212,7 +212,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
         accompaniments: accs,
         score_aroma: scores.score_aroma, score_astringency: scores.score_astringency,
-        score_richness: scores.score_richness, score_sweetness: scores.score_sweetness,
+        score_richness: scores.score_richness, score_color_depth: scores.score_color_depth,
       })
       downloadBlob(blob, `${(teaName || 'tea').replace(/[/\\?%*:|"<>]/g, '_')}_card.png`)
     } catch (e: any) {
@@ -715,7 +715,7 @@ export default function ReviewsPage() {
     setUserId(user.id)
     const [{ data }, { data: profile }] = await Promise.all([
       supabase.from('reviews')
-        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_sweetness,comment,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden')
+        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden')
         .eq('user_id', user.id).order('drank_at', { ascending: false }),
       supabase.from('profiles').select('is_subscribed,is_admin,is_creator').eq('id', user.id).single(),
     ])
@@ -741,7 +741,7 @@ export default function ReviewsPage() {
     }
     const headers = [
       '飲んだ日', '紅茶名', 'ブランド', '認定店', '色',
-      '香り', '渋み', 'コク', '甘み',
+      '香り', '渋み', 'コク', '水色の濃さ',
       '抽出方法', '淹れ時間(秒)', '茶葉量(g/100ml)', '添え物',
       'コメント', '公開', '登録日時',
     ]
@@ -751,7 +751,7 @@ export default function ReviewsPage() {
       r.brand_name ?? '',
       r.shop_name ?? '',
       r.color_hex ?? '',
-      r.score_aroma ?? '', r.score_astringency ?? '', r.score_richness ?? '', r.score_sweetness ?? '',
+      r.score_aroma ?? '', r.score_astringency ?? '', r.score_richness ?? '', r.score_color_depth ?? '',
       r.brew_method ?? '',
       r.steep_seconds ?? '',
       r.tea_grams_per_100ml ?? '',

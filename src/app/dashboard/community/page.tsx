@@ -39,7 +39,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
     score_aroma:       review.score_aroma       ?? 3,
     score_astringency: review.score_astringency ?? 3,
     score_richness:    review.score_richness    ?? 3,
-    score_sweetness:   review.score_sweetness   ?? 3,
+    score_color_depth: review.score_color_depth ?? 3,
   }
   return (
     <div className={styles.tile} onClick={onClick}>
@@ -112,7 +112,7 @@ export default function CommunityPage() {
   const load = useCallback(async () => {
     const { data } = await supabase
       .from('reviews')
-      .select('id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_sweetness, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, accompaniments')
+      .select('id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_color_depth, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, accompaniments')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
 
@@ -173,8 +173,8 @@ export default function CommunityPage() {
     })
     .sort((a, b) => {
       if (sortBy === 'score') {
-        const sa = (a.score_aroma+a.score_astringency+a.score_richness+a.score_sweetness)/4
-        const sb = (b.score_aroma+b.score_astringency+b.score_richness+b.score_sweetness)/4
+        const sa = (a.score_aroma+a.score_astringency+a.score_richness+a.score_color_depth)/4
+        const sb = (b.score_aroma+b.score_astringency+b.score_richness+b.score_color_depth)/4
         return sb - sa
       }
       return (b.drank_at??b.created_at).localeCompare(a.drank_at??a.created_at)
@@ -252,7 +252,7 @@ export default function CommunityPage() {
                   score_aroma: selected.score_aroma??3,
                   score_astringency: selected.score_astringency??3,
                   score_richness: selected.score_richness??3,
-                  score_sweetness: selected.score_sweetness??3,
+                  score_color_depth: selected.score_color_depth??3,
                 }} size={220}/>
               </div>
             </div>

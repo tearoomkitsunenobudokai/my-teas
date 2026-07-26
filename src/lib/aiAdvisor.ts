@@ -19,12 +19,12 @@ export type ReviewLike = {
   score_aroma?: number | null
   score_astringency?: number | null
   score_richness?: number | null
-  score_sweetness?: number | null
+  score_color_depth?: number | null
 }
 
 export type PreferenceStats = {
   count: number
-  avg: { aroma: number; astringency: number; richness: number; sweetness: number }
+  avg: { aroma: number; astringency: number; richness: number; colorDepth: number }
   topAroma: string | null
   topAromaCount: number
   topTea: string | null
@@ -32,7 +32,7 @@ export type PreferenceStats = {
 
 export function analyzePreference(reviews: ReviewLike[]): PreferenceStats {
   const n = reviews.length
-  const sum = { aroma: 0, astringency: 0, richness: 0, sweetness: 0 }
+  const sum = { aroma: 0, astringency: 0, richness: 0, colorDepth: 0 }
   const aromaCount: Record<string, number> = {}
   const teaCount: Record<string, number> = {}
 
@@ -40,7 +40,7 @@ export function analyzePreference(reviews: ReviewLike[]): PreferenceStats {
     sum.aroma += r.score_aroma ?? 3
     sum.astringency += r.score_astringency ?? 3
     sum.richness += r.score_richness ?? 3
-    sum.sweetness += r.score_sweetness ?? 3
+    sum.colorDepth += r.score_color_depth ?? 3
     for (const a of r.aroma_notes ?? []) aromaCount[a] = (aromaCount[a] ?? 0) + 1
     if (r.tea_name) teaCount[r.tea_name] = (teaCount[r.tea_name] ?? 0) + 1
   }
@@ -54,7 +54,7 @@ export function analyzePreference(reviews: ReviewLike[]): PreferenceStats {
       aroma: n ? sum.aroma / n : 3,
       astringency: n ? sum.astringency / n : 3,
       richness: n ? sum.richness / n : 3,
-      sweetness: n ? sum.sweetness / n : 3,
+      colorDepth: n ? sum.colorDepth / n : 3,
     },
     topAroma: topAromaEntry?.[0] ?? null,
     topAromaCount: topAromaEntry?.[1] ?? 0,
@@ -115,8 +115,8 @@ export function pruneHistory(entries: AdvisorHistoryEntry[]): AdvisorHistoryEntr
 }
 
 const SCORE_TAGS = {
-  high: { astringency: 'しっかりした渋み', richness: '濃厚なコク', sweetness: 'はっきりした甘み', aroma: '華やかな香り' },
-  low:  { astringency: 'まろやかな口当たり', richness: 'すっきりした味わい', sweetness: '控えめな甘さ', aroma: '繊細な香り' },
+  high: { astringency: 'しっかりした渋み', richness: '濃厚なコク', colorDepth: '濃い水色', aroma: '華やかな香り' },
+  low:  { astringency: 'まろやかな口当たり', richness: 'すっきりした味わい', colorDepth: '澄んだ淡い水色', aroma: '繊細な香り' },
 }
 
 // X（旧Twitter）にそのまま投稿できることを想定した文字数上限
@@ -139,7 +139,7 @@ export function generateAdvisorComment(reviews: ReviewLike[], tierKey?: AdvisorT
   const stats = analyzePreference(reviews)
   const traits: string[] = []
 
-  ;(['richness', 'astringency', 'sweetness'] as const).forEach(key => {
+  ;(['richness', 'astringency', 'colorDepth'] as const).forEach(key => {
     const v = stats.avg[key]
     if (v >= 3.8) traits.push(SCORE_TAGS.high[key])
     else if (v <= 2.2) traits.push(SCORE_TAGS.low[key])
@@ -237,7 +237,7 @@ export function buildRecommendationPrompt(reviews: ReviewLike[], prefs: TastePre
     lines.push('・まだ評価データなし')
   } else {
     lines.push(`・評価件数: ${reviews.length}件`)
-    lines.push(`・平均スコア: 香り${stats.avg.aroma.toFixed(1)} / 渋み${stats.avg.astringency.toFixed(1)} / コク${stats.avg.richness.toFixed(1)} / 甘味${stats.avg.sweetness.toFixed(1)}（5段階）`)
+    lines.push(`・平均スコア: 香り${stats.avg.aroma.toFixed(1)} / 渋み${stats.avg.astringency.toFixed(1)} / コク${stats.avg.richness.toFixed(1)} / 水色${stats.avg.colorDepth.toFixed(1)}（5段階）`)
     if (stats.topAroma) lines.push(`・よく選ぶ香りノート: ${stats.topAroma}（${stats.topAromaCount}件）`)
     if (stats.topTea) lines.push(`・よく飲む茶葉: ${stats.topTea}`)
   }
@@ -301,8 +301,8 @@ export function generateRecommendation(reviews: ReviewLike[], prefs?: TastePrefe
   if (stats.avg.richness >= 3.8 && stats.avg.astringency >= 3.5) {
     return { title: 'アッサムやウバなど、コクと渋みの強い茶葉', reason: `これまでの評価でコク・渋みともに高めの茶葉を好む傾向があります。ミルクティーとの相性も良いタイプです。` }
   }
-  if (stats.avg.sweetness >= 3.8 && stats.avg.astringency <= 2.5) {
-    return { title: 'ダージリンやニルギリなど、甘みを感じやすい軽やかな茶葉', reason: `渋みは控えめで甘みを感じる茶葉の評価が高めです。ストレートでゆっくり楽しむのがおすすめです。` }
+  if (stats.avg.colorDepth <= 2.2 && stats.avg.astringency <= 2.5) {
+    return { title: 'ダージリンやニルギリなど、水色が淡く繊細な軽やかな茶葉', reason: `渋みが控えめで、水色も淡いすっきりとした茶葉の評価が高めです。ストレートでゆっくり楽しむのがおすすめです。` }
   }
   if (stats.topAroma) {
     return { title: `「${stats.topAroma}」系の香りが強い茶葉`, reason: `過去の評価で「${stats.topAroma}」系の香りを選ぶことが多いようです（${stats.topAromaCount}件）。同じ香りの系統で新しい茶葉を探してみるのはいかがでしょうか。` }

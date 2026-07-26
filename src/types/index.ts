@@ -18,7 +18,7 @@ export interface Review {
   score_aroma: number       // 香り  1(弱)〜5(強)
   score_astringency: number // 渋み  1(弱)〜5(強)
   score_richness: number    // コク  1(少ない)〜5(多い)
-  score_sweetness: number   // 甘味  1(弱)〜5(強)
+  score_color_depth: number // 水色  1(薄い)〜5(濃い)
   comment: string | null
   is_public: boolean
   drank_at: string | null
@@ -30,21 +30,21 @@ export interface ReviewScores {
   score_aroma: number
   score_astringency: number
   score_richness: number
-  score_sweetness: number
+  score_color_depth: number
 }
 
 export const SCORE_LABELS: Record<keyof ReviewScores, string> = {
   score_aroma:       '香り',
   score_astringency: '渋み',
   score_richness:    'コク',
-  score_sweetness:   '甘味',
+  score_color_depth: '水色',
 }
 
 export const SCORE_DESCRIPTIONS: Record<keyof ReviewScores, { weak: string; strong: string; note?: string }> = {
   score_aroma:       { weak: '弱', strong: '強' },
   score_astringency: { weak: '弱', strong: '強' },
   score_richness:    { weak: '少', strong: '多' },
-  score_sweetness:   { weak: '弱', strong: '強', note: 'ストレートで飲んだときの、茶葉本来の甘味（砂糖などの甘みではありません）' },
+  score_color_depth: { weak: '薄い', strong: '濃い', note: '抽出した紅茶の水色の濃さ。ミルクティーにしたときの色残りの目安にもなります' },
 }
 
 // 香り分析のプリセット
