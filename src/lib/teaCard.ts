@@ -391,14 +391,17 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.fillStyle = INK_DEEP
   ctx.fillText(teaNameText, nameX, ny)
   if (data.tea_garden) {
-    // 飾り罫（短い金線）を挟んで茶園名
+    // 飾り罫（金線）を挟んで茶園名。罫の長さは茶園名の文字幅に合わせて可変にする
+    const gf = fitFontSize(ctx, data.tea_garden, 19, 480, s => `400 ${s}px ${MINCHO}`, 13)
+    ctx.font = `400 ${gf}px ${MINCHO}`
+    const gw = ctx.measureText(data.tea_garden).width
+
     ny += 22
     ctx.strokeStyle = 'rgba(168,135,63,0.6)'
     ctx.lineWidth = 1
-    ctx.beginPath(); ctx.moveTo(nameX, ny); ctx.lineTo(nameX + 64, ny); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(nameX, ny); ctx.lineTo(nameX + gw, ny); ctx.stroke()
+
     ny += 26
-    const gf = fitFontSize(ctx, data.tea_garden, 19, 480, s => `400 ${s}px ${MINCHO}`, 13)
-    ctx.font = `400 ${gf}px ${MINCHO}`
     ctx.fillStyle = INK_SOFT
     ctx.fillText(data.tea_garden, nameX, ny)
   }
@@ -557,9 +560,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).format(now)
+  // フッターのQRコード位置（罫線の長さもここに合わせる）
+  const qrSize = 84
+  const qrX = nameX + 320
+  const footerRuleEnd = qrX + qrSize   // 罫線はQRコードの右端まで伸ばす
+
   ctx.strokeStyle = 'rgba(168,135,63,0.45)'
   ctx.lineWidth = 1
-  ctx.beginPath(); ctx.moveTo(nameX, H - 132); ctx.lineTo(nameX + 300, H - 132); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(nameX, H - 132); ctx.lineTo(footerRuleEnd, H - 132); ctx.stroke()
   ctx.font = `400 14px ${SERIF}`
   ctx.fillStyle = INK_SOFT
   ctx.textAlign = 'left'
@@ -576,8 +584,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // （画像が無い場合は何も描画しないので、カード生成は失敗しない）
   const qr = await tryLoadImage('/card/qr.png')
   if (qr) {
-    const qrSize = 84
-    ctx.drawImage(qr, nameX + 320, H - 132 + 6, qrSize, qrSize)
+    ctx.drawImage(qr, qrX, H - 132 + 6, qrSize, qrSize)
   }
 
   return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/png', 0.95))
