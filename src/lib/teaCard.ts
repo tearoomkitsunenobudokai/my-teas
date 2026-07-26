@@ -373,19 +373,22 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // ── 円の下: ブランド → 紅茶名 → 飾り罫 → 茶園 ──
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'
+  // ブランド名・紅茶名・フッターは、通常の左端(64)より全角1文字分ぶん左に寄せる
+  const leftShift = 20
+  const nameX = 64 - leftShift
   let ny = cupCy + cupR + 40
   if (data.brand_name) {
-    const bf = fitFontSize(ctx, data.brand_name, 28, 470, s => `italic 700 ${s}px ${SERIF}`)
+    const bf = fitFontSize(ctx, data.brand_name, 28, 490, s => `italic 700 ${s}px ${SERIF}`)
     ctx.font = `italic 700 ${bf}px ${SERIF}`
     ctx.fillStyle = '#A8760F'
-    ctx.fillText(data.brand_name, 64, ny)
+    ctx.fillText(data.brand_name, nameX, ny)
   }
   ny += 56
   const teaNameText = data.tea_name || '（お茶の名前）'
-  const nf = fitFontSize(ctx, teaNameText, 52, 470, s => `700 ${s}px ${MINCHO}`)
+  const nf = fitFontSize(ctx, teaNameText, 52, 490, s => `700 ${s}px ${MINCHO}`)
   ctx.font = `700 ${nf}px ${MINCHO}`
   ctx.fillStyle = INK_DEEP
-  ctx.fillText(teaNameText, 64, ny)
+  ctx.fillText(teaNameText, nameX, ny)
   if (data.tea_garden) {
     // 飾り罫（短い金線）を挟んで茶園名
     ny += 22
@@ -413,7 +416,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   let headFont = 34
   for (const fs of [34, 32, 30, 28, 26, 24, 22, 20, 18]) {
     ctx.font = `700 ${fs}px ${MINCHO}`
-    if (computeLines(ctx, heading, rightW, 99).length <= 2) { headFont = fs; break }
+    // 折り返さない（1行に収まる）最大サイズを選ぶ。
+    // 紅茶名は20文字までなので、この範囲なら必ず1行に収まる。
+    if (computeLines(ctx, heading, rightW, 99).length <= 1) { headFont = fs; break }
     headFont = fs
   }
   ctx.font = `700 ${headFont}px ${MINCHO}`
@@ -553,7 +558,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }).format(now)
   ctx.strokeStyle = 'rgba(168,135,63,0.45)'
   ctx.lineWidth = 1
-  ctx.beginPath(); ctx.moveTo(64, H - 132); ctx.lineTo(64 + 300, H - 132); ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(nameX, H - 132); ctx.lineTo(nameX + 300, H - 132); ctx.stroke()
   ctx.font = `400 14px ${SERIF}`
   ctx.fillStyle = INK_SOFT
   ctx.textAlign = 'left'
@@ -564,7 +569,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     'Website: https://my-teas-omega.vercel.app',
     'X: @myteas_kbk',
   ]
-  footer.forEach((line, i) => ctx.fillText(line, 64, H - 110 + i * 19))
+  footer.forEach((line, i) => ctx.fillText(line, nameX, H - 110 + i * 19))
 
   return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/png', 0.95))
 }
