@@ -1,9 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import styles from './auth.module.css'
+
+function fmtDate(iso: string) {
+  const d = new Date(iso)
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`
+}
 
 export default function AuthPage() {
   const router = useRouter()
@@ -14,6 +19,33 @@ export default function AuthPage() {
   const [resetMode, setResetMode] = useState(false)
   const [resetSent, setResetSent] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
+
+  // ログイン画面に出す告知類（未ログインでも取得できる関数を使う）
+  const [announcements, setAnnouncements] = useState<any[]>([])
+  const [maintMode, setMaintMode] = useState<string>('off')
+  const [maintMessage, setMaintMessage] = useState('')
+  const [signupEnabled, setSignupEnabled] = useState(true)
+  const [signupClosedMessage, setSignupClosedMessage] = useState('')
+
+  useEffect(() => {
+    (async () => {
+      const [ann, mode, msg, canSignup, closedMsg] = await Promise.all([
+        supabase.rpc('get_public_announcements'),
+        supabase.rpc('get_maintenance_mode'),
+        supabase.rpc('get_maintenance_message'),
+        supabase.rpc('is_signup_enabled'),
+        supabase.rpc('get_signup_closed_message'),
+      ])
+      setAnnouncements(ann.data ?? [])
+      if (typeof mode.data === 'string') setMaintMode(mode.data)
+      if (typeof msg.data === 'string') setMaintMessage(msg.data)
+      if (typeof canSignup.data === 'boolean') {
+        setSignupEnabled(canSignup.data)
+        if (!canSignup.data) setTab('login')
+      }
+      if (typeof closedMsg.data === 'string') setSignupClosedMessage(closedMsg.data)
+    })()
+  }, [supabase])
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
@@ -63,10 +95,28 @@ export default function AuthPage() {
         </div>
         <p className={styles.tagline}>紅茶を記録して、共有しよう</p>
 
+        {/* メンテナンス告知 */}
+        {maintMode !== 'off' && (
+          <div className={styles.noticeWarn}>
+            <strong>🔧 メンテナンス{maintMode === 'full' ? '中（サービス停止中）' : '中（閲覧のみ）'}</strong>
+            <p>{maintMessage || 'ただいまメンテナンス中です。しばらく経ってから再度お試しください。'}</p>
+          </div>
+        )}
+
+        {/* 新規登録の停止告知 */}
+        {!signupEnabled && (
+          <div className={styles.noticeInfo}>
+            <strong>新規登録を停止しています</strong>
+            <p>{signupClosedMessage || 'ただいま新規登録を停止しています。再開までしばらくお待ちください。'}</p>
+          </div>
+        )}
+
         {!resetMode && (
           <div className={styles.tabs}>
             <button className={`${styles.tab} ${tab === 'login' ? styles.tabActive : ''}`} onClick={() => { setTab('login'); setError('') }}>ログイン</button>
-            <button className={`${styles.tab} ${tab === 'signup' ? styles.tabActive : ''}`} onClick={() => { setTab('signup'); setError('') }}>新規登録</button>
+            {signupEnabled && (
+              <button className={`${styles.tab} ${tab === 'signup' ? styles.tabActive : ''}`} onClick={() => { setTab('signup'); setError('') }}>新規登録</button>
+            )}
           </div>
         )}
 
@@ -121,6 +171,20 @@ export default function AuthPage() {
             <button className={styles.btnPrimary} onClick={handleSignup} disabled={loading}>
               {loading ? '登録中...' : 'アカウントを作成'}
             </button>
+          </div>
+        )}
+        {announcements.length > 0 && (
+          <div className={styles.notices}>
+            <p className={styles.noticesTitle}>📣 お知らせ</p>
+            {announcements.map((a, i) => (
+              <div key={i} className={styles.noticeItem}>
+                <time className={styles.noticeDate}>{fmtDate(a.published_at)}</time>
+                <div>
+                  <p className={styles.noticeItemTitle}>{a.title}</p>
+                  {a.body && <p className={styles.noticeItemBody}>{a.body}</p>}
+                </div>
+              </div>
+            ))}
           </div>
         )}
         <p style={{ fontSize: 11, color: 'var(--text-hint)', textAlign: 'center', marginTop: 20 }}>

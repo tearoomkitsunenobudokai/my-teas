@@ -99,3 +99,69 @@
   width: 100%;
 }
 .linkBtn:hover { text-decoration: underline; }
+
+/* ─── ログイン画面の告知類 ─── */
+.noticeWarn {
+  background: #FFF4E5;
+  border: 1px solid #F0C68A;
+  color: #7A4A00;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: left;
+}
+.noticeInfo {
+  background: var(--bg-muted);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: left;
+}
+.noticeWarn strong, .noticeInfo strong { display: block; margin-bottom: 3px; font-size: 13px; }
+.noticeWarn p, .noticeInfo p { font-size: 12.5px; white-space: pre-wrap; }
+
+.notices {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--border);
+  text-align: left;
+}
+.noticesTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.noticeItem {
+  display: flex;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.noticeItem:last-child { border-bottom: none; }
+.noticeDate {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-hint);
+  padding-top: 2px;
+  width: 72px;
+}
+.noticeItemTitle { font-size: 13px; font-weight: 600; color: var(--text); }
+.noticeItemBody {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-top: 2px;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .noticeItem { flex-direction: column; gap: 2px; }
+  .noticeDate { width: auto; }
+}

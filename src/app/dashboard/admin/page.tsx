@@ -30,6 +30,12 @@ export default function AdminPage() {
   const [maintMessage, setMaintMessage] = useState('')
   const [savingMaint, setSavingMaint] = useState(false)
   const [maintSaved, setMaintSaved] = useState(false)
+
+  // 新規登録の受付（管理者・製作者が操作可）
+  const [signupEnabled, setSignupEnabled] = useState(true)
+  const [signupClosedMessage, setSignupClosedMessage] = useState('')
+  const [savingSignup, setSavingSignup] = useState(false)
+  const [signupSaved, setSignupSaved] = useState(false)
   const [activeTab, setActiveTab] = useState<'aroma'|'settings'|'users'|'points'|'home'|'maintenance'>('aroma')
   const [presets, setPresets] = useState<any[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -126,7 +132,7 @@ export default function AdminPage() {
     supabase.from('home_links').select('*').order('sort_order')
       .then(({ data }) => setHomeLinks(data ?? []))
     supabase.from('app_settings').select('key,value')
-      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days', 'maintenance_mode', 'maintenance_message'])
+      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days', 'maintenance_mode', 'maintenance_message', 'signup_enabled', 'signup_closed_message'])
       .then(({ data }) => {
         const m: any = {}
         for (const r of data ?? []) m[r.key] = r.value
@@ -138,8 +144,25 @@ export default function AdminPage() {
         })
         setMaintMode((m['maintenance_mode'] ?? 'off') as 'off' | 'readonly' | 'full')
         setMaintMessage(m['maintenance_message'] ?? '')
+        setSignupEnabled((m['signup_enabled'] ?? 'true') === 'true')
+        setSignupClosedMessage(m['signup_closed_message'] ?? '')
       })
   }, [supabase])
+
+  // 新規登録の受付を切り替える
+  async function saveSignupEnabled(enabled: boolean) {
+    const label = enabled ? '新規登録を再開する' : '新規登録を停止する'
+    if (!confirm(`${label}\n\nよろしいですか？`)) return
+    setSavingSignup(true)
+    const { error } = await supabase.rpc('set_signup_enabled', {
+      p_enabled: enabled,
+      p_message: signupClosedMessage || null,
+    })
+    setSavingSignup(false)
+    if (error) { alert(error.message); return }
+    setSignupEnabled(enabled)
+    setSignupSaved(true); setTimeout(() => setSignupSaved(false), 2500)
+  }
 
   // メンテナンスモードの切り替え（DB側の関数で製作者かを再確認している）
   async function saveMaintenance(mode: 'off' | 'readonly' | 'full') {
@@ -563,6 +586,43 @@ export default function AdminPage() {
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>⚙️ アプリ設定</h2>
           <p className={styles.sectionDesc}>My-Teasの各種制限・設定を管理します。</p>
+        </div>
+
+        {/* 新規登録の受付 */}
+        <div className={styles.settingsCard} style={{ marginBottom: 20 }}>
+          <p className={styles.settingLabel} style={{ marginBottom: 6 }}>
+            🚪 新規登録の受付：{' '}
+            <span style={{ color: signupEnabled ? 'var(--green)' : '#B00020', fontWeight: 700 }}>
+              {signupEnabled ? '受付中' : '停止中'}
+            </span>
+          </p>
+          <p className={styles.settingDesc} style={{ marginBottom: 10 }}>
+            停止すると、ログイン画面から「新規登録」タブが消え、
+            アカウント作成もデータベース側で拒否されます（既存ユーザーのログインには影響しません）。
+          </p>
+          {signupSaved && <p style={{ fontSize: 12, color: 'var(--green)', marginBottom: 8 }}>✓ 切り替えました</p>}
+
+          <label className={styles.settingLabel} style={{ display: 'block', marginBottom: 4 }}>
+            停止中にログイン画面へ表示するメッセージ
+          </label>
+          <textarea
+            className={`${styles.settingInput} ${styles.settingInputText}`}
+            style={{ width: '100%', minHeight: 60, marginBottom: 12 }}
+            value={signupClosedMessage}
+            onChange={e => setSignupClosedMessage(e.target.value)}
+            placeholder="例: ただいま新規登録を停止しています。再開までしばらくお待ちください。"
+          />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button className={styles.saveBtn} disabled={savingSignup || signupEnabled}
+              onClick={() => saveSignupEnabled(true)}>
+              ✅ 新規登録を再開する
+            </button>
+            <button className={styles.cancelBtn} disabled={savingSignup || !signupEnabled}
+              style={{ borderColor: '#B00020', color: '#B00020' }}
+              onClick={() => saveSignupEnabled(false)}>
+              🚫 新規登録を停止する
+            </button>
+          </div>
         </div>
         <div className={styles.settingsCard}>
           <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
