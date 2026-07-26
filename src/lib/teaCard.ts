@@ -373,7 +373,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // ── 円の下: ブランド → 紅茶名 → 飾り罫 → 茶園 ──
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'
-  // ブランド名・紅茶名・フッターは、通常の左端(64)より全角1文字分ぶん左に寄せる
+  // 左側（ブランド名・紅茶名・飾り罫・茶園名）とフッターは、
+  // 通常の左端(64)より全角1文字分ぶん左に寄せる
   const leftShift = 20
   const nameX = 64 - leftShift
   let ny = cupCy + cupR + 40
@@ -394,12 +395,12 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ny += 22
     ctx.strokeStyle = 'rgba(168,135,63,0.6)'
     ctx.lineWidth = 1
-    ctx.beginPath(); ctx.moveTo(64, ny); ctx.lineTo(64 + 64, ny); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(nameX, ny); ctx.lineTo(nameX + 64, ny); ctx.stroke()
     ny += 26
-    const gf = fitFontSize(ctx, data.tea_garden, 19, 460, s => `400 ${s}px ${MINCHO}`, 13)
+    const gf = fitFontSize(ctx, data.tea_garden, 19, 480, s => `400 ${s}px ${MINCHO}`, 13)
     ctx.font = `400 ${gf}px ${MINCHO}`
     ctx.fillStyle = INK_SOFT
-    ctx.fillText(data.tea_garden, 64, ny)
+    ctx.fillText(data.tea_garden, nameX, ny)
   }
 
   // ── 右上: TASTING CARD → 紅茶名 → 評価者/飲んだ日 → 場所 → 罫 → メモ ──
