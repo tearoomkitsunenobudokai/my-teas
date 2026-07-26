@@ -185,31 +185,22 @@ function drawFrame(ctx: CanvasRenderingContext2D) {
 }
 
 // ── 装飾: ダマスク柄風の淡い植物模様（背景） ──
-function drawDamask(ctx: CanvasRenderingContext2D) {
-  ctx.save()
-  ctx.strokeStyle = 'rgba(180,150,100,0.08)'
-  ctx.fillStyle = 'rgba(180,150,100,0.04)'
-  ctx.lineWidth = 2
-
-  const flower = (cx: number, cy: number, r: number) => {
-    for (let k = 0; k < 8; k++) {
-      const a = (k * Math.PI) / 4
-      ctx.beginPath()
-      ctx.ellipse(cx + r * 0.62 * Math.cos(a), cy + r * 0.62 * Math.sin(a),
-        r * 0.42, r * 0.2, a, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-    }
-    ctx.beginPath(); ctx.arc(cx, cy, r * 0.22, 0, Math.PI * 2); ctx.fill(); ctx.stroke()
+// 背景の飾り模様。public/card/pattern.png（ロゴ由来の模様）を薄く敷く。
+// 画像が無い場合は何も描かず、カード生成は継続する。
+async function drawDamask(ctx: CanvasRenderingContext2D) {
+  const pat = await tryLoadImage('/card/pattern.png')
+  if (!pat) return
+  const ratio = pat.height / pat.width
+  const place = (cx: number, cy: number, size: number, alpha: number) => {
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.drawImage(pat, cx - size / 2, cy - (size * ratio) / 2, size, size * ratio)
+    ctx.restore()
   }
-  const vine = (x1: number, y1: number, cx: number, cy: number, x2: number, y2: number) => {
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(cx, cy, x2, y2); ctx.stroke()
-  }
-  flower(W * 0.52, H * 0.50, 110)
-  flower(W * 0.68, H * 0.26, 62)
-  flower(W * 0.88, H * 0.82, 44)
-  vine(W * 0.46, H * 0.84, W * 0.52, H * 0.58, W * 0.63, H * 0.40)
-  ctx.restore()
+  // 元の花模様と同じ3箇所・同程度の濃さ（コントラスト差 約20）で配置
+  place(W * 0.52, H * 0.50, 260, 0.36)
+  place(W * 0.68, H * 0.26, 150, 0.30)
+  place(W * 0.88, H * 0.82, 110, 0.30)
 }
 
 // ── 水色の円（金の二重リング付き・枠内に収める構図） ──
@@ -343,7 +334,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   bg.addColorStop(1, '#EFE7D4')
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
-  drawDamask(ctx)
+  await drawDamask(ctx)
 
   // ── 左上: 水色の大円（フレーム内でトリミングして見切れさせる） ──
   // 円自体は紙面より大きく描くが、内罫の内側でクリップすることで
