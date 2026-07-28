@@ -235,8 +235,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    height: 72vh;
-    max-height: 640px;
+    height: 88vh;
+    max-height: none;
     background: var(--bg-card);
     border-top-left-radius: 16px;
     border-top-right-radius: 16px;

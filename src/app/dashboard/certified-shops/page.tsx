@@ -488,6 +488,14 @@ export default function CertifiedShopsPage() {
               onClick={() => setShowBookmarks(v => !v)}>
               ⭐ {bookmarks.length > 0 && <span className={styles.bmCount}>{bookmarks.length}</span>}
             </button>
+            <button className={`${styles.btnSecondary} ${showMyMap ? styles.btnActive : ''}`}
+              onClick={() => {
+                if (showMyMap) { setShowMyMap(false) }
+                else { setSelectedShop(null); setShowMyMap(true) }
+              }}
+              title="登録されている認定店を地図でまとめて表示します">
+              🗺️ 全体地図
+            </button>
             {isAdmin && <>
               <button className={styles.btnSecondary} onClick={() => setShowMapIdModal(true)}>🗺️ マップ設定</button>
               <button className={styles.btnSecondary} onClick={() => downloadKml(filtered, selectedYear)} title="マイマップにインポートできるKMLファイルをダウンロード">📥 KML出力</button>
