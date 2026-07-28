@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import dynamic from 'next/dynamic'
@@ -806,6 +807,10 @@ export default function ReviewsPage() {
               ⬇ CSVエクスポート
             </button>
           )}
+          <Link href="/dashboard/reviews/mobile" className={styles.mobileBtn}
+            title="スマホ向けの大きな画面で、1項目ずつ入力できます">
+            📱 スマホ入力
+          </Link>
           <button className={styles.regBtn} onClick={() => { setEditTarget(null); setShowModal(true) }}>
             + 新しく評価を登録
           </button>
