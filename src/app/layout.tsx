@@ -27,7 +27,10 @@ export const viewport: Viewport = {
   themeColor: '#1D9E75',
   width: 'device-width',
   initialScale: 1,
-  // ピンチズームは有効のまま（視覚アクセシビリティのため無効化しない）
+  // 入力欄をタップしたときにiOSが勝手に拡大するのを防ぐため、倍率を固定する。
+  // （拡大されると画面から要素がはみ出し、スマホでの入力操作がしづらくなるため）
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

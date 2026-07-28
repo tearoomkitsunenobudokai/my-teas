@@ -236,14 +236,24 @@ export default function MobileReviewPage() {
             <input className={styles.input} type="date" value={drankAt}
               onChange={e => setDrankAt(e.target.value)} />
             <p className={styles.subGap}>お店（任意）</p>
-            <select className={styles.input} value={shopName} onChange={e => setShopName(e.target.value)}>
-              <option value="">選択しない</option>
+            <input className={styles.input} value={shopName} maxLength={60}
+              onChange={e => setShopName(e.target.value)}
+              placeholder="お店の名前を入力（自由入力できます）" />
+            <p className={styles.pickLabel}>認定店から選ぶ場合はこちら</p>
+            <select className={styles.input} value={shops.some(s => s.name === shopName) ? shopName : ''}
+              onChange={e => { if (e.target.value) setShopName(e.target.value) }}>
+              <option value="">認定店リストから選択…</option>
               {shops.map(s => (
                 <option key={s.id} value={s.name}>
                   {s.name}{s.prefecture ? `（${s.prefecture}）` : ''}
                 </option>
               ))}
             </select>
+            {shopName && (
+              <button className={styles.clearBtn} onClick={() => setShopName('')}>
+                お店の入力をクリア
+              </button>
+            )}
           </>
         )}
 
