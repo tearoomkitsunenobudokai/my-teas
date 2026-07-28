@@ -12,6 +12,7 @@ const NAV = [
   { href: '/dashboard/certified-shops', label: '認定店', icon: '🏅' },
   { href: '/dashboard/colors', label: 'カラーパレット', icon: '🎨' },
   { href: '/dashboard/ai-analysis', label: 'AI分析', icon: '🤖' },
+  { href: '/dashboard/card-print', label: '印刷用に変換', icon: '🖨' },
   { href: '/dashboard/contact', label: 'お問い合わせ', icon: '✉️' },
 ]
 
