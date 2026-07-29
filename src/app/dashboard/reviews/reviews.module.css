@@ -387,3 +387,113 @@
   .otherAddBtn { padding: 12px 18px; font-size: 14px; }
   .otherAromaHint { font-size: 12px; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   スマホでの操作性を全面的に改善
+   指で押しやすいよう、タップ領域を最低44px（iOSの推奨値）以上に統一する。
+   ※このブロックは他のスマホ用指定より後に置き、確実に適用されるようにしている
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+
+  /* ── 入力欄：高さと文字を大きく ── */
+  .input, .textarea, .inputDate {
+    min-height: 52px;
+    padding: 14px 14px;
+    font-size: 16px;
+    border-radius: 12px;
+    border-width: 1.5px;
+  }
+  .inputSm { min-height: 52px; width: 100%; max-width: 160px; }
+  .textarea { min-height: 110px; line-height: 1.7; }
+
+  /* ── 項目ラベル：見出しとして認識しやすく ── */
+  .label {
+    font-size: 15.5px;
+    font-weight: 700;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+
+  /* ── 香りタグ：小さすぎたので大幅に拡大 ── */
+  .aromaChip {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 15px;
+    border-radius: 24px;
+    border-width: 1.5px;
+  }
+  .groupItems { gap: 9px; padding: 12px 10px; }
+
+  /* ── 香りの系統ボタン：押しやすい高さに ── */
+  .groupBtn {
+    min-height: 54px;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  /* ── チップ（抽出方法・添え物）── */
+  .chip {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 18px;
+    font-size: 15px;
+    border-radius: 24px;
+    border-width: 1.5px;
+  }
+  .chips { gap: 10px; }
+
+  /* ── スコア：横幅いっぱいに広げ、押し間違いを防ぐ ── */
+  .scoreList { width: 100%; }
+  .scoreItem { margin-bottom: 20px; }
+  .scoreItemName { font-size: 16px; }
+  .scoreItemBtns { gap: 8px; width: 100%; }
+  .scoreBtn {
+    min-height: 56px;
+    max-height: none;
+    font-size: 19px;
+    border-radius: 14px;
+    border-width: 1.5px;
+  }
+
+  /* ── 水色スウォッチ：3列にして1つずつを大きく ── */
+  .swatchGrid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .swatchName { font-size: 12.5px; }
+
+  /* ── 公開設定のチェックボックス：タップ領域を確保 ── */
+  .checkLabel {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15.5px;
+  }
+  .checkLabel input[type="checkbox"] { width: 24px; height: 24px; }
+
+  /* ── 「その他」自由入力 ── */
+  .otherAddBtn { min-height: 52px; padding: 0 22px; font-size: 15px; border-radius: 12px; }
+
+  /* ── 詳細の開閉ボタン ── */
+  .detailToggle { min-height: 50px; font-size: 15px; }
+
+  /* ── 選択済みの香りタグ（削除ボタン付き）── */
+  .aromaSelected {
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    padding: 0 6px 0 14px;
+  }
+  .aromaSelected button { min-width: 34px; min-height: 34px; font-size: 18px; }
+
+  /* ── ステップ表示・下部ボタン ── */
+  .wizBar { padding: 14px 16px; }
+  .wizStep { font-size: 15px; }
+  .wizListBtn { min-height: 44px; padding: 0 14px; font-size: 13px; }
+  .cancelBtn, .saveBtn { min-height: 56px; font-size: 16.5px; font-weight: 700; }
+}
