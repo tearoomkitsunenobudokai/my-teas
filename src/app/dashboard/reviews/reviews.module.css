@@ -295,3 +295,70 @@
   white-space: nowrap;
 }
 .mobileBtn:hover { background: var(--green-light); }
+
+/* ─── 水色スウォッチ（スマホ入力と同じ見た目） ─── */
+.swatchGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-top: 12px;
+}
+.swatchItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.swatch {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  display: block;
+}
+.swatchItemOn .swatch {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-light);
+}
+.swatchName {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ─── スコア入力（1〜5のボタン） ─── */
+.scoreList { width: 100%; margin-top: 14px; }
+.scoreItem { margin-bottom: 14px; }
+.scoreItemName { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.scoreItemEdge {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-hint);
+  margin-bottom: 5px;
+}
+.scoreItemBtns { display: flex; gap: 6px; }
+.scoreBtn {
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  max-height: 46px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.scoreBtnOn { background: var(--green); border-color: var(--green); color: #fff; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .swatchGrid { gap: 8px; }
+  .scoreBtn { max-height: 52px; font-size: 17px; }
+}

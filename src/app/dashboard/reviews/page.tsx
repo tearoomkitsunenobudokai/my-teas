@@ -230,7 +230,6 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [shops,       setShops]       = useState<any[]>([])
   const [pastBrands,  setPastBrands]  = useState<string[]>([])
   const [openGroup,   setOpenGroup]   = useState<string|null>(null)
-  const [showColors,  setShowColors]  = useState(false)
   const [showDetail,  setShowDetail]  = useState(false)
 
   // ステップ入力（ウィザード）: 新規登録時はデフォルトで1項目ずつの対話形式。
@@ -407,19 +406,17 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             <p className={styles.label}>🍵 水色</p>
             <TeaCup hex={colorHex} size={72}/>
             {colorName && <p className={styles.colorName}>{colorName}</p>}
-            <button className={styles.pickBtn} onClick={() => setShowColors(v=>!v)}>
-              {showColors ? '▲ 閉じる' : '🎨 選択'}
-            </button>
-            {showColors && (
-              <div className={styles.dots}>
-                {colors.map(c => (
-                  <button key={c.hex} title={c.name}
-                    className={`${styles.dot} ${colorHex===c.hex ? styles.dotOn:''}`}
-                    style={{ background: hexToRgba(c.hex, 0.85) }}
-                    onClick={() => { setColorHex(c.hex); setShowColors(false) }}/>
-                ))}
-              </div>
-            )}
+            {/* スマホ入力と同じく、色名つきのスウォッチを常時表示して選びやすくする */}
+            <div className={styles.swatchGrid}>
+              {colors.map(c => (
+                <button key={c.hex} type="button"
+                  className={`${styles.swatchItem} ${colorHex === c.hex ? styles.swatchItemOn : ''}`}
+                  onClick={() => setColorHex(colorHex === c.hex ? '' : c.hex)}>
+                  <span className={styles.swatch} style={{ background: hexToRgba(c.hex, 0.85) }}/>
+                  <span className={styles.swatchName}>{c.name}</span>
+                </button>
+              ))}
+            </div>
             {/* カスタムカラー入力 */}
             <div className={styles.customColorRow}>
               <input type="color"
@@ -438,16 +435,22 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           <div className={styles.chartBlock} style={{ display: show(2) ? undefined : 'none' }}>
             <p className={styles.label}>📊 評価スコア</p>
             <RadarChart scores={scores} size={160}/>
-            <div className={styles.sliders}>
+            {/* スマホ入力と同じく、1〜5のボタンで直接選べるようにする */}
+            <div className={styles.scoreList}>
               {(Object.keys(SCORE_LABELS) as (keyof ReviewScores)[]).map(k => (
-                <div key={k} className={styles.slRow}>
-                  <span className={styles.slLabel}>{SCORE_LABELS[k]}</span>
-                  <span className={styles.slEdge}>{SCORE_DESCRIPTIONS[k].weak}</span>
-                  <input type="range" min={1} max={5} step={1} value={scores[k]}
-                    onChange={e => setScores(s=>({...s,[k]:+e.target.value}))}
-                    className={styles.slider}/>
-                  <span className={styles.slEdge}>{SCORE_DESCRIPTIONS[k].strong}</span>
-                  <span className={styles.slVal}>{scores[k]}</span>
+                <div key={k} className={styles.scoreItem}>
+                  <p className={styles.scoreItemName}>{SCORE_LABELS[k]}</p>
+                  <div className={styles.scoreItemEdge}>
+                    <span>{SCORE_DESCRIPTIONS[k].weak}</span>
+                    <span>{SCORE_DESCRIPTIONS[k].strong}</span>
+                  </div>
+                  <div className={styles.scoreItemBtns}>
+                    {[1, 2, 3, 4, 5].map(v => (
+                      <button key={v} type="button"
+                        className={`${styles.scoreBtn} ${scores[k] === v ? styles.scoreBtnOn : ''}`}
+                        onClick={() => setScores(s => ({ ...s, [k]: v }))}>{v}</button>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
