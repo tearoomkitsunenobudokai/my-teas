@@ -18,8 +18,11 @@ export default function CardPrintPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  const [files, setFiles] = useState<File[]>([])
-  const [previews, setPreviews] = useState<string[]>([])
+  // 上段・下段をそれぞれ別のファイルとして扱う（片方だけでも作成できる）
+  const [slot1, setSlot1] = useState<File | null>(null)
+  const [slot2, setSlot2] = useState<File | null>(null)
+  const [preview1, setPreview1] = useState('')
+  const [preview2, setPreview2] = useState('')
   const [cutGuide, setCutGuide] = useState(true)
   const [working, setWorking] = useState(false)
   const [doneMsg, setDoneMsg] = useState('')
@@ -40,17 +43,36 @@ export default function CardPrintPage() {
 
   useEffect(() => { load() }, [load])
 
-  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
-    const picked = Array.from(e.target.files ?? []).slice(0, 2)
-    setFiles(picked)
+  // 指定したスロットの画像を差し替える（同じスロットを選び直しても反映される）
+  function pickSlot(slot: 1 | 2, e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null
     setDoneMsg('')
-    // プレビュー用URLを作る（前のURLは解放する）
-    previews.forEach(u => URL.revokeObjectURL(u))
-    setPreviews(picked.map(f => URL.createObjectURL(f)))
+    if (slot === 1) {
+      if (preview1) URL.revokeObjectURL(preview1)
+      setSlot1(f)
+      setPreview1(f ? URL.createObjectURL(f) : '')
+    } else {
+      if (preview2) URL.revokeObjectURL(preview2)
+      setSlot2(f)
+      setPreview2(f ? URL.createObjectURL(f) : '')
+    }
+    // 同じファイルを再選択できるよう、input の値をリセットしておく
+    e.target.value = ''
+  }
+
+  function clearSlot(slot: 1 | 2) {
+    setDoneMsg('')
+    if (slot === 1) {
+      if (preview1) URL.revokeObjectURL(preview1)
+      setSlot1(null); setPreview1('')
+    } else {
+      if (preview2) URL.revokeObjectURL(preview2)
+      setSlot2(null); setPreview2('')
+    }
   }
 
   async function run() {
-    if (files.length === 0) { alert('評価カードの画像を選んでください'); return }
+    if (!slot1 && !slot2) { alert('評価カードの画像を選んでください'); return }
     if (cost > 0 && !confirm(`${cost}ptを消費して印刷用ファイルを作成します。よろしいですか？`)) return
 
     setWorking(true)
@@ -67,7 +89,7 @@ export default function CardPrintPage() {
         if (row && typeof row.remaining === 'number') setPoints(row.remaining)
       }
 
-      const blob = await composePostcard(files, { cutGuide })
+      const blob = await composePostcard([slot1, slot2], { cutGuide })
       downloadPostcard(blob)
       setDoneMsg('印刷用ファイルをダウンロードしました。')
     } catch (e: any) {
@@ -99,31 +121,54 @@ export default function CardPrintPage() {
           )}
         </div>
 
-        <label className={styles.label}>評価カードの画像（最大2枚）</label>
-        <input type="file" accept="image/*" multiple onChange={onPick} className={styles.file}/>
+        <label className={styles.label}>評価カードの画像</label>
         <p className={styles.hint}>
-          評価の編集画面で作成・保存した「評価カード画像」を選んでください。
-          1枚だけでも作成できます（下段は空欄になります）。
+          上段・下段それぞれに、評価の編集画面で作成した「評価カード画像」を選んでください。
+          片方だけでも作成できます（もう一方は空欄になります）。
         </p>
 
-        {previews.length > 0 && (
-          <div className={styles.previewArea}>
-            <p className={styles.previewTitle}>選択中（{previews.length}枚）</p>
-            <div className={styles.previewGrid}>
-              {previews.map((u, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={u} alt={`カード${i + 1}`} className={styles.preview}/>
-              ))}
-            </div>
-          </div>
-        )}
+        <div className={styles.slots}>
+          {([1, 2] as const).map(n => {
+            const file = n === 1 ? slot1 : slot2
+            const preview = n === 1 ? preview1 : preview2
+            return (
+              <div key={n} className={styles.slot}>
+                <p className={styles.slotTitle}>{n === 1 ? '① 上段' : '② 下段'}</p>
+                {preview ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={preview} alt={`カード${n}`} className={styles.slotPreview}/>
+                    <p className={styles.slotFileName}>{file?.name}</p>
+                    <div className={styles.slotActions}>
+                      <label className={styles.slotChangeBtn}>
+                        変更
+                        <input type="file" accept="image/*" hidden
+                          onChange={e => pickSlot(n, e)}/>
+                      </label>
+                      <button className={styles.slotClearBtn} onClick={() => clearSlot(n)}>
+                        削除
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <label className={styles.slotEmpty}>
+                    <span className={styles.slotPlusIcon}>＋</span>
+                    <span className={styles.slotEmptyText}>画像を選ぶ</span>
+                    <input type="file" accept="image/*" hidden
+                      onChange={e => pickSlot(n, e)}/>
+                  </label>
+                )}
+              </div>
+            )
+          })}
+        </div>
 
         <label className={styles.checkRow}>
           <input type="checkbox" checked={cutGuide} onChange={e => setCutGuide(e.target.checked)}/>
           <span>切り取り線を入れる</span>
         </label>
 
-        <button className={styles.runBtn} onClick={run} disabled={working || files.length === 0}>
+        <button className={styles.runBtn} onClick={run} disabled={working || (!slot1 && !slot2)}>
           {working ? '変換中…' : '印刷用ファイルを作成する'}
         </button>
 

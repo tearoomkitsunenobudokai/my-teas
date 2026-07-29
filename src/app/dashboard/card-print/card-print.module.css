@@ -101,3 +101,83 @@
   .preview { width: 140px; }
   .balance { margin-left: 0; }
 }
+
+/* ─── 上段・下段の個別選択スロット ─── */
+.slots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+.slot {
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.slotTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  align-self: flex-start;
+}
+.slotPreview {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+  background: #fff;
+}
+.slotFileName {
+  font-size: 11px;
+  color: var(--text-hint);
+  word-break: break-all;
+  text-align: center;
+  line-height: 1.4;
+}
+.slotActions { display: flex; gap: 8px; width: 100%; }
+.slotChangeBtn, .slotClearBtn {
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-card);
+  color: var(--text-muted);
+}
+.slotChangeBtn { border-color: var(--green); color: var(--green); }
+
+/* 未選択のスロット */
+.slotEmpty {
+  width: 100%;
+  min-height: 140px;
+  border: 2px dashed var(--border-strong);
+  border-radius: 10px;
+  background: var(--bg-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.slotEmpty:hover { border-color: var(--green); background: var(--green-light); }
+.slotPlusIcon { font-size: 28px; color: var(--text-hint); line-height: 1; }
+.slotEmptyText { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  /* スマホでは縦に並べて、1枚ずつ大きく確認できるようにする */
+  .slots { grid-template-columns: 1fr; gap: 16px; }
+  .slotEmpty { min-height: 120px; }
+  .slotTitle { font-size: 14px; }
+  .slotChangeBtn, .slotClearBtn { min-height: 48px; font-size: 14px; }
+}

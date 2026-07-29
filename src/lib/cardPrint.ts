@@ -39,17 +39,21 @@ export interface PostcardOptions {
 }
 
 /**
- * カード画像1〜2枚を、ハガキサイズのPNGに配置して返す。
- * 1枚だけ渡した場合は上段に配置し、下段は空欄になる。
+ * カード画像をハガキサイズのPNGに配置して返す。
+ * 配列の1番目が上段、2番目が下段。null を渡すとその段は空欄になる。
  */
 export async function composePostcard(
-  files: File[],
+  files: (File | null)[],
   options: PostcardOptions = {},
 ): Promise<Blob> {
   const { cutGuide = true } = options
-  if (files.length === 0) throw new Error('画像を1枚以上選んでください')
+  const slots = files.slice(0, 2)
+  if (!slots.some(Boolean)) throw new Error('画像を1枚以上選んでください')
 
-  const images = await Promise.all(files.slice(0, 2).map(loadImageFile))
+  // null の段は読み込まず、位置だけ確保する
+  const images = await Promise.all(
+    slots.map(f => (f ? loadImageFile(f) : Promise.resolve(null))),
+  )
 
   const W = MM(POSTCARD_W_MM)
   const H = MM(POSTCARD_H_MM)
@@ -74,16 +78,16 @@ export async function composePostcard(
   const positions = [topY, topY + ch + gap]
 
   images.forEach((img, i) => {
-    ctx.drawImage(img, x, positions[i], cw, ch)
+    if (img) ctx.drawImage(img, x, positions[i], cw, ch)
   })
 
   if (cutGuide) {
-    // 切り取りの目安線（薄いグレーの破線）。印刷後にカットする位置。
+    // 切り取りの目安線（薄いグレーの破線）。カードを置いた段にだけ引く。
     ctx.strokeStyle = '#BBBBBB'
     ctx.lineWidth = Math.max(1, Math.round(DPI / 300))
     ctx.setLineDash([MM(2), MM(2)])
-    positions.slice(0, Math.max(images.length, 1)).forEach(y => {
-      ctx.strokeRect(x, y, cw, ch)
+    images.forEach((img, i) => {
+      if (img) ctx.strokeRect(x, positions[i], cw, ch)
     })
     ctx.setLineDash([])
   }
