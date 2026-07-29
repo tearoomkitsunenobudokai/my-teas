@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import dynamic from 'next/dynamic'
 import { ReviewScores, SCORE_LABELS, SCORE_DESCRIPTIONS } from '@/types'
-import { isCommentClean } from '@/lib/moderation'
+import { isCommentClean, isTextClean } from '@/lib/moderation'
 import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import { brewIconPath, accompanimentIconPath } from '@/lib/icons'
@@ -34,6 +34,7 @@ function ChipContent({ iconPath, label }: { iconPath: string | null; label: stri
   return <>{label}</>
 }
 const MAX_AROMA = 3
+const MAX_OTHER_AROMA = 10
 const MAX_COMMENT = 300
 const MAX_NOTES = 300
 
@@ -102,6 +103,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [shopName,  setShopName]  = useState(initial?.shop_name ?? '')
   const [colorHex,  setColorHex]  = useState(initial?.color_hex ?? '')
   const [aromaNotes,setAromaNotes]= useState<string[]>(initial?.aroma_notes ?? [])
+  const [otherAroma, setOtherAroma] = useState('')
+  const [otherAromaErr, setOtherAromaErr] = useState('')
   const [scores,    setScores]    = useState<ReviewScores>(isEdit
     ? { score_aroma: initial.score_aroma??3, score_astringency: initial.score_astringency??3,
         score_richness: initial.score_richness??3, score_color_depth: initial.score_color_depth??3 }
@@ -274,6 +277,24 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
     if (aromaNotes.includes(n)) { setAromaNotes(a => a.filter(x => x !== n)); return }
     if (aromaNotes.length >= MAX_AROMA) { alert(`香りは${MAX_AROMA}つまでです`); return }
     setAromaNotes(a => [...a, n])
+  }
+
+  // 「その他」の自由入力を香りタグとして追加する。
+  // 不適切な語が含まれていないかをここで検査する（コメント欄と同じ基準）。
+  function addOtherAroma() {
+    const v = otherAroma.trim()
+    if (!v) { setOtherAromaErr('香りを入力してください'); return }
+    if (v.length > MAX_OTHER_AROMA) { setOtherAromaErr(`${MAX_OTHER_AROMA}文字以内で入力してください`); return }
+    const check = isTextClean(v)
+    if (!check.clean) {
+      setOtherAromaErr(check.reason ?? '入力できない語が含まれています')
+      return
+    }
+    if (aromaNotes.includes(v)) { setOtherAromaErr('すでに追加されています'); return }
+    if (aromaNotes.length >= MAX_AROMA) { setOtherAromaErr(`香りは${MAX_AROMA}つまでです`); return }
+    setAromaNotes(a => [...a, v])
+    setOtherAroma('')
+    setOtherAromaErr('')
   }
 
   async function save() {
@@ -488,6 +509,28 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               )}
             </div>
           ))}
+          {/* その他（自由入力・10文字まで） */}
+          <div className={styles.group}>
+            <button className={`${styles.groupBtn} ${openGroup === '__other__' ? styles.groupBtnOn : ''}`}
+              onClick={() => setOpenGroup(openGroup === '__other__' ? null : '__other__')}>
+              その他（自由入力） {openGroup === '__other__' ? '▲' : '▼'}
+            </button>
+            {openGroup === '__other__' && (
+              <div className={styles.otherAromaBox}>
+                <div className={styles.otherAromaRow}>
+                  <input className={styles.input} value={otherAroma} maxLength={MAX_OTHER_AROMA}
+                    onChange={e => { setOtherAroma(e.target.value.slice(0, MAX_OTHER_AROMA)); setOtherAromaErr('') }}
+                    placeholder="例: 焼きたてパン"
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addOtherAroma() } }} />
+                  <button className={styles.otherAddBtn} onClick={addOtherAroma}>追加</button>
+                </div>
+                <p className={styles.otherAromaHint}>
+                  一覧にない香りを{MAX_OTHER_AROMA}文字まで入力できます（{otherAroma.length}/{MAX_OTHER_AROMA}）
+                </p>
+                {otherAromaErr && <p className={styles.otherAromaErr}>{otherAromaErr}</p>}
+              </div>
+            )}
+          </div>
         </div>
         </div>
 
