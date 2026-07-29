@@ -345,3 +345,22 @@
   .swatchGrid { gap: 8px; }
   .scoreBtn { max-height: 52px; font-size: 17px; }
 }
+
+/* ─── スマホでの可読性向上（案A） ───
+   小さすぎる補助文字を、スマホ表示時のみ底上げする。
+   PCでの見た目は変えず、情報密度も大きく損なわないよう最小限の調整に留める。 */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  /* 入力フォーム内 */
+  .sub { font-size: 12px; }                 /* 項目横の補足（10px → 12px） */
+  .colorName { font-size: 12.5px; }         /* 選択中の色名（11px → 12.5px） */
+  .swatchName { font-size: 12px; }          /* 色名ラベル（10px → 12px） */
+  .scoreItemEdge { font-size: 12px; }       /* 「弱い↔強い」の目安（10.5px → 12px） */
+  .scoreItemName { font-size: 15px; }       /* 評価項目名（14px → 15px） */
+
+  /* 評価一覧のタイル */
+  .tileBrand { font-size: 12.5px; padding: 3px 10px; }
+  .tileSub { font-size: 12.5px; }
+  .tileDate { font-size: 12px; }
+  .tilePlaceholder { font-size: 12.5px; }
+  .aromaTag { font-size: 11px; padding: 2px 7px; }
+}

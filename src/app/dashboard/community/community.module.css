@@ -107,3 +107,18 @@
 }
 .tileWantBtn:hover { background: var(--green-light); }
 .tileWantBtnActive { background: var(--green); color: #fff; }
+
+/* ─── スマホでの可読性向上 ───
+   小さすぎる補助文字を、スマホ表示時のみ底上げする（PCの見た目は変えない） */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .tileShop { font-size: 12.5px; }
+  .tileBrand { font-size: 12.5px; padding: 3px 10px; }
+  .tileDate { font-size: 12px; }
+  .tilePlaceholder { font-size: 12.5px; }
+  .tileAromaTag { font-size: 11px; padding: 2px 7px; }
+  .tileAuthor { font-size: 12.5px; }
+  .tileLocation { font-size: 12px; }
+  .authorSub { font-size: 12.5px; }
+  .detailSectionLabel { font-size: 12px; }
+  .countBadge { font-size: 12px; }
+}
