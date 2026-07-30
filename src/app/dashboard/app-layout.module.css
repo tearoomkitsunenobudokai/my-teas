@@ -18,3 +18,12 @@
   padding: 9px 14px;
   line-height: 1.6;
 }
+
+
+
+/* === AUTO: スマホ文字拡大 === */
+/* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
+   個別に微調整したい場合は、この下に手書きで上書きしてください。 */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .maintenanceBar { font-size: 23.4px; }
+}

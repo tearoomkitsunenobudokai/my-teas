@@ -82,3 +82,24 @@
   .quizChip { padding: 10px 16px; font-size: 14px; }
   .quizInput { font-size: 16px; padding: 12px; }
 }
+
+
+
+/* === AUTO: スマホ文字拡大 === */
+/* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
+   個別に微調整したい場合は、この下に手書きで上書きしてください。 */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .back { font-size: 21.6px; }
+  .hint { font-size: 23.4px; }
+  .mockTag { font-size: 19.8px; }
+  .runBtn { font-size: 25.2px; }
+  .thinking { font-size: 23.4px; }
+  .pointsHint { font-size: 21.6px; }
+  .resultLabel { font-size: 19.8px; }
+  .resultTitle { font-size: 28.8px; }
+  .resultReason { font-size: 23.4px; }
+  .quizLead { font-size: 21.6px; }
+  .quizLabel { font-size: 23.4px; }
+  .quizChip { font-size: 25.2px; }
+  .quizInput { font-size: 28.8px; }
+}

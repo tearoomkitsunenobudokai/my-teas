@@ -83,3 +83,25 @@
 .detailBlockTrivia { font-size: 11px; line-height: 1.6; color: var(--text-muted); }
 
 .detailLuckyThing { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+
+
+/* === AUTO: スマホ文字拡大 === */
+/* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
+   個別に微調整したい場合は、この下に手書きで上書きしてください。 */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .back { font-size: 21.6px; }
+  .hint { font-size: 23.4px; }
+  .progressText { font-size: 23.4px; }
+  .completeBadge { font-size: 21.6px; }
+  .cellNo { font-size: 16.2px; }
+  .cellFortune { font-size: 18.0px; }
+  .cellUnknown { font-size: 32.4px; }
+  .closeBtn { font-size: 28.8px; }
+  .detailNo { font-size: 19.8px; }
+  .detailFortune { font-size: 34px; }
+  .detailMessage { font-size: 23.4px; }
+  .detailBlockLabel { font-size: 21.6px; }
+  .detailBlockTrivia { font-size: 19.8px; }
+  .detailLuckyThing { font-size: 21.6px; }
+}

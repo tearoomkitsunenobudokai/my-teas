@@ -155,3 +155,35 @@
 }
 .historyPanelTitle { font-size: 12px; font-weight: 700; color: var(--text-muted); }
 .historyList { display: flex; flex-direction: column; gap: 14px; max-height: 480px; overflow-y: auto; }
+
+
+
+/* === AUTO: スマホ文字拡大 === */
+/* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
+   個別に微調整したい場合は、この下に手書きで上書きしてください。 */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .back { font-size: 21.6px; }
+  .hint { font-size: 23.4px; }
+  .mockTag { font-size: 19.8px; }
+  .adminTag { font-size: 19.8px; }
+  .statNum { font-size: 28.8px; }
+  .statLabel { font-size: 19.8px; }
+  .runBtn { font-size: 25.2px; }
+  .pointsHint { font-size: 21.6px; }
+  .thinking { font-size: 23.4px; }
+  .resultLabel { font-size: 19.8px; }
+  .resultText { font-size: 25.2px; }
+  .tierStep { font-size: 19.8px; }
+  .tierStepEmoji { font-size: 34px; }
+  .tierStepName { font-size: 21.6px; }
+  .tierStepRange { font-size: 18.0px; }
+  .historyBtn { font-size: 19.8px; }
+  .avatarEmoji { font-size: 34px; width: 115px; height: 115px; }
+  .avatarTag { font-size: 18.0px; }
+  .bubbleName { font-size: 19.8px; }
+  .bubbleTime { font-size: 18.0px; }
+  .bubbleText { font-size: 25.2px; }
+  .bubbleTyping { font-size: 23.4px; }
+  .speechRowCompact .avatarEmoji { font-size: 34px; width: 83px; height: 83px; }
+  .historyPanelTitle { font-size: 21.6px; }
+}

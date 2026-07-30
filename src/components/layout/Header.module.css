@@ -121,3 +121,36 @@
   white-space: nowrap;
 }
 .myPageBtn:hover { border-color: var(--green); color: var(--green); }
+
+
+
+/* === AUTO: スマホ文字拡大 === */
+/* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
+   個別に微調整したい場合は、この下に手書きで上書きしてください。 */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .logo { font-size: 28.8px; }
+  .logoIcon { font-size: 34px; }
+  .avatar { font-size: 25.2px; width: 61px; height: 61px; }
+  .panelAvatar { font-size: 32.4px; width: 76px; height: 76px; }
+  .panelName { font-size: 27.0px; }
+  .panelLocation { font-size: 19.8px; }
+  .statNum { font-size: 34px; }
+  .statLabel { font-size: 18.0px; }
+  .favLabel { font-size: 19.8px; }
+  .favTeaName { font-size: 23.4px; }
+  .bioText { font-size: 21.6px; }
+  .editBtn { font-size: 21.6px; }
+  .logoutBtn { font-size: 21.6px; }
+  .eLabel { font-size: 19.8px; }
+  .eInput { font-size: 23.4px; }
+  .cancelSmBtn { font-size: 21.6px; }
+  .saveSmBtn { font-size: 21.6px; }
+  .autoCalcNote { font-size: 18.0px; }
+  .pointsIcon { font-size: 25.2px; }
+  .pointsNum { font-size: 27.0px; }
+  .pointsLabel { font-size: 19.8px; }
+  .avatarPreview { font-size: 34px; width: 101px; height: 101px; }
+  .avatarUploadBtn { font-size: 23.4px; }
+  .avatarHint { font-size: 19.8px; }
+  .myPageBtn { font-size: 23.4px; }
+}
