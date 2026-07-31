@@ -158,3 +158,34 @@
   .wantFilterBtn { font-size: 23.4px; }
   .tileWantBtn { font-size: 19.8px; }
 }
+
+/* ═══════════════════════════════════════════════
+   タイルの体裁修正
+   文字を大きくした結果、香りタグが枠からはみ出したり
+   投稿者名が不自然に改行される問題を解消する。
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  /* 左カラム（水色＋香りタグ）を広げ、タグが収まるようにする */
+  .tileLeft { width: 108px; }
+
+  /* 香りタグ：折り返しを許可し、枠内に必ず収める */
+  .tileAromaTag {
+    font-size: 13px;
+    padding: 3px 9px;
+    white-space: normal;          /* 長い名前は折り返す */
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .tileAroma { gap: 4px; width: 100%; }
+
+  /* 投稿者・場所：はみ出さず、途中で不自然に切れないように */
+  .tileFooter { flex-wrap: wrap; gap: 6px 10px; }
+  .tileAuthor { font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+  .tileLocation { font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+
+  /* 茶葉名・ブランド・お店：長くても枠内で折り返す */
+  .tileTea { overflow-wrap: anywhere; }
+  .tileBrand, .tileShop { overflow-wrap: anywhere; max-width: 100%; }
+}
