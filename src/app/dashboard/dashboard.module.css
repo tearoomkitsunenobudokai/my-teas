@@ -134,3 +134,38 @@
   .stampBoxGoal { font-size: 23.4px; }
   .stampProgress { font-size: 25.2px; }
 }
+
+/* ═══════════════════════════════════════════════
+   ダッシュボードの体裁修正
+   文字を大きくした結果、幅の狭い枠でラベルが縦積みに
+   潰れてしまう問題を解消する。
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  /* 統計カード：カード幅を広げ、ラベルは折り返さない大きさに */
+  .statsRow { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .statLabel { font-size: 15px; white-space: nowrap; text-align: center; }
+  .statNum { font-size: 30px; }
+
+  /* 平均スコア：ラベル欄の幅を広げ、縦積みを防ぐ */
+  .scoreRow { gap: 10px; }
+  .scoreLabel {
+    width: 56px;
+    font-size: 16px;
+    white-space: nowrap;   /* 「香り」が縦に割れるのを防ぐ */
+  }
+  .scoreEdge { font-size: 13px; white-space: nowrap; }
+  .scorebarVal { font-size: 17px; white-space: nowrap; }
+
+  /* ランキング（よく飲む紅茶・よく行くお店） */
+  .rankName { font-size: 16px; }
+  .rankCount { font-size: 14px; white-space: nowrap; }
+
+
+  /* 香りタグ */
+  .aromaItem { font-size: 15px; padding: 5px 12px; }
+  .aromaName { font-size: 15px; }
+  .aromaCount { font-size: 14px; }
+
+  /* セクション見出し */
+  .cardTitle { font-size: 19px; }
+}
