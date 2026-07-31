@@ -190,3 +190,44 @@
   .noticeItemTitle { font-size: 23.4px; }
   .noticeItemBody { font-size: 21.6px; }
 }
+
+/* ═══════════════════════════════════════════════
+   ログイン画面を画面いっぱいに広げて見やすくする
+   カード幅が380px固定で、画面が広いと余白ばかりが目立ち
+   内容が小さく見えてしまうため、画面幅に追従させる。
+   ═══════════════════════════════════════════════ */
+.box {
+  /* 画面が狭いときは幅いっぱい、広いときは読みやすい上限まで */
+  max-width: min(100%, 560px);
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .wrap {
+    padding: 16px 12px;
+    align-items: flex-start;      /* 内容が増えても上から自然に表示 */
+  }
+  @supports (min-height: 100dvh) {
+    .wrap { min-height: 100dvh; }
+  }
+  .box {
+    max-width: none;              /* 画面幅いっぱいに */
+    padding: 24px 20px 28px;
+    border-radius: 16px;
+  }
+
+  /* 入力欄・ボタンを押しやすく */
+  .input { min-height: 56px; padding: 14px 16px; font-size: 17px; }
+  .btnPrimary { min-height: 58px; font-size: 19px; font-weight: 700; }
+  .tab { min-height: 52px; font-size: 19px; }
+  .label { font-size: 16px; }
+  .linkBtn { min-height: 48px; font-size: 16px; }
+
+  /* お知らせ欄を読みやすく */
+  .notices { margin-top: 26px; padding-top: 18px; }
+  .noticesTitle { font-size: 17px; }
+  .noticeItemTitle { font-size: 16px; line-height: 1.6; }
+  .noticeItemBody { font-size: 15px; line-height: 1.8; }
+  .noticeDate { font-size: 13px; }
+  .noticeWarn, .noticeInfo { font-size: 15px; }
+  .noticeWarn p, .noticeInfo p { font-size: 14.5px; }
+}
