@@ -358,3 +358,50 @@
   .visitedBadge { font-size: 16.2px; }
   .mapCloseBtn { font-size: 25.2px; width: 47px; height: 47px; }
 }
+
+/* ═══════════════════════════════════════════════
+   認定店リストのスマホ表示を改善
+   ・入れ子のスクロール（ページ内にさらにスクロール領域がある構造）が
+     外側のスクロールと競合し、リスト下部に到達できなくなっていたため、
+     スマホではページ全体を素直にスクロールさせる。
+   ・検索欄とエリア見出しは画面上部に固定して、常に操作できるようにする。
+   ・住所は横幅の許す限り表示する。
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  /* 高さの固定と入れ子スクロールを解除し、ページ全体で1つのスクロールにする */
+  .pageWrap { height: auto; overflow: visible; }
+  .leftPane { overflow: visible; border-right: none; }
+  .shopList { overflow: visible; flex: none; padding-bottom: 32px; }
+
+  /* 検索・絞り込みを上部に固定 */
+  .filters {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bg-card);
+    padding: 10px 12px;
+    border-bottom: 0.5px solid var(--border);
+    margin: 0;
+  }
+  /* エリア見出し（「首都圏エリア 90店」）は検索欄のすぐ下に固定 */
+  .areaTitle {
+    position: sticky;
+    top: 62px;
+    z-index: 4;
+    font-size: 14px;
+    padding: 8px 14px 6px;
+  }
+
+  /* 住所は省略せず、幅の許す限り表示する */
+  .shopRowAddr {
+    max-width: none;
+    white-space: normal;      /* 長い住所は折り返す */
+    overflow: visible;
+    text-overflow: clip;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .shopRowName { font-size: 16px; line-height: 1.45; }
+  .shopRow { padding: 12px 14px; }
+  .shopRowLeft { min-width: 0; flex: 1; }
+}
