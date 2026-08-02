@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { Radar } from 'react-chartjs-2'
 import {
   Chart as ChartJS, RadialLinearScale, PointElement,
@@ -8,9 +9,40 @@ import { ReviewScores, SCORE_LABELS } from '@/types'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
-interface Props { scores: ReviewScores; label?: string; size?: number; labelFontSize?: number; tickFontSize?: number; fluid?: boolean; verticalSideLabels?: boolean }
+interface Props {
+  scores: ReviewScores; label?: string; size?: number
+  /** スマホ表示のときの文字サイズ */
+  labelFontSize?: number; tickFontSize?: number
+  /** PC表示のときの文字サイズ（未指定なら既定値を使う） */
+  desktopLabelFontSize?: number; desktopTickFontSize?: number
+  fluid?: boolean; verticalSideLabels?: boolean
+}
 
-export default function RadarChart({ scores, label = '', size = 260, labelFontSize = 13, tickFontSize = 11, fluid = false, verticalSideLabels = false }: Props) {
+/* スマホ表示かどうかを判定する。CSSのメディアクエリと同じ条件を使い、
+   PCではラベルが大きくなりすぎないよう文字サイズを切り替える。 */
+const MOBILE_QUERY = '(max-width: 768px), (pointer: coarse) and (max-width: 1100px)'
+
+function useIsMobile(): boolean {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_QUERY)
+    const update = () => setIsMobile(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+  return isMobile
+}
+
+export default function RadarChart({
+  scores, label = '', size = 260,
+  labelFontSize = 13, tickFontSize = 11,
+  desktopLabelFontSize = 13, desktopTickFontSize = 11,
+  fluid = false, verticalSideLabels = false,
+}: Props) {
+  const isMobile = useIsMobile()
+  const labelFs = isMobile ? labelFontSize : desktopLabelFontSize
+  const tickFs  = isMobile ? tickFontSize  : desktopTickFontSize
   const keys = Object.keys(SCORE_LABELS) as (keyof ReviewScores)[]
   /* 軸の並びは 上→右→下→左。verticalSideLabels=true のときは
      左右（コク・渋み）のラベルを1文字ずつ改行して縦書きにする。
@@ -18,7 +50,8 @@ export default function RadarChart({ scores, label = '', size = 260, labelFontSi
   const labels = keys.map((k, i) => {
     const text = SCORE_LABELS[k]
     const isSide = i === 1 || i === 3
-    return verticalSideLabels && isSide ? text.split('') : text
+    /* 縦書きはスマホ表示のときだけ。PCは横幅に余裕があるため横書きのままにする。 */
+    return verticalSideLabels && isMobile && isSide ? text.split('') : text
   })
   const data   = keys.map(k => scores[k] ?? 1)
 
@@ -37,7 +70,8 @@ export default function RadarChart({ scores, label = '', size = 260, labelFontSi
             borderColor: '#1D9E75',
             pointBackgroundColor: '#1D9E75',
             borderWidth: 2,
-            pointRadius: 5,
+            /* PCではタイルが複数列に並び1枚が小さくなるため、点も小さくする */
+            pointRadius: isMobile ? 5 : 3.5,
           }],
         }}
         options={{
@@ -47,12 +81,14 @@ export default function RadarChart({ scores, label = '', size = 260, labelFontSi
           scales: {
             r: {
               min: 0, max: 5,
-              ticks: { stepSize: 1, font: { size: tickFontSize }, callback: (v: any) => `${v}` },
+              ticks: { stepSize: 1, font: { size: tickFs }, callback: (v: any) => `${v}` },
               pointLabels: {
-                font: { size: labelFontSize, weight: 600 },
+                font: { size: labelFs, weight: 600 },
                 /* 軸名（香り・コク・水色・渋み）の背景に薄い青を敷いて読みやすくする */
                 backdropColor: 'rgba(214, 233, 250, 0.9)',
-                backdropPadding: { top: 4, bottom: 4, left: 7, right: 7 },
+                backdropPadding: isMobile
+                  ? { top: 4, bottom: 4, left: 7, right: 7 }
+                  : { top: 3, bottom: 3, left: 5, right: 5 },
               },
             },
           },
