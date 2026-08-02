@@ -236,3 +236,9 @@
   border-top: none;
   border-radius: 0 0 10px 10px;
 }
+
+/* スマホでは常に1列表示にする。
+   サイドバー最小化で本文幅が広がっても、auto-fill で2列に増えないよう固定する。 */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .tileGrid { grid-template-columns: 1fr; }
+}

@@ -35,6 +35,20 @@ export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
     })
   }
 
+  // スマホ表示のときだけ、ナビで画面遷移したら自動でメニューを最小化する。
+  // （展開したままだと本文が狭くなるため。PCでは従来通り維持する）
+  function handleNavClick(href: string) {
+    if (href === pathname) return // 同じ画面なら何もしない
+    if (typeof window === 'undefined') return
+    const isMobile = window.matchMedia(
+      '(max-width: 768px), (pointer: coarse) and (max-width: 1100px)'
+    ).matches
+    if (isMobile) {
+      setCollapsed(true)
+      localStorage.setItem(COLLAPSE_KEY, '1')
+    }
+  }
+
   return (
     <nav className={`${styles.sidebar} ${collapsed ? styles.collapsed : ''}`}>
       <button
@@ -49,6 +63,7 @@ export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
       {!collapsed && <div className={styles.section}>メニュー</div>}
       {NAV.map(({ href, label, icon }) => (
         <Link key={href} href={href}
+          onClick={() => handleNavClick(href)}
           title={collapsed ? label : undefined}
           className={`${styles.item} ${pathname === href ? styles.active : ''}`}>
           <span>{icon}</span> {!collapsed && label}
@@ -58,6 +73,7 @@ export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
         <>
           {!collapsed && <div className={styles.section}>管理</div>}
           <Link href="/dashboard/admin"
+            onClick={() => handleNavClick('/dashboard/admin')}
             title={collapsed ? '管理者メニュー' : undefined}
             className={`${styles.item} ${pathname === '/dashboard/admin' ? styles.active : ''}`}>
             <span>⚙️</span> {!collapsed && '管理者メニュー'}
