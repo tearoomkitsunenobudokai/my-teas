@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase'
 import dynamic from 'next/dynamic'
 import { ReviewScores } from '@/types'
 import TeaCupSvg from '@/components/TeaCup'
+import { formatGardenOrigin, formatLeafWater } from '@/lib/reviewFormat'
 import styles from './community.module.css'
 
 const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr: false })
@@ -58,7 +59,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           {review.shop_name
             ? <span className={styles.tileShop}>🏪 {review.shop_name}</span>
             : <span className={styles.tilePlaceholder}>🏪 店舗未設定</span>}
-          {review.tea_garden && <span className={styles.tileShop}>🌱 {review.tea_garden}</span>}
+          {formatGardenOrigin(review.tea_garden, review.origin_country) && <span className={styles.tileShop}>🌱 {formatGardenOrigin(review.tea_garden, review.origin_country)}</span>}
         </div>
       </div>
       {/* タイル本体：上段=水色/チャート、下段=香り・添え物（全幅で折り返しを防ぐ） */}
@@ -135,7 +136,7 @@ export default function CommunityPage() {
   const load = useCallback(async () => {
     const { data } = await supabase
       .from('reviews')
-      .select('id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_color_depth, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, accompaniments')
+      .select('id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_color_depth, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, tea_grams, water_ml, origin_country, accompaniments')
       .eq('is_public', true)
       .order('created_at', { ascending: false })
 
@@ -253,7 +254,7 @@ export default function CommunityPage() {
                 <p className={styles.modalTitle}>{selected.tea_name ?? '不明'}</p>
                 {selected.brand_name && <p className={styles.hint}>🏷 {selected.brand_name}</p>}
                 {selected.shop_name && <p className={styles.hint}>🏪 {selected.shop_name}</p>}
-                {selected.tea_garden && <p className={styles.hint}>🌱 {selected.tea_garden}</p>}
+                {formatGardenOrigin(selected.tea_garden, selected.origin_country) && <p className={styles.hint}>🌱 {formatGardenOrigin(selected.tea_garden, selected.origin_country)}</p>}
               </div>
               <button className={styles.closeBtn} onClick={() => setSelected(null)}>✕</button>
             </div>
@@ -296,7 +297,7 @@ export default function CommunityPage() {
             </div>
 
             {/* 詳細情報（入力されている項目のみ表示） */}
-            {(selected.brew_method || selected.steep_seconds || selected.tea_grams_per_100ml || selected.accompaniments?.length > 0) && (
+            {(selected.brew_method || selected.steep_seconds || selected.tea_grams != null || selected.water_ml != null || selected.tea_grams_per_100ml || selected.accompaniments?.length > 0) && (
               <div className={styles.detailInfoRow}>
                 {selected.brew_method && (
                   <span className={styles.detailInfoTag}>🍵 {selected.brew_method}</span>
@@ -304,8 +305,8 @@ export default function CommunityPage() {
                 {selected.steep_seconds && (
                   <span className={styles.detailInfoTag}>⏱ {selected.steep_seconds}秒</span>
                 )}
-                {selected.tea_grams_per_100ml && (
-                  <span className={styles.detailInfoTag}>⚖️ {selected.tea_grams_per_100ml}g/100ml</span>
+                {formatLeafWater(selected.tea_grams, selected.water_ml, selected.tea_grams_per_100ml) && (
+                  <span className={styles.detailInfoTag}>⚖️ {formatLeafWater(selected.tea_grams, selected.water_ml, selected.tea_grams_per_100ml)}</span>
                 )}
                 {selected.accompaniments?.map((a: string) => (
                   <span key={a} className={styles.detailInfoTag}>✨ {a}</span>

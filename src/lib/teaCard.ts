@@ -13,11 +13,13 @@
 // ─────────────────────────────────────────────────────────
 
 import { brewIconPath, accompanimentIconPath } from './icons'
+import { formatGardenOrigin, formatLeafWater } from './reviewFormat'
 
 export interface TeaCardData {
   tea_name: string
   brand_name?: string | null
   tea_garden?: string | null
+  origin_country?: string | null
   shop_name?: string | null
   user_name?: string | null
   drank_at?: string | null
@@ -28,6 +30,8 @@ export interface TeaCardData {
   brew_method?: string | null
   steep_seconds?: number | null
   tea_grams_per_100ml?: number | null
+  tea_grams?: number | null
+  water_ml?: number | null
   accompaniments?: string[] | null
   score_aroma: number
   score_astringency: number
@@ -382,11 +386,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.font = `700 ${nf}px ${MINCHO}`
   ctx.fillStyle = INK_DEEP
   ctx.fillText(teaNameText, nameX, ny)
-  if (data.tea_garden) {
-    // 飾り罫（金線）を挟んで茶園名。罫の長さは茶園名の文字幅に合わせて可変にする
-    const gf = fitFontSize(ctx, data.tea_garden, 19, 480, s => `400 ${s}px ${MINCHO}`, 13)
+  // 茶園と原産国の表示。両方あれば「デジュー農園（インド）」、
+  // 茶園が空なら括弧なしで「インド」だけを表示する。
+  const gardenText = formatGardenOrigin(data.tea_garden, data.origin_country)
+  if (gardenText) {
+    // 飾り罫（金線）を挟んで茶園名。罫の長さは文字幅に合わせて可変にする
+    const gf = fitFontSize(ctx, gardenText, 19, 480, s => `400 ${s}px ${MINCHO}`, 13)
     ctx.font = `400 ${gf}px ${MINCHO}`
-    const gw = ctx.measureText(data.tea_garden).width
+    const gw = ctx.measureText(gardenText).width
 
     ny += 22
     ctx.strokeStyle = 'rgba(168,135,63,0.6)'
@@ -395,7 +402,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
     ny += 26
     ctx.fillStyle = INK_SOFT
-    ctx.fillText(data.tea_garden, nameX, ny)
+    ctx.fillText(gardenText, nameX, ny)
   }
 
   // ── 右上: TASTING CARD → 紅茶名 → 評価者/飲んだ日 → 場所 → 罫 → メモ ──
@@ -536,7 +543,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }
   const details: string[] = []
   if (data.brew_method) details.push(data.brew_method)
-  if (data.tea_grams_per_100ml) details.push(`${data.tea_grams_per_100ml}g/100ml`)
+  // 茶葉量と水量。新形式（g・ml）を優先し、無ければ旧形式（g/100ml）を表示する
+  const amount = formatLeafWater(data.tea_grams, data.water_ml, data.tea_grams_per_100ml)
+  if (amount) details.push(amount)
   if (data.steep_seconds) details.push(`${data.steep_seconds}秒`)
   if (details.length) {
     await sectionWithIcons('淹れ方', [data.brew_method ? brewIconPath(data.brew_method) : null], details.join(' / '))

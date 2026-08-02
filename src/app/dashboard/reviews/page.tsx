@@ -138,8 +138,14 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [drankAt,   setDrankAt]   = useState(initial?.drank_at ?? new Date().toISOString().slice(0,10))
   const [brewMethod,setBrewMethod]= useState(initial?.brew_method ?? '')
   const [teaGarden, setTeaGarden] = useState(initial?.tea_garden ?? '')
+  const [originCountry, setOriginCountry] = useState(initial?.origin_country ?? '')
+  const [originErr, setOriginErr] = useState('')
   const [steepSec,  setSteepSec]  = useState(initial?.steep_seconds ? String(initial.steep_seconds) : '')
-  const [teaGrams,  setTeaGrams]  = useState(initial?.tea_grams_per_100ml ? String(initial.tea_grams_per_100ml) : '')
+  /* 茶葉量はグラム(g)と水量(ml)をそれぞれ入力する。
+     旧データ（tea_grams_per_100ml = g/100ml の比率）しかない場合は、
+     比率をそのままグラム欄に出すと誤解を招くため復元しない。 */
+  const [teaGrams,  setTeaGrams]  = useState(initial?.tea_grams != null ? String(initial.tea_grams) : '')
+  const [waterMl,   setWaterMl]   = useState(initial?.water_ml != null ? String(initial.water_ml) : '')
   const [accs,      setAccs]      = useState<string[]>(initial?.accompaniments ?? [])
 
   // AI要約（通常/お嬢様風）。既存の保存済み要約があれば復元。
@@ -236,8 +242,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         tea_name: teaName, brand_name: brandName, shop_name: shopName,
         user_name: profile?.name ?? null, drank_at: drankAt, color_hex: colorHex, color_name: colorName,
         comment: cardText, aroma_notes: aromaNotes, brew_method: brewMethod, tea_garden: teaGarden || null,
+        origin_country: originCountry || null,
         steep_seconds: steepSec ? parseInt(steepSec) : null,
-        tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
+        tea_grams: teaGrams ? parseFloat(teaGrams) : null,
+        water_ml: waterMl ? parseFloat(waterMl) : null,
         accompaniments: accs,
         score_aroma: scores.score_aroma, score_astringency: scores.score_astringency,
         score_richness: scores.score_richness, score_color_depth: scores.score_color_depth,
@@ -322,6 +330,19 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
   async function save() {
     if (!teaName.trim()) { alert('お茶の名前を入力してください'); return }
+
+    // 原産国の不適切表現チェック（香りの自由入力と同じ基準）
+    if (originCountry.trim()) {
+      const oc = isTextClean(originCountry.trim())
+      if (!oc.clean) {
+        setOriginErr(oc.reason ?? '入力できない語が含まれています')
+        setShowDetail(true)
+        alert('原産国に入力できない語が含まれています。内容をご確認ください。')
+        return
+      }
+    }
+    setOriginErr('')
+
     setSaving(true)
 
     // 新規登録時のみ上限チェック（権限区分ごとの上限を適用）
@@ -375,8 +396,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       ...scores, comment: comment || null, notes: notes || null, is_public: effectiveIsPublic, drank_at: drankAt,
       brew_method: brewMethod || null,
       tea_garden: teaGarden || null,
+      origin_country: originCountry || null,
       steep_seconds: steepSec ? parseInt(steepSec) : null,
-      tea_grams_per_100ml: teaGrams ? parseFloat(teaGrams) : null,
+      tea_grams: teaGrams ? parseFloat(teaGrams) : null,
+      water_ml: waterMl ? parseFloat(waterMl) : null,
       accompaniments: accs.length ? accs : null,
     }
     const { data: saved, error } = isEdit
@@ -672,6 +695,12 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         </button>
         {showDetail && (
           <div className={styles.detail}>
+            <p className={styles.label}>原産国</p>
+            <input className={styles.input} value={originCountry} maxLength={20}
+              onChange={e => { setOriginCountry(e.target.value.slice(0, 20)); setOriginErr('') }}
+              placeholder="例: インド"/>
+            {originErr && <p className={styles.otherAromaErr}>{originErr}</p>}
+
             <p className={styles.label}>茶園</p>
             <input className={styles.input} value={teaGarden} maxLength={30}
               onChange={e => setTeaGarden(e.target.value.slice(0, 30))} placeholder="例: ニンバン茶園"/>
@@ -692,9 +721,14 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                   onChange={e => setSteepSec(e.target.value)} placeholder="例: 180"/>
               </div>
               <div>
-                <p className={styles.label}>茶葉量（g/100ml）</p>
+                <p className={styles.label}>茶葉量（g）</p>
                 <input className={styles.inputSm} type="number" step="0.1" min="0" value={teaGrams}
-                  onChange={e => setTeaGrams(e.target.value)} placeholder="例: 2.5"/>
+                  onChange={e => setTeaGrams(e.target.value)} placeholder="例: 5"/>
+              </div>
+              <div>
+                <p className={styles.label}>水量（ml）</p>
+                <input className={styles.inputSm} type="number" step="1" min="0" value={waterMl}
+                  onChange={e => setWaterMl(e.target.value)} placeholder="例: 200"/>
               </div>
             </div>
             <p className={styles.label}>添え物</p>
@@ -794,7 +828,7 @@ export default function ReviewsPage() {
     setUserId(user.id)
     const [{ data }, { data: profile }] = await Promise.all([
       supabase.from('reviews')
-        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden')
+        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden,origin_country,tea_grams,water_ml')
         .eq('user_id', user.id).order('drank_at', { ascending: false }),
       supabase.from('profiles').select('is_subscribed,is_admin,is_creator').eq('id', user.id).single(),
     ])
@@ -819,9 +853,9 @@ export default function ReviewsPage() {
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
     }
     const headers = [
-      '飲んだ日', '紅茶名', 'ブランド', '認定店', '色',
+      '飲んだ日', '紅茶名', 'ブランド', '認定店', '原産国', '茶園', '色',
       '香り', '渋み', 'コク', '水色の濃さ',
-      '抽出方法', '淹れ時間(秒)', '茶葉量(g/100ml)', '添え物',
+      '抽出方法', '淹れ時間(秒)', '茶葉量(g)', '水量(ml)', '茶葉量(g/100ml)※旧', '添え物',
       'コメント', 'その他の情報', '公開', '登録日時',
     ]
     const rows = reviews.map(r => [
@@ -829,10 +863,14 @@ export default function ReviewsPage() {
       r.tea_name ?? '',
       r.brand_name ?? '',
       r.shop_name ?? '',
+      r.origin_country ?? '',
+      r.tea_garden ?? '',
       r.color_hex ?? '',
       r.score_aroma ?? '', r.score_astringency ?? '', r.score_richness ?? '', r.score_color_depth ?? '',
       r.brew_method ?? '',
       r.steep_seconds ?? '',
+      r.tea_grams ?? '',
+      r.water_ml ?? '',
       r.tea_grams_per_100ml ?? '',
       Array.isArray(r.accompaniments) ? r.accompaniments.join('・') : '',
       r.comment ?? '',
