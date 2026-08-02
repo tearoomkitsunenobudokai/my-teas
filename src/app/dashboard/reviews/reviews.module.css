@@ -791,3 +791,50 @@
   .hexSwatch { width: 20px; height: 20px; }
   .hexRow { gap: 8px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v249: 一覧表示（編集時）の項目ごとの折りたたみ見出し
+   ═══════════════════════════════════════════════ */
+.secHead {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-muted);
+  border: 0.5px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  margin: 14px 0 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+.secHead:hover { border-color: var(--border-strong); }
+.secHeadLabel { font-size: 14px; font-weight: 700; color: var(--text); }
+.secHeadIcon { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .secHead { padding: 15px 16px; margin: 18px 0 10px; }
+  .secHeadLabel { font-size: 21px; }
+  .secHeadIcon { font-size: 16px; }
+}
+
+/* 一覧表示の一括開閉バー */
+.secBar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-top: 4px;
+}
+.secBarHint { font-size: 12px; color: var(--text-hint); }
+.secBarBtns { display: flex; gap: 8px; }
+.secBarBtn {
+  font-size: 12px; font-family: inherit; cursor: pointer;
+  background: none; border: 0.5px solid var(--border-strong);
+  border-radius: 20px; padding: 5px 12px; color: var(--text-muted);
+}
+.secBarBtn:hover { border-color: var(--green); color: var(--green); }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .secBarHint { font-size: 17px; }
+  .secBarBtn { font-size: 17px; padding: 8px 16px; }
+}
