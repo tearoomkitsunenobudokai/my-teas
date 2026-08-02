@@ -24,6 +24,38 @@ function alphaHex(density: number): string {
     .toString(16).padStart(2, '0').toUpperCase()
 }
 
+/**
+ * スライダー＋増減ボタンの行。
+ * スマホではスライダーのつまみを細かく動かしづらいため、
+ * 「≪ -10 / ‹ -1 / +1 › / +10 ≫」のボタンで確実に調整できるようにする。
+ */
+function StepperRow({ label, value, min, max, onChange, suffix }: {
+  label: string; value: number; min: number; max: number
+  onChange: (v: number) => void; suffix?: string
+}) {
+  const set = (v: number) => onChange(Math.min(max, Math.max(min, v)))
+  return (
+    <div className={styles.stepRow}>
+      <div className={styles.stepHead}>
+        <span className={styles.sizeLabel}>{label}</span>
+        <span className={styles.stepVal}>{value}{suffix ?? ''}</span>
+      </div>
+      <div className={styles.stepCtrl}>
+        <button type="button" className={styles.stepBtnLg}
+          onClick={() => set(value - 10)} disabled={value <= min} aria-label={`${label}を10減らす`}>≪</button>
+        <button type="button" className={styles.stepBtn}
+          onClick={() => set(value - 1)} disabled={value <= min} aria-label={`${label}を1減らす`}>‹</button>
+        <input type="range" min={min} max={max} value={value}
+          onChange={e => set(Number(e.target.value))} className={styles.range}/>
+        <button type="button" className={styles.stepBtn}
+          onClick={() => set(value + 1)} disabled={value >= max} aria-label={`${label}を1増やす`}>›</button>
+        <button type="button" className={styles.stepBtnLg}
+          onClick={() => set(value + 10)} disabled={value >= max} aria-label={`${label}を10増やす`}>≫</button>
+      </div>
+    </div>
+  )
+}
+
 export default function ColorPickerModal({ onPick, onClose }: Props) {
   const cameraRef = useRef<HTMLInputElement>(null)
   const fileRef   = useRef<HTMLInputElement>(null)
@@ -193,19 +225,12 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
             </div>
             <p className={styles.guideSm}>枠をドラッグして、色を取りたい場所に合わせてください</p>
 
-            <div className={styles.sizeRow}>
-              <span className={styles.sizeLabel}>枠の大きさ</span>
-              <input type="range" min={12} max={70} value={radius}
-                onChange={e => setRadius(Number(e.target.value))} className={styles.range}/>
-            </div>
+            <StepperRow label="枠の大きさ" value={radius} min={12} max={70}
+              onChange={setRadius}/>
 
             {/* 濃さの調整（実際のカップ表示で確認しながら決められるようにする） */}
-            <div className={styles.densityRow}>
-              <span className={styles.sizeLabel}>濃さ</span>
-              <input type="range" min={40} max={100} value={density}
-                onChange={e => setDensity(Number(e.target.value))} className={styles.range}/>
-              <span className={styles.densityVal}>{density}%</span>
-            </div>
+            <StepperRow label="濃さ" value={density} min={40} max={100}
+              onChange={setDensity} suffix="%"/>
 
             {/* 抽出結果＋カップのプレビュー */}
             <div className={styles.resultRow}>

@@ -111,3 +111,42 @@
   .densityVal { font-size: 16px; min-width: 56px; }
   .previewNote { font-size: 15px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v256: スライダー＋増減ボタン
+   スマホでつまみを細かく動かすのは難しいため、
+   1ずつ・10ずつ変えられるボタンを左右に置く。
+   ═══════════════════════════════════════════════ */
+.stepRow { margin-top: 12px; }
+.stepHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+.stepVal {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px; font-weight: 600; color: var(--text);
+}
+.stepCtrl { display: flex; align-items: center; gap: 6px; }
+.stepCtrl .range { flex: 1; min-width: 0; }
+.stepBtn, .stepBtnLg {
+  flex-shrink: 0;
+  font-family: inherit;
+  background: var(--bg-muted);
+  border: 0.5px solid var(--border-strong);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  line-height: 1;
+  /* タップしやすい大きさを確保する */
+  min-width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+}
+.stepBtn { font-size: 15px; }
+.stepBtnLg { font-size: 13px; }
+.stepBtn:active, .stepBtnLg:active { background: var(--green-light); border-color: var(--green); }
+.stepBtn:disabled, .stepBtnLg:disabled { opacity: 0.35; cursor: default; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .stepVal { font-size: 18px; }
+  .stepBtn, .stepBtnLg { min-width: 46px; height: 46px; border-radius: 10px; }
+  .stepBtn { font-size: 22px; }
+  .stepBtnLg { font-size: 18px; }
+  .stepCtrl { gap: 8px; }
+}
