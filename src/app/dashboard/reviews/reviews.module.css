@@ -624,3 +624,20 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .tileName { font-size: 17px; }
 }
+
+/* ═══════════════════════════════════════════════
+   フィルター（絞り込み）バーを上部に固定
+   一覧をスクロールしても検索・絞り込みがすぐ使えるようにする。
+   スクロールする親（.main）に上下パディングがあるため、
+   その分だけ負のマージンで持ち上げて、隙間から中身が覗かないようにする。
+   ═══════════════════════════════════════════════ */
+.toolbar {
+  position: sticky;
+  top: -1.75rem;              /* .main の padding 分を打ち消す */
+  z-index: 20;
+  /* 固定中に背後の内容が透けないよう、上下に余白を足して塗りつぶす */
+  margin: -0.5rem 0 0;
+  padding-top: calc(10px + 1.75rem);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+}
