@@ -9,11 +9,19 @@
  * ・抽出時は極端に明るい／暗いピクセル（ハイライトや影）を除いてから平均する
  */
 import { useEffect, useRef, useState } from 'react'
+import TeaCup from './TeaCup'
 import styles from './ColorPickerModal.module.css'
 
 type Props = {
-  onPick: (hex6: string) => void   // 抽出した色を #RRGGBB で返す
+  /** 抽出した色を 8桁 hex（#RRGGBBAA）で返す。AA は「濃さ」スライダーの値 */
+  onPick: (hex8: string) => void
   onClose: () => void
+}
+
+/** 濃さ(40〜100%) を 2桁の16進(不透明度)に変換する */
+function alphaHex(density: number): string {
+  return Math.round(Math.min(100, Math.max(0, density)) / 100 * 255)
+    .toString(16).padStart(2, '0').toUpperCase()
 }
 
 export default function ColorPickerModal({ onPick, onClose }: Props) {
@@ -29,6 +37,9 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
   const [radius, setRadius] = useState(28)      // 抽出枠の半径（画面上のpx）
   const [hex, setHex] = useState('')
   const [dragging, setDragging] = useState(false)
+  /* 濃さ（不透明度）。写真から取り込んだ色は「実際に見た色」なので既定は100%。
+     撮影時の照明で濃く／薄く写った場合に、ここで微調整できるようにする。 */
+  const [density, setDensity] = useState(100)
 
   // 画像を読み込んで canvas に描画する
   function loadFile(file?: File | null) {
@@ -188,7 +199,15 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
                 onChange={e => setRadius(Number(e.target.value))} className={styles.range}/>
             </div>
 
-            {/* 抽出結果 */}
+            {/* 濃さの調整（実際のカップ表示で確認しながら決められるようにする） */}
+            <div className={styles.densityRow}>
+              <span className={styles.sizeLabel}>濃さ</span>
+              <input type="range" min={40} max={100} value={density}
+                onChange={e => setDensity(Number(e.target.value))} className={styles.range}/>
+              <span className={styles.densityVal}>{density}%</span>
+            </div>
+
+            {/* 抽出結果＋カップのプレビュー */}
             <div className={styles.resultRow}>
               <span className={styles.resultSwatch} style={{ background: hex || '#eee' }}/>
               <span className={styles.resultHex}>{hex || '—'}</span>
@@ -197,9 +216,18 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
                 撮り直す
               </button>
             </div>
+            {hex && (
+              <div className={styles.previewRow}>
+                <TeaCup hex={hex + alphaHex(density)} size={72} tight/>
+                <span className={styles.previewNote}>
+                  登録するとこのように表示されます。<br/>
+                  薄くすると柔らかい印象に、濃くすると写真に近づきます。
+                </span>
+              </div>
+            )}
 
             <button type="button" className={styles.applyBtn} disabled={!hex}
-              onClick={() => { if (hex) { onPick(hex); onClose() } }}>
+              onClick={() => { if (hex) { onPick(hex + alphaHex(density)); onClose() } }}>
               この色を水色に設定する
             </button>
           </div>

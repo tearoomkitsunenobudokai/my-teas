@@ -891,10 +891,9 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         {showPicker && (
           <ColorPickerModal
             onClose={() => setShowPicker(false)}
-            onPick={hex6 => {
-              // 既存の透明度を保ったまま色だけ差し替える（未設定なら既定の B0）
-              const alpha = colorHex.length === 9 ? colorHex.slice(7) : 'B0'
-              setColorHex(hex6 + alpha)
+            onPick={hex8 => {
+              // モーダル側で「濃さ」まで決めているので、そのまま採用する
+              setColorHex(hex8)
             }}/>
         )}
 
