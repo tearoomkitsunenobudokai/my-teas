@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase'
 import dynamic from 'next/dynamic'
 import { ReviewScores, SCORE_LABELS, SCORE_DESCRIPTIONS } from '@/types'
 import { isCommentClean, isTextClean } from '@/lib/moderation'
+import { sortByPrefecture, prefectureOrder } from '@/lib/prefectures'
 import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import { brewIconPath, accompanimentIconPath } from '@/lib/icons'
@@ -351,8 +352,15 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
   /* 認定店を「エリア→店舗」の2段プルダウンで選べるようにするための一覧。
      エリア未選択のときは全店舗を対象にする。 */
-  const shopAreas = Array.from(new Set(shops.map(s => s.prefecture).filter(Boolean))).sort()
-  const shopsInArea = shopArea ? shops.filter(s => s.prefecture === shopArea) : shops
+  // 都道府県コード順（北海道→沖縄県）で並べる。文字コード順だと地理と無関係な順になるため。
+  const shopAreas = sortByPrefecture(Array.from(new Set(shops.map(s => s.prefecture).filter(Boolean))))
+  const shopsInArea = (shopArea ? shops.filter(s => s.prefecture === shopArea) : shops)
+    // エリア未選択のときは全店舗が並ぶため、都道府県コード順→店名順に整える
+    .slice()
+    .sort((a, b) => {
+      const d = prefectureOrder(a.prefecture) - prefectureOrder(b.prefecture)
+      return d !== 0 ? d : String(a.name).localeCompare(String(b.name), 'ja')
+    })
 
   function toggleAroma(n: string) {
     if (aromaNotes.includes(n)) { setAromaNotes(a => a.filter(x => x !== n)); return }
