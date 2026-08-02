@@ -50,7 +50,9 @@
 .cupBox svg { width: 100%; height: auto; max-width: 128px; }
 .hexCode { font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-muted); letter-spacing: 0.02em; }
 /* チャート */
-.chartBox { display: flex; align-items: center; justify-content: center; padding: 8px 4px; flex: 1; }
+/* fluid のチャートがセル幅いっぱいに広がるようにする */
+.chartBox > div { width: 100%; }
+.chartBox { display: flex; align-items: center; justify-content: center; padding: 10px 4px; flex: 1; }
 /* ── 下段（属性行：ラベル＋内容） ── */
 .attrRow { display: grid; grid-template-columns: 74px minmax(0, 1fr); border-top: 0.5px solid var(--border); align-items: stretch; }
 .attrLabel {

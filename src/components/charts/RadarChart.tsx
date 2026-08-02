@@ -8,15 +8,18 @@ import { ReviewScores, SCORE_LABELS } from '@/types'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
-interface Props { scores: ReviewScores; label?: string; size?: number; labelFontSize?: number; tickFontSize?: number }
+interface Props { scores: ReviewScores; label?: string; size?: number; labelFontSize?: number; tickFontSize?: number; fluid?: boolean }
 
-export default function RadarChart({ scores, label = '', size = 260, labelFontSize = 13, tickFontSize = 11 }: Props) {
+export default function RadarChart({ scores, label = '', size = 260, labelFontSize = 13, tickFontSize = 11, fluid = false }: Props) {
   const keys = Object.keys(SCORE_LABELS) as (keyof ReviewScores)[]
   const labels = keys.map(k => SCORE_LABELS[k])
   const data   = keys.map(k => scores[k] ?? 1)
 
   return (
-    <div style={{ width: size, height: size, maxWidth: '100%' }}>
+    /* fluid=true のときは親要素の幅いっぱいに描画する（正方形を維持） */
+    <div style={fluid
+      ? { width: '100%', aspectRatio: '1 / 1', maxWidth: size }
+      : { width: size, height: size, maxWidth: '100%' }}>
       <Radar
         data={{
           labels,
