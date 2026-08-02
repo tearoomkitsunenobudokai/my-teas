@@ -602,3 +602,25 @@
   .tileSub, .tileBrand { font-size: 13px; }
   .tileDate { font-size: 12.5px; }
 }
+
+/* ═══════════════════════════════════════════════
+   評価タイルのレイアウト崩れを解消（コミュニティと同じ対応）
+   茶葉名が長いときに何行にも膨らむのを防ぎ、2行までに揃える。
+   ═══════════════════════════════════════════════ */
+.tileName {
+  font-size: 16px;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.tileNameRow { align-items: flex-start; }
+.tileDate { padding-top: 2px; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .tileName { font-size: 17px; }
+}

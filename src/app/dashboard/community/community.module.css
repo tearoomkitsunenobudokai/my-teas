@@ -189,3 +189,33 @@
   .tileTea { overflow-wrap: anywhere; }
   .tileBrand, .tileShop { overflow-wrap: anywhere; max-width: 100%; }
 }
+
+/* ═══════════════════════════════════════════════
+   タイルのレイアウト崩れを解消
+   茶葉名が長いと1文字ずつ折り返して何行にも膨らみ、
+   タイルの高さがバラバラになって見づらくなるため、
+   表示は2行までに抑え、続きは「…」で省略する。
+   ※画面幅にかかわらず効くよう、メディアクエリの外で指定する
+   ═══════════════════════════════════════════════ */
+.tileName {
+  font-size: 16px;
+  line-height: 1.45;
+  /* 2行を超える場合は省略して、タイルの高さを揃える */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  /* 単語の途中で不自然に切れないようにする（日本語は自然に折り返る） */
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+/* 日付は1行目の高さに揃える（名前が折り返しても上部に固定） */
+.tileNameRow { align-items: flex-start; }
+.tileDate { padding-top: 2px; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .tileName { font-size: 17px; }
+  .tileShop, .tileBrand { font-size: 13px; }
+  .tileDate { font-size: 12.5px; }
+}
