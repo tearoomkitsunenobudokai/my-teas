@@ -298,3 +298,26 @@
   .tileAuthor, .tileLocation { font-size: 14px; }
   .tileWantBtn { font-size: 14px; padding: 7px 14px; border-radius: 18px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v242: スマホの文字を約1.5倍に拡大（可読性向上）
+   ※ v228の一括拡大による崩れを避けるため、機械的な全体倍率ではなく
+     タイル表組みのように固定枠を持つ要素は折り返し可能な設計のうえで拡大する。
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  /* 表組みの見出し・ラベル */
+  .th, .attrLabel { font-size: 22px; }
+  .attrRow { grid-template-columns: 110px minmax(0, 1fr); }
+  /* 香り・添え物のチップ */
+  .chip, .chipAccomp { font-size: 22px; padding: 7px 16px; border-radius: 24px; }
+  .colEmpty { font-size: 22px; }
+  .attrValue { padding: 12px 14px; gap: 10px; }
+  /* カラーコード */
+  .hexCode { font-size: 20px; }
+  /* タイル周辺 */
+  .tileName { font-size: 30px; line-height: 1.35; }
+  .tileShop, .tileBrand, .tilePlaceholder { font-size: 21px; }
+  .tileDate { font-size: 19px; }
+  .tileAuthor, .tileLocation { font-size: 21px; }
+  .tileWantBtn { font-size: 21px; padding: 10px 18px; border-radius: 22px; }
+}

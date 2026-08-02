@@ -687,3 +687,32 @@
   .tileDate { font-size: 13px; }
   .editBtn, .delBtn { font-size: 15px; padding: 9px 16px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v242: スマホの文字を約1.5倍に拡大（コミュニティと同一の値に統一）
+   ページタイトルはコミュニティ側にのみ拡大指定があり、こちらは小さいままだったため揃える。
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  /* ページ見出し（コミュニティと同じサイズに） */
+  .title { font-size: 34px; }
+  /* 表組みの見出し・ラベル */
+  .th, .attrLabel { font-size: 22px; }
+  .attrRow { grid-template-columns: 110px minmax(0, 1fr); }
+  /* 香り・添え物のチップ */
+  .tagAroma, .tagAccomp { font-size: 22px; padding: 7px 16px; border-radius: 24px; }
+  .colEmpty { font-size: 22px; }
+  .attrValue { padding: 12px 14px; gap: 10px; }
+  /* カラーコード */
+  .hexCode { font-size: 20px; }
+  /* タイル周辺 */
+  .tileName { font-size: 30px; line-height: 1.35; }
+  .tileSub, .tileShop, .tileBrand, .tilePlaceholder { font-size: 21px; }
+  .tileDate { font-size: 19px; }
+  .editBtn, .delBtn { font-size: 21px; padding: 11px 18px; }
+  /* ツールバー（飲んだ日・公開/非公開・並び順・件数）もコミュニティと同等に */
+  .fl { font-size: 21px; }
+  .di, .sortSel { font-size: 21px; padding: 8px 12px; }
+  .pfb, .pfbOn { font-size: 20px; padding: 8px 16px; }
+  .clr { font-size: 20px; padding: 7px 12px; }
+  .regBtn { font-size: 22px; padding: 12px 20px; }
+}
