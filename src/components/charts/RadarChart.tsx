@@ -8,11 +8,18 @@ import { ReviewScores, SCORE_LABELS } from '@/types'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
-interface Props { scores: ReviewScores; label?: string; size?: number; labelFontSize?: number; tickFontSize?: number; fluid?: boolean }
+interface Props { scores: ReviewScores; label?: string; size?: number; labelFontSize?: number; tickFontSize?: number; fluid?: boolean; verticalSideLabels?: boolean }
 
-export default function RadarChart({ scores, label = '', size = 260, labelFontSize = 13, tickFontSize = 11, fluid = false }: Props) {
+export default function RadarChart({ scores, label = '', size = 260, labelFontSize = 13, tickFontSize = 11, fluid = false, verticalSideLabels = false }: Props) {
   const keys = Object.keys(SCORE_LABELS) as (keyof ReviewScores)[]
-  const labels = keys.map(k => SCORE_LABELS[k])
+  /* 軸の並びは 上→右→下→左。verticalSideLabels=true のときは
+     左右（コク・渋み）のラベルを1文字ずつ改行して縦書きにする。
+     Chart.js は配列を渡すと複数行として描画するため、その仕組みを利用する。 */
+  const labels = keys.map((k, i) => {
+    const text = SCORE_LABELS[k]
+    const isSide = i === 1 || i === 3
+    return verticalSideLabels && isSide ? text.split('') : text
+  })
   const data   = keys.map(k => scores[k] ?? 1)
 
   return (

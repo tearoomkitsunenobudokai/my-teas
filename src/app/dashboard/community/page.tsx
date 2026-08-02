@@ -75,7 +75,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           <div className={`${styles.topCell} ${styles.colDiv}`}>
             <div className={styles.th}>チャート</div>
             <div className={styles.chartBox}>
-              <RadarChart scores={scores} size={420} labelFontSize={20} tickFontSize={15} fluid/>
+              <RadarChart scores={scores} size={420} labelFontSize={20} tickFontSize={15} fluid verticalSideLabels/>
             </div>
           </div>
         </div>
