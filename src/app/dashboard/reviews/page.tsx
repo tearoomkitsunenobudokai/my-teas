@@ -293,10 +293,17 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   /* 一覧表示（編集時など）では項目が縦に長くなるため、
      ステップ単位で折りたためるようにする。
      ウィザード表示中は1ステップずつしか出ないので折りたたみは使わない。
-     初期状態は「必須項目を含む 2/8 お茶の名前」だけ開き、他は閉じておく。 */
-  const [openSections, setOpenSections] = useState<Record<number, boolean>>({ 1: true })
+
+     動き方（アコーディオン方式）:
+       ・初期状態はすべて閉じる
+       ・見出しをタップすると、その項目だけが開き、他は自動的に閉じる
+       ・「すべて開く」を押したときだけ、複数を同時に開いた状態にする */
+  const [openSections, setOpenSections] = useState<Record<number, boolean>>({})
   const isOpen = (i: number) => !wizard ? (openSections[i] ?? false) : true
-  const toggleSection = (i: number) => setOpenSections(p => ({ ...p, [i]: !(p[i] ?? false) }))
+  const toggleSection = (i: number) => setOpenSections(p =>
+    // 開いているものを再度タップしたら、その項目だけを閉じる
+    //（「すべて開く」の後でも、他の項目は開いたまま残る）
+    (p[i] ?? false) ? { ...p, [i]: false } : { [i]: true })
 
   /* 折りたたみの見出し。一覧表示のときだけ表示する。 */
   function SectionHead({ i }: { i: number }) {
@@ -486,7 +493,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         {/* 一覧表示のときは、項目ごとに開閉できることを案内して一括操作も置く */}
         {!wizard && (
           <div className={styles.secBar}>
-            <span className={styles.secBarHint}>項目名をタップで開閉できます</span>
+            <span className={styles.secBarHint}>項目名をタップすると、その項目だけが開きます</span>
             <span className={styles.secBarBtns}>
               <button type="button" className={styles.secBarBtn}
                 onClick={() => setOpenSections(Object.fromEntries(WIZ_STEPS.map((_, i) => [i, true])))}>
