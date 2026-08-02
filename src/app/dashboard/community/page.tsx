@@ -61,35 +61,30 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           {review.tea_garden && <span className={styles.tileShop}>🌱 {review.tea_garden}</span>}
         </div>
       </div>
-      {/* タイル本体：各カラムに見出しを付けた4カラム（水色 / 香り / チャート / 添え物） */}
-      <div className={styles.tileBody}>
-        {/* 水色 */}
-        <div className={styles.tileCol}>
-          <span className={styles.colLabel}>水色</span>
-          <TeaCupSvg hex={colorHex} size={96}/>
+      {/* タイル本体：表組み（水色 / 香り / チャート / 添え物） */}
+      <div className={styles.tileTable}>
+        {/* ── ヘッダー行 ── */}
+        <div className={`${styles.th} ${styles.colCup}`}>水色</div>
+        <div className={`${styles.th} ${styles.colDiv}`}>香り</div>
+        <div className={`${styles.th} ${styles.colDiv} ${styles.colChart}`}>チャート</div>
+        <div className={`${styles.th} ${styles.colDiv}`}>添え物</div>
+        {/* ── 本体行 ── */}
+        <div className={`${styles.td} ${styles.colCup}`}>
+          <TeaCupSvg hex={colorHex} size={88}/>
+          {colorHex && <span className={styles.hexCode}>{colorHex.toUpperCase()}</span>}
         </div>
-        {/* 香り */}
-        <div className={styles.tileCol}>
-          <span className={styles.colLabel}>香り</span>
-          <div className={styles.colTags}>
-            {aroma.length > 0
-              ? aroma.slice(0,3).map((n:string) => <span key={n} className={styles.tileAromaTag}>{n}</span>)
-              : <span className={styles.colEmpty}>—</span>}
-          </div>
+        <div className={`${styles.td} ${styles.colDiv}`}>
+          {aroma.length > 0
+            ? <ul className={styles.cellList}>{aroma.slice(0,3).map((n:string) => <li key={n}>{n}</li>)}</ul>
+            : <span className={styles.colEmpty}>—</span>}
         </div>
-        {/* チャート */}
-        <div className={styles.tileColChart}>
-          <span className={styles.colLabel}>チャート</span>
+        <div className={`${styles.td} ${styles.colDiv} ${styles.colChart}`}>
           <RadarChart scores={scores} size={150}/>
         </div>
-        {/* 添え物 */}
-        <div className={styles.tileCol}>
-          <span className={styles.colLabel}>添え物</span>
-          <div className={styles.colTags}>
-            {accompaniments.length > 0
-              ? accompaniments.map((a:string) => <span key={a} className={styles.tileAccompTag}>{a}</span>)
-              : <span className={styles.colEmpty}>—</span>}
-          </div>
+        <div className={`${styles.td} ${styles.colDiv}`}>
+          {accompaniments.length > 0
+            ? <ul className={styles.cellList}>{accompaniments.map((a:string) => <li key={a}>{a}</li>)}</ul>
+            : <span className={styles.colEmpty}>—</span>}
         </div>
       </div>
       {/* 投稿者 */}

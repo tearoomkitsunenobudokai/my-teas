@@ -19,7 +19,7 @@
 .tile:hover { border-color: var(--green); box-shadow: 0 4px 16px rgba(29,158,117,0.12); }
 
 /* タイル上部 */
-.tileHeader { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; border-bottom: 0.5px solid var(--border); }
+.tileHeader { display: flex; flex-direction: column; gap: 6px; }
 .tileNameRow { display: flex; align-items: baseline; gap: 8px; }
 .tileName { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
 .tileMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -28,23 +28,32 @@
 .tileDate { font-size: 11px; color: var(--text-hint); margin-left: auto; white-space: nowrap; flex-shrink: 0; }
 .tilePlaceholder { font-size: 11px; color: var(--text-hint); opacity: 0.6; }
 
-/* タイル本体（各カラムに見出しを付けた4カラム: 水色 / 香り / チャート / 添え物） */
-.tileBody { display: flex; flex-wrap: wrap; gap: 12px 8px; align-items: flex-start; }
-.tileLeft { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 80px; } /* ※旧レイアウト用（未使用） */
-/* 各カラム（見出し＋中身の縦積み） */
-.tileCol { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-.tileColChart { flex: 1 1 120px; min-width: 108px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
-/* カラム見出し */
-.colLabel { font-size: 10px; font-weight: 700; color: var(--text-hint); letter-spacing: 0.04em; white-space: nowrap; }
-/* タグを縦に積むラッパ（香り・添え物） */
-.colTags { display: flex; flex-direction: column; gap: 4px; align-items: center; max-width: 96px; }
-.colEmpty { font-size: 11px; color: var(--text-hint); opacity: 0.5; }
-/* 飲み方タグ（添え物）：香りタグと区別できるよう淡い琥珀色に */
-.tileAccompTag { font-size: 9px; background: #FBEFD9; color: #7A4A00; padding: 1px 6px; border-radius: 20px; border: 0.5px solid #E6C88A; white-space: nowrap; }
-/* 縦カラム内のタグは折り返しを許可し、列幅に収める */
-.colTags .tileAromaTag, .colTags .tileAccompTag {
-  white-space: normal; text-align: center; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%;
+/* タイル本体：表組み（水色 / 香り / チャート / 添え物） */
+.tileTable {
+  display: grid;
+  grid-template-columns: minmax(64px, 88px) minmax(46px, 92px) minmax(0, 1fr) minmax(46px, 92px);
+  align-items: stretch;
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
 }
+/* セル共通 */
+.th, .td { padding: 6px 6px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-width: 0; }
+/* ヘッダーセル（表ヘッダー風の背景色） */
+.th { background: var(--bg-muted); font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.04em; border-bottom: 0.5px solid var(--border); }
+/* 2列目以降の左に縦罫線 */
+.colDiv { border-left: 0.5px solid var(--border); }
+/* チャート列は中央寄せ */
+.colChart { justify-content: center; }
+/* 水色カップは列幅に合わせて伸縮（大きめを維持しつつ狭い端末で縮む） */
+.colCup svg { width: 100%; height: auto; max-width: 88px; }
+/* カラーコード（カップ下の余白に表示） */
+.hexCode { margin-top: 5px; font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-muted); letter-spacing: 0.02em; }
+/* 香り・添え物：横書きの箇条書き */
+.cellList { list-style: none; margin: 0; padding: 0; width: 100%; }
+.cellList li { position: relative; padding-left: 11px; font-size: 11px; line-height: 1.5; color: var(--text); text-align: left; overflow-wrap: break-word; }
+.cellList li::before { content: "・"; position: absolute; left: 0; color: var(--text-hint); }
+.colEmpty { font-size: 11px; color: var(--text-hint); opacity: 0.5; }
 
 /* 香りタグ */
 .tileAroma { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
@@ -257,16 +266,11 @@
 }
 
 /* ═══════════════════════════════════════════════
-   4カラム化タイルのスマホ調整
-   飲み方タグを読みやすい大きさにしつつ、香り・飲み方の列が
-   広がりすぎてレーダーを潰さないよう幅を割合で抑える。
-   横幅が足りない端末では flex-wrap により飲み方が下段に折り返る。
+   表組みタイルのスマホ調整（見出し・箇条書き・hexを読みやすい大きさに）
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .colLabel { font-size: 14px; }
-  .colEmpty { font-size: 15px; }
-  .tileAccompTag { font-size: 13px; padding: 3px 9px; }
-  .colTags { max-width: 30%; }
-  /* 水色カップを大きくした分、レーダーの最小幅を少し下げて1行に収まりやすくする */
-  .tileColChart { flex-basis: 108px; min-width: 92px; }
+  .th { font-size: 13px; }
+  .hexCode { font-size: 12px; }
+  .cellList li { font-size: 13px; padding-left: 13px; }
+  .colEmpty { font-size: 14px; }
 }
