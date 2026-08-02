@@ -8,9 +8,9 @@ import { ReviewScores, SCORE_LABELS } from '@/types'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 
-interface Props { scores: ReviewScores; label?: string; size?: number }
+interface Props { scores: ReviewScores; label?: string; size?: number; labelFontSize?: number; tickFontSize?: number }
 
-export default function RadarChart({ scores, label = '', size = 260 }: Props) {
+export default function RadarChart({ scores, label = '', size = 260, labelFontSize = 13, tickFontSize = 11 }: Props) {
   const keys = Object.keys(SCORE_LABELS) as (keyof ReviewScores)[]
   const labels = keys.map(k => SCORE_LABELS[k])
   const data   = keys.map(k => scores[k] ?? 1)
@@ -37,8 +37,8 @@ export default function RadarChart({ scores, label = '', size = 260 }: Props) {
           scales: {
             r: {
               min: 0, max: 5,
-              ticks: { stepSize: 1, font: { size: 11 }, callback: (v: any) => `${v}` },
-              pointLabels: { font: { size: 13, weight: 600 } },
+              ticks: { stepSize: 1, font: { size: tickFontSize }, callback: (v: any) => `${v}` },
+              pointLabels: { font: { size: labelFontSize, weight: 600 } },
             },
           },
         }}

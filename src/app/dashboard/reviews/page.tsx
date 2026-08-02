@@ -71,30 +71,38 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
             : <span className={styles.tilePlaceholder}>🏪 店舗未設定</span>}
         </div>
       </div>
-      {/* タイル本体：表組み（水色 / 香り / チャート / 添え物） */}
+      {/* タイル本体：上段=水色/チャート、下段=香り・添え物（全幅で折り返しを防ぐ） */}
       <div className={styles.tileTable}>
-        {/* ── ヘッダー行 ── */}
-        <div className={`${styles.th} ${styles.colCup}`}>水色</div>
-        <div className={`${styles.th} ${styles.colDiv}`}>香り</div>
-        <div className={`${styles.th} ${styles.colDiv} ${styles.colChart}`}>チャート</div>
-        <div className={`${styles.th} ${styles.colDiv}`}>添え物</div>
-        {/* ── 本体行 ── */}
-        <div className={`${styles.td} ${styles.colCup}`}>
-          <TeaCup hex={r.color_hex} size={88}/>
-          {r.color_hex && <span className={styles.hexCode}>{(r.color_hex as string).toUpperCase()}</span>}
+        <div className={styles.topRow}>
+          <div className={styles.topCell}>
+            <div className={styles.th}>水色</div>
+            <div className={styles.cupBox}>
+              <TeaCup hex={r.color_hex} size={104}/>
+              {r.color_hex && <span className={styles.hexCode}>{(r.color_hex as string).toUpperCase()}</span>}
+            </div>
+          </div>
+          <div className={`${styles.topCell} ${styles.colDiv}`}>
+            <div className={styles.th}>チャート</div>
+            <div className={styles.chartBox}>
+              <RadarChart scores={scores} size={200} labelFontSize={15} tickFontSize={12}/>
+            </div>
+          </div>
         </div>
-        <div className={`${styles.td} ${styles.colDiv}`}>
-          {(r.aroma_notes ?? []).length > 0
-            ? <ul className={styles.cellList}>{(r.aroma_notes as string[]).slice(0,3).map(n => <li key={n}>{n}</li>)}</ul>
-            : <span className={styles.colEmpty}>—</span>}
+        <div className={styles.attrRow}>
+          <div className={styles.attrLabel}>香り</div>
+          <div className={styles.attrValue}>
+            {(r.aroma_notes ?? []).length > 0
+              ? (r.aroma_notes as string[]).slice(0,3).map(n => <span key={n} className={styles.chip}>{n}</span>)
+              : <span className={styles.colEmpty}>—</span>}
+          </div>
         </div>
-        <div className={`${styles.td} ${styles.colDiv} ${styles.colChart}`}>
-          <RadarChart scores={scores} size={150}/>
-        </div>
-        <div className={`${styles.td} ${styles.colDiv}`}>
-          {(r.accompaniments ?? []).length > 0
-            ? <ul className={styles.cellList}>{(r.accompaniments as string[]).map(a => <li key={a}>{a}</li>)}</ul>
-            : <span className={styles.colEmpty}>—</span>}
+        <div className={styles.attrRow}>
+          <div className={styles.attrLabel}>添え物</div>
+          <div className={styles.attrValue}>
+            {(r.accompaniments ?? []).length > 0
+              ? (r.accompaniments as string[]).map(a => <span key={a} className={styles.chipAccomp}>{a}</span>)
+              : <span className={styles.colEmpty}>—</span>}
+          </div>
         </div>
       </div>
 
