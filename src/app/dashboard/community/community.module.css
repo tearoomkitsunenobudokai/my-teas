@@ -28,10 +28,19 @@
 .tileDate { font-size: 11px; color: var(--text-hint); margin-left: auto; white-space: nowrap; flex-shrink: 0; }
 .tilePlaceholder { font-size: 11px; color: var(--text-hint); opacity: 0.6; }
 
-/* タイル本体 */
-.tileBody { display: flex; gap: 12px; align-items: flex-start; }
-.tileLeft { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 80px; }
-.tileChart { flex: 1; min-width: 0; display: flex; justify-content: center; }
+/* タイル本体（左から 水色 / 香り / レーダー / 飲み方 の4カラム） */
+.tileBody { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.tileLeft { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 80px; } /* ※旧レイアウト用（未使用） */
+.tileCup { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
+.tileAromaCol { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: 88px; }
+.tileChart { flex: 1 1 120px; min-width: 108px; display: flex; justify-content: center; }
+.tileAccompCol { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: 100px; }
+/* 飲み方タグ（添え物）：香りタグと区別できるよう淡い琥珀色に */
+.tileAccompTag { font-size: 9px; background: #FBEFD9; color: #7A4A00; padding: 1px 6px; border-radius: 20px; border: 0.5px solid #E6C88A; white-space: nowrap; }
+/* 縦カラム内のタグは折り返しを許可し、列幅に収める */
+.tileAromaCol .tileAromaTag, .tileAccompCol .tileAccompTag {
+  white-space: normal; text-align: left; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%;
+}
 
 /* 香りタグ */
 .tileAroma { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
@@ -241,4 +250,17 @@
    サイドバー最小化で本文幅が広がっても、auto-fill で2列に増えないよう固定する。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .tileGrid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════
+   4カラム化タイルのスマホ調整
+   飲み方タグを読みやすい大きさにしつつ、香り・飲み方の列が
+   広がりすぎてレーダーを潰さないよう幅を割合で抑える。
+   横幅が足りない端末では flex-wrap により飲み方が下段に折り返る。
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .tileAccompTag { font-size: 13px; padding: 3px 9px; }
+  .tileAromaCol { max-width: 30%; }
+  .tileAccompCol { max-width: 34%; }
+  .tileChart { flex-basis: 120px; min-width: 108px; }
 }

@@ -31,11 +31,20 @@
 .tileSub { font-size:11px; color:var(--text-muted); overflow-wrap:anywhere; word-break:break-word; max-width:100%; }
 .tileDate { font-size:11px; color:var(--text-hint); margin-left:auto; white-space:nowrap; flex-shrink:0; }
 .tilePlaceholder { font-size:11px; color:var(--text-hint); opacity:0.6; }
-.tileBody { display:flex; gap:10px; align-items:flex-start; }
-.tileLeft { display:flex; flex-direction:column; align-items:center; gap:5px; width:78px; flex-shrink:0; }
-.tileRight { flex:1; display:flex; justify-content:center; }
+.tileBody { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.tileLeft { display:flex; flex-direction:column; align-items:center; gap:5px; width:78px; flex-shrink:0; } /* ※旧レイアウト用（未使用） */
+.tileCup { flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
+.aromaCol { flex:0 0 auto; display:flex; flex-direction:column; gap:4px; align-items:flex-start; max-width:88px; }
+.tileRight { flex:1 1 120px; min-width:108px; display:flex; justify-content:center; }
+.accompCol { flex:0 0 auto; display:flex; flex-direction:column; gap:4px; align-items:flex-start; max-width:100px; }
 .aromaTags { display:flex; flex-wrap:wrap; gap:3px; justify-content:center; }
 .aromaTag { font-size:9px; background:#E1F5EE; color:#085041; padding:1px 5px; border-radius:20px; border:0.5px solid #9FE1CB; white-space:nowrap; }
+/* 飲み方タグ（添え物）：香りタグと区別できるよう淡い琥珀色に */
+.accompTag { font-size:9px; background:#FBEFD9; color:#7A4A00; padding:1px 6px; border-radius:20px; border:0.5px solid #E6C88A; white-space:nowrap; }
+/* 縦カラム内のタグは折り返しを許可し、列幅に収める */
+.aromaCol .aromaTag, .accompCol .accompTag {
+  white-space:normal; text-align:left; line-height:1.35; overflow-wrap:anywhere; max-width:100%;
+}
 .tileActions { display:flex; gap:8px; justify-content:flex-end; padding-top:6px; border-top:0.5px solid var(--border); }
 .editBtn { background:none; border:0.5px solid var(--border-strong); border-radius:6px; padding:4px 12px; font-size:12px; cursor:pointer; color:var(--text-muted); }
 .editBtn:hover { background:var(--bg-muted); }
@@ -646,4 +655,17 @@
    サイドバー最小化で本文幅が広がっても、auto-fill で2列に増えないよう固定する。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════
+   4カラム化タイルのスマホ調整（自分の評価）
+   飲み方タグを読みやすい大きさにしつつ、香り・飲み方の列が
+   広がりすぎてレーダーを潰さないよう幅を割合で抑える。
+   横幅が足りない端末では flex-wrap により飲み方が下段に折り返る。
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .accompTag { font-size: 13px; padding: 3px 9px; }
+  .aromaCol { max-width: 30%; }
+  .accompCol { max-width: 34%; }
+  .tileRight { flex-basis: 120px; min-width: 108px; }
 }

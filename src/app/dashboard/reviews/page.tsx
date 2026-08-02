@@ -71,16 +71,22 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
             : <span className={styles.tilePlaceholder}>🏪 店舗未設定</span>}
         </div>
       </div>
+      {/* タイル本体：左から 水色 / 香り / レーダー / 飲み方 の4カラム */}
       <div className={styles.tileBody}>
-        <div className={styles.tileLeft}>
-          <TeaCup hex={r.color_hex} size={72}/>
-          {(r.aroma_notes ?? []).length > 0 && (
-            <div className={styles.aromaTags}>
-              {(r.aroma_notes as string[]).slice(0,3).map(n => <span key={n} className={styles.aromaTag}>{n}</span>)}
-            </div>
-          )}
+        <div className={styles.tileCup}>
+          <TeaCup hex={r.color_hex} size={56}/>
         </div>
-        <div className={styles.tileRight}><RadarChart scores={scores} size={155}/></div>
+        {(r.aroma_notes ?? []).length > 0 && (
+          <div className={styles.aromaCol}>
+            {(r.aroma_notes as string[]).slice(0,3).map(n => <span key={n} className={styles.aromaTag}>{n}</span>)}
+          </div>
+        )}
+        <div className={styles.tileRight}><RadarChart scores={scores} size={150}/></div>
+        {(r.accompaniments ?? []).length > 0 && (
+          <div className={styles.accompCol}>
+            {(r.accompaniments as string[]).map(a => <span key={a} className={styles.accompTag}>{a}</span>)}
+          </div>
+        )}
       </div>
 
       <div className={styles.tileActions}>

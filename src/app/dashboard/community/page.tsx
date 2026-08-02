@@ -33,6 +33,8 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
   // reviews.tea_name 優先、なければ teas.name
   const teaName = review.tea_name ?? '不明'
   const aroma: string[] = review.aroma_notes ?? []
+  // 飲み方（＝添え物: なし（ストレート）・ミルク・砂糖・レモン 等）
+  const accompaniments: string[] = review.accompaniments ?? []
   // reviews.color_hex 優先、なければ teas.color_hex
   const colorHex = review.color_hex
   const scores: ReviewScores = {
@@ -59,21 +61,32 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           {review.tea_garden && <span className={styles.tileShop}>🌱 {review.tea_garden}</span>}
         </div>
       </div>
-      {/* タイル本体：左=水色+香り / 右=チャート */}
+      {/* タイル本体：左から 水色 / 香り / レーダー / 飲み方 の4カラム */}
       <div className={styles.tileBody}>
-        <div className={styles.tileLeft}>
-          <TeaCupSvg hex={colorHex} size={72}/>
-          {aroma.length > 0 && (
-            <div className={styles.tileAroma}>
-              {aroma.slice(0,3).map((n:string) => (
-                <span key={n} className={styles.tileAromaTag}>{n}</span>
-              ))}
-            </div>
-          )}
+        {/* 1. 水色カップ */}
+        <div className={styles.tileCup}>
+          <TeaCupSvg hex={colorHex} size={56}/>
         </div>
+        {/* 2. 香り分類（縦に最大3つ） */}
+        {aroma.length > 0 && (
+          <div className={styles.tileAromaCol}>
+            {aroma.slice(0,3).map((n:string) => (
+              <span key={n} className={styles.tileAromaTag}>{n}</span>
+            ))}
+          </div>
+        )}
+        {/* 3. レーダーチャート */}
         <div className={styles.tileChart}>
-          <RadarChart scores={scores} size={160}/>
+          <RadarChart scores={scores} size={150}/>
         </div>
+        {/* 4. 飲み方（添え物） */}
+        {accompaniments.length > 0 && (
+          <div className={styles.tileAccompCol}>
+            {accompaniments.map((a:string) => (
+              <span key={a} className={styles.tileAccompTag}>{a}</span>
+            ))}
+          </div>
+        )}
       </div>
       {/* 投稿者 */}
       <div className={styles.tileFooter}>
