@@ -45,7 +45,7 @@
 .hexCode { font-size:12px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--text-muted); letter-spacing:0.02em; }
 /* fluid のチャートがセル幅いっぱいに広がるようにする */
 .chartBox > div { width:100%; }
-.chartBox { display:flex; align-items:center; justify-content:center; padding:4px 2px; flex:1; }
+.chartBox { display:flex; align-items:center; justify-content:center; padding:7px 5px; flex:1; }
 .attrRow { display:grid; grid-template-columns:74px minmax(0,1fr); border-top:0.5px solid var(--border); align-items:stretch; }
 .attrLabel {
   background:var(--bg-muted); font-size:12px; font-weight:700; color:var(--text-muted);

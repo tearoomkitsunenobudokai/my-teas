@@ -48,7 +48,12 @@ export default function RadarChart({ scores, label = '', size = 260, labelFontSi
             r: {
               min: 0, max: 5,
               ticks: { stepSize: 1, font: { size: tickFontSize }, callback: (v: any) => `${v}` },
-              pointLabels: { font: { size: labelFontSize, weight: 600 } },
+              pointLabels: {
+                font: { size: labelFontSize, weight: 600 },
+                /* 軸名（香り・コク・水色・渋み）の背景に薄い青を敷いて読みやすくする */
+                backdropColor: 'rgba(214, 233, 250, 0.9)',
+                backdropPadding: { top: 4, bottom: 4, left: 7, right: 7 },
+              },
             },
           },
         }}
