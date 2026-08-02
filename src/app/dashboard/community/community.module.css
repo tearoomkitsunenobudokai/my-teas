@@ -28,18 +28,22 @@
 .tileDate { font-size: 11px; color: var(--text-hint); margin-left: auto; white-space: nowrap; flex-shrink: 0; }
 .tilePlaceholder { font-size: 11px; color: var(--text-hint); opacity: 0.6; }
 
-/* タイル本体（左から 水色 / 香り / レーダー / 飲み方 の4カラム） */
-.tileBody { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+/* タイル本体（各カラムに見出しを付けた4カラム: 水色 / 香り / チャート / 添え物） */
+.tileBody { display: flex; flex-wrap: wrap; gap: 12px 8px; align-items: flex-start; }
 .tileLeft { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 80px; } /* ※旧レイアウト用（未使用） */
-.tileCup { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; }
-.tileAromaCol { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: 88px; }
-.tileChart { flex: 1 1 120px; min-width: 108px; display: flex; justify-content: center; }
-.tileAccompCol { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; max-width: 100px; }
+/* 各カラム（見出し＋中身の縦積み） */
+.tileCol { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.tileColChart { flex: 1 1 120px; min-width: 108px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+/* カラム見出し */
+.colLabel { font-size: 10px; font-weight: 700; color: var(--text-hint); letter-spacing: 0.04em; white-space: nowrap; }
+/* タグを縦に積むラッパ（香り・添え物） */
+.colTags { display: flex; flex-direction: column; gap: 4px; align-items: center; max-width: 96px; }
+.colEmpty { font-size: 11px; color: var(--text-hint); opacity: 0.5; }
 /* 飲み方タグ（添え物）：香りタグと区別できるよう淡い琥珀色に */
 .tileAccompTag { font-size: 9px; background: #FBEFD9; color: #7A4A00; padding: 1px 6px; border-radius: 20px; border: 0.5px solid #E6C88A; white-space: nowrap; }
 /* 縦カラム内のタグは折り返しを許可し、列幅に収める */
-.tileAromaCol .tileAromaTag, .tileAccompCol .tileAccompTag {
-  white-space: normal; text-align: left; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%;
+.colTags .tileAromaTag, .colTags .tileAccompTag {
+  white-space: normal; text-align: center; line-height: 1.35; overflow-wrap: anywhere; max-width: 100%;
 }
 
 /* 香りタグ */
@@ -259,8 +263,10 @@
    横幅が足りない端末では flex-wrap により飲み方が下段に折り返る。
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .colLabel { font-size: 14px; }
+  .colEmpty { font-size: 15px; }
   .tileAccompTag { font-size: 13px; padding: 3px 9px; }
-  .tileAromaCol { max-width: 30%; }
-  .tileAccompCol { max-width: 34%; }
-  .tileChart { flex-basis: 120px; min-width: 108px; }
+  .colTags { max-width: 30%; }
+  /* 水色カップを大きくした分、レーダーの最小幅を少し下げて1行に収まりやすくする */
+  .tileColChart { flex-basis: 108px; min-width: 92px; }
 }

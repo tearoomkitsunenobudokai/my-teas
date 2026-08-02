@@ -61,32 +61,36 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           {review.tea_garden && <span className={styles.tileShop}>🌱 {review.tea_garden}</span>}
         </div>
       </div>
-      {/* タイル本体：左から 水色 / 香り / レーダー / 飲み方 の4カラム */}
+      {/* タイル本体：各カラムに見出しを付けた4カラム（水色 / 香り / チャート / 添え物） */}
       <div className={styles.tileBody}>
-        {/* 1. 水色カップ */}
-        <div className={styles.tileCup}>
-          <TeaCupSvg hex={colorHex} size={56}/>
+        {/* 水色 */}
+        <div className={styles.tileCol}>
+          <span className={styles.colLabel}>水色</span>
+          <TeaCupSvg hex={colorHex} size={96}/>
         </div>
-        {/* 2. 香り分類（縦に最大3つ） */}
-        {aroma.length > 0 && (
-          <div className={styles.tileAromaCol}>
-            {aroma.slice(0,3).map((n:string) => (
-              <span key={n} className={styles.tileAromaTag}>{n}</span>
-            ))}
+        {/* 香り */}
+        <div className={styles.tileCol}>
+          <span className={styles.colLabel}>香り</span>
+          <div className={styles.colTags}>
+            {aroma.length > 0
+              ? aroma.slice(0,3).map((n:string) => <span key={n} className={styles.tileAromaTag}>{n}</span>)
+              : <span className={styles.colEmpty}>—</span>}
           </div>
-        )}
-        {/* 3. レーダーチャート */}
-        <div className={styles.tileChart}>
+        </div>
+        {/* チャート */}
+        <div className={styles.tileColChart}>
+          <span className={styles.colLabel}>チャート</span>
           <RadarChart scores={scores} size={150}/>
         </div>
-        {/* 4. 飲み方（添え物） */}
-        {accompaniments.length > 0 && (
-          <div className={styles.tileAccompCol}>
-            {accompaniments.map((a:string) => (
-              <span key={a} className={styles.tileAccompTag}>{a}</span>
-            ))}
+        {/* 添え物 */}
+        <div className={styles.tileCol}>
+          <span className={styles.colLabel}>添え物</span>
+          <div className={styles.colTags}>
+            {accompaniments.length > 0
+              ? accompaniments.map((a:string) => <span key={a} className={styles.tileAccompTag}>{a}</span>)
+              : <span className={styles.colEmpty}>—</span>}
           </div>
-        )}
+        </div>
       </div>
       {/* 投稿者 */}
       <div className={styles.tileFooter}>

@@ -71,22 +71,32 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
             : <span className={styles.tilePlaceholder}>🏪 店舗未設定</span>}
         </div>
       </div>
-      {/* タイル本体：左から 水色 / 香り / レーダー / 飲み方 の4カラム */}
+      {/* タイル本体：各カラムに見出しを付けた4カラム（水色 / 香り / チャート / 添え物） */}
       <div className={styles.tileBody}>
-        <div className={styles.tileCup}>
-          <TeaCup hex={r.color_hex} size={56}/>
+        <div className={styles.tileCol}>
+          <span className={styles.colLabel}>水色</span>
+          <TeaCup hex={r.color_hex} size={96}/>
         </div>
-        {(r.aroma_notes ?? []).length > 0 && (
-          <div className={styles.aromaCol}>
-            {(r.aroma_notes as string[]).slice(0,3).map(n => <span key={n} className={styles.aromaTag}>{n}</span>)}
+        <div className={styles.tileCol}>
+          <span className={styles.colLabel}>香り</span>
+          <div className={styles.colTags}>
+            {(r.aroma_notes ?? []).length > 0
+              ? (r.aroma_notes as string[]).slice(0,3).map(n => <span key={n} className={styles.aromaTag}>{n}</span>)
+              : <span className={styles.colEmpty}>—</span>}
           </div>
-        )}
-        <div className={styles.tileRight}><RadarChart scores={scores} size={150}/></div>
-        {(r.accompaniments ?? []).length > 0 && (
-          <div className={styles.accompCol}>
-            {(r.accompaniments as string[]).map(a => <span key={a} className={styles.accompTag}>{a}</span>)}
+        </div>
+        <div className={styles.tileColChart}>
+          <span className={styles.colLabel}>チャート</span>
+          <RadarChart scores={scores} size={150}/>
+        </div>
+        <div className={styles.tileCol}>
+          <span className={styles.colLabel}>添え物</span>
+          <div className={styles.colTags}>
+            {(r.accompaniments ?? []).length > 0
+              ? (r.accompaniments as string[]).map(a => <span key={a} className={styles.accompTag}>{a}</span>)
+              : <span className={styles.colEmpty}>—</span>}
           </div>
-        )}
+        </div>
       </div>
 
       <div className={styles.tileActions}>
