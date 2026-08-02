@@ -84,7 +84,7 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
           <div className={`${styles.topCell} ${styles.colDiv}`}>
             <div className={styles.th}>チャート</div>
             <div className={styles.chartBox}>
-              <RadarChart scores={scores} size={260} labelFontSize={20} tickFontSize={15} fluid/>
+              <RadarChart scores={scores} size={420} labelFontSize={20} tickFontSize={15} fluid/>
             </div>
           </div>
         </div>
@@ -867,6 +867,8 @@ export default function ReviewsPage() {
 
   return (
     <div className={styles.page}>
+      {/* タイトル＋フィルターをまとめて上部に固定する */}
+      <div className={styles.stickyHead}>
       <div className={styles.ph}>
         <h1 className={styles.title}>⭐ 自分の評価</h1>
         <div className={styles.phActions}>
@@ -901,6 +903,7 @@ export default function ReviewsPage() {
           <option value="desc">新しい順</option><option value="asc">古い順</option>
         </select>
         <span className={styles.cnt}>{list.length}件</span>
+      </div>
       </div>
 
       {loading ? <p className={styles.hint}>読み込み中…</p>

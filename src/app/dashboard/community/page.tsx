@@ -75,7 +75,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           <div className={`${styles.topCell} ${styles.colDiv}`}>
             <div className={styles.th}>チャート</div>
             <div className={styles.chartBox}>
-              <RadarChart scores={scores} size={260} labelFontSize={20} tickFontSize={15} fluid/>
+              <RadarChart scores={scores} size={420} labelFontSize={20} tickFontSize={15} fluid/>
             </div>
           </div>
         </div>
@@ -205,6 +205,8 @@ export default function CommunityPage() {
 
   return (
     <div className={styles.page}>
+      {/* タイトル＋フィルターをまとめて上部に固定する */}
+      <div className={styles.stickyHead}>
       <div className={styles.pageHeader}>
         <h1 className={styles.title}>👥 コミュニティ</h1>
         <span className={styles.subtitle}>みんなの評価を見る</span>
@@ -226,6 +228,7 @@ export default function CommunityPage() {
           </button>
         )}
         <span className={styles.countBadge}>{filtered.length}件</span>
+      </div>
       </div>
 
       {/* タイルグリッド */}

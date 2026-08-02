@@ -46,8 +46,8 @@ export default function TeaCup({ hex, size = 70, tight = false }: { hex?: string
 
   return (
     /* tight=true のときは外周の余白を詰めて、同じ枠内でカップを大きく見せる
-       （外円 r=52 + 線幅1 の外側 6.5〜113.5 が収まる範囲まで切り詰める） */
-    <svg viewBox={tight ? '6 6 108 108' : '0 0 120 120'} width={size} height={size}>
+       （最外周は r=46 + 線幅1.4 なので 13〜107 が収まる範囲まで切り詰める） */
+    <svg viewBox={tight ? '13 13 94 94' : '0 0 120 120'} width={size} height={size}>
       <defs>
         {/* 水色本体：中心が濃く、縁で明るい琥珀に抜ける */}
         <radialGradient id={`${id}b`} cx="50%" cy="47%" r="53%">
@@ -64,8 +64,7 @@ export default function TeaCup({ hex, size = 70, tight = false }: { hex?: string
         </linearGradient>
       </defs>
 
-      {/* ソーサーとカップ */}
-      <ellipse cx="60" cy="60" rx="52" ry="52" fill="#f7f3ed" stroke="#d8cfc4" strokeWidth="1.5" />
+      {/* カップ（外周の細い円は廃止し、r=46 を最も外側の縁とする） */}
       <ellipse cx="60" cy="60" rx="46" ry="46" fill="#efeae2" />
 
       {/* 紅茶の液面 */}
@@ -82,9 +81,8 @@ export default function TeaCup({ hex, size = 70, tight = false }: { hex?: string
       <circle cx="67" cy="57" r="0.6" fill={rgb(deep)} opacity="0.35" />
       <circle cx="60" cy="59" r="0.5" fill={rgb(deep)} opacity="0.3" />
 
-      {/* カップの縁 */}
-      <circle cx="60" cy="60" r="46" fill="none" stroke="#cdc4b6" strokeWidth="0.8" />
-      <circle cx="60" cy="60" r="52" fill="none" stroke="#bdb4a5" strokeWidth="1" />
+      {/* カップの縁：外周の細い線は使わず、太い線を一つ内側（r=46）に配置する */}
+      <circle cx="60" cy="60" r="46" fill="none" stroke="#bdb4a5" strokeWidth="1.4" />
     </svg>
   )
 }

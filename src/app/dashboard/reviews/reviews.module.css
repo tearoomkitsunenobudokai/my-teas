@@ -33,7 +33,7 @@
 .tilePlaceholder { font-size:11px; color:var(--text-hint); opacity:0.6; }
 /* タイル本体：上段=水色/チャート、下段=香り・添え物の属性行 */
 .tileTable { border:0.5px solid var(--border); border-radius:10px; overflow:hidden; }
-.topRow { display:grid; grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr); }
+.topRow { display:grid; grid-template-columns:minmax(0,0.78fr) minmax(0,1.22fr); }
 .topCell { display:flex; flex-direction:column; min-width:0; }
 .th {
   background:var(--bg-muted); font-size:12px; font-weight:700; color:var(--text-muted);
@@ -45,7 +45,7 @@
 .hexCode { font-size:12px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--text-muted); letter-spacing:0.02em; }
 /* fluid のチャートがセル幅いっぱいに広がるようにする */
 .chartBox > div { width:100%; }
-.chartBox { display:flex; align-items:center; justify-content:center; padding:10px 4px; flex:1; }
+.chartBox { display:flex; align-items:center; justify-content:center; padding:4px 2px; flex:1; }
 .attrRow { display:grid; grid-template-columns:74px minmax(0,1fr); border-top:0.5px solid var(--border); align-items:stretch; }
 .attrLabel {
   background:var(--bg-muted); font-size:12px; font-weight:700; color:var(--text-muted);
@@ -705,7 +705,7 @@
   /* カラーコード */
   .hexCode { font-size: 20px; }
   /* タイル周辺 */
-  .tileName { font-size: 30px; line-height: 1.35; }
+  .tileName { font-size: 34px; line-height: 1.3; }
   .tileSub, .tileShop, .tileBrand, .tilePlaceholder { font-size: 21px; }
   .tileDate { font-size: 19px; }
   .editBtn, .delBtn { font-size: 21px; padding: 11px 18px; }
@@ -715,4 +715,31 @@
   .pfb, .pfbOn { font-size: 20px; padding: 8px 16px; }
   .clr { font-size: 20px; padding: 7px 12px; }
   .regBtn { font-size: 22px; padding: 12px 20px; }
+}
+
+/* ═══════════════════════════════════════════════
+   v243: ページタイトルもフィルターと一緒に上部へ固定
+   これまでフィルターバーのみ固定していたため、スクロールすると
+   今どのページを見ているのか分からなくなっていた。
+   タイトルとフィルターを1つのラッパーにまとめて固定する。
+   ═══════════════════════════════════════════════ */
+.stickyHead {
+  position: sticky;
+  top: -1.75rem;                 /* .main の上パディング分を打ち消す */
+  z-index: 25;
+  background: var(--bg);
+  margin: -1.75rem -0.5rem 0;    /* 左右も塗りつぶし、隙間から中身が覗かないようにする */
+  padding: 1.75rem 0.5rem 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+/* ラッパー側で固定するため、内側のツールバー単体の固定は解除する */
+.stickyHead .toolbar {
+  position: static;
+  top: auto;
+  margin: 0;
+  padding-top: 10px;
+  border-top: 0.5px solid var(--border);
+  border-radius: 10px;
 }
