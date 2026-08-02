@@ -46,8 +46,8 @@
 /* カラム間の縦罫線 */
 .colDiv { border-left: 0.5px solid var(--border); }
 /* 水色カップ */
-.cupBox { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 10px 6px; flex: 1; }
-.cupBox svg { width: 100%; height: auto; max-width: 104px; }
+.cupBox { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px 4px; flex: 1; }
+.cupBox svg { width: 100%; height: auto; max-width: 128px; }
 .hexCode { font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text-muted); letter-spacing: 0.02em; }
 /* チャート */
 .chartBox { display: flex; align-items: center; justify-content: center; padding: 8px 4px; flex: 1; }
@@ -248,7 +248,7 @@
 .tileDate { padding-top: 2px; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileName { font-size: 17px; }
+  .tileName { font-size: 20px; line-height: 1.35; }
   .tileShop, .tileBrand { font-size: 13px; }
   .tileDate { font-size: 12.5px; }
 }
@@ -287,10 +287,10 @@
   .colEmpty { font-size: 15px; }
   .attrValue { padding: 10px 12px; gap: 8px; }
   .attrRow { grid-template-columns: 86px minmax(0, 1fr); }
-  .cupBox svg { max-width: 118px; }
+  .cupBox svg { max-width: 100%; }
   .hexCode { letter-spacing: 0.03em; }
   /* タイル周辺の文字も拡大 */
-  .tileName { font-size: 17px; }
+  .tileName { font-size: 20px; line-height: 1.35; }
   .tileShop, .tilePlaceholder { font-size: 14px; }
   .tileDate { font-size: 13px; }
   .tileAuthor, .tileLocation { font-size: 14px; }

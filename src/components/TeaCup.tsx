@@ -33,7 +33,7 @@ function mix(a: [number, number, number], b: [number, number, number], t: number
   return [clamp(a[0] + (b[0] - a[0]) * t), clamp(a[1] + (b[1] - a[1]) * t), clamp(a[2] + (b[2] - a[2]) * t)]
 }
 
-export default function TeaCup({ hex, size = 70 }: { hex?: string; size?: number }) {
+export default function TeaCup({ hex, size = 70, tight = false }: { hex?: string; size?: number; tight?: boolean }) {
   const [r, g, b, a] = parseHex(hex ?? '#C8A96E')
   // 透明度は「淡さ」として反映する（薄い設定ほど淡い水色になる）
   const base = mix([r, g, b], [248, 242, 230], 1 - a)
@@ -45,7 +45,9 @@ export default function TeaCup({ hex, size = 70 }: { hex?: string; size?: number
   const id = 'tea' + (hex ?? 'x').replace(/\W/g, '').slice(0, 8) + size
 
   return (
-    <svg viewBox="0 0 120 120" width={size} height={size}>
+    /* tight=true のときは外周の余白を詰めて、同じ枠内でカップを大きく見せる
+       （外円 r=52 + 線幅1 の外側 6.5〜113.5 が収まる範囲まで切り詰める） */
+    <svg viewBox={tight ? '6 6 108 108' : '0 0 120 120'} width={size} height={size}>
       <defs>
         {/* 水色本体：中心が濃く、縁で明るい琥珀に抜ける */}
         <radialGradient id={`${id}b`} cx="50%" cy="47%" r="53%">

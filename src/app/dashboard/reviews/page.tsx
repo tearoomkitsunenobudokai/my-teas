@@ -77,7 +77,7 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
           <div className={styles.topCell}>
             <div className={styles.th}>水色</div>
             <div className={styles.cupBox}>
-              <TeaCup hex={r.color_hex} size={104}/>
+              <TeaCup hex={r.color_hex} size={128} tight/>
               {r.color_hex && <span className={styles.hexCode}>{(r.color_hex as string).toUpperCase()}</span>}
             </div>
           </div>
@@ -92,7 +92,7 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
           <div className={styles.attrLabel}>香り</div>
           <div className={styles.attrValue}>
             {(r.aroma_notes ?? []).length > 0
-              ? (r.aroma_notes as string[]).slice(0,3).map(n => <span key={n} className={styles.chip}>{n}</span>)
+              ? (r.aroma_notes as string[]).slice(0,3).map(n => <span key={n} className={styles.tagAroma}>{n}</span>)
               : <span className={styles.colEmpty}>—</span>}
           </div>
         </div>
@@ -100,7 +100,7 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
           <div className={styles.attrLabel}>添え物</div>
           <div className={styles.attrValue}>
             {(r.accompaniments ?? []).length > 0
-              ? (r.accompaniments as string[]).map(a => <span key={a} className={styles.chipAccomp}>{a}</span>)
+              ? (r.accompaniments as string[]).map(a => <span key={a} className={styles.tagAccomp}>{a}</span>)
               : <span className={styles.colEmpty}>—</span>}
           </div>
         </div>

@@ -68,7 +68,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           <div className={styles.topCell}>
             <div className={styles.th}>水色</div>
             <div className={styles.cupBox}>
-              <TeaCupSvg hex={colorHex} size={104}/>
+              <TeaCupSvg hex={colorHex} size={128} tight/>
               {colorHex && <span className={styles.hexCode}>{colorHex.toUpperCase()}</span>}
             </div>
           </div>

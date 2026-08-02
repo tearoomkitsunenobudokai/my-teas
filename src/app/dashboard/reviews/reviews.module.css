@@ -40,8 +40,8 @@
   letter-spacing:0.04em; text-align:center; padding:5px 4px; border-bottom:0.5px solid var(--border);
 }
 .colDiv { border-left:0.5px solid var(--border); }
-.cupBox { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:10px 6px; flex:1; }
-.cupBox svg { width:100%; height:auto; max-width:104px; }
+.cupBox { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:10px 4px; flex:1; }
+.cupBox svg { width:100%; height:auto; max-width:128px; }
 .hexCode { font-size:12px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--text-muted); letter-spacing:0.02em; }
 .chartBox { display:flex; align-items:center; justify-content:center; padding:8px 4px; flex:1; }
 .attrRow { display:grid; grid-template-columns:74px minmax(0,1fr); border-top:0.5px solid var(--border); align-items:stretch; }
@@ -51,8 +51,9 @@
   padding:8px 4px; border-right:0.5px solid var(--border);
 }
 .attrValue { display:flex; flex-wrap:wrap; align-items:center; gap:6px; padding:8px 10px; min-width:0; }
-.chip { font-size:13px; background:#E1F5EE; color:#085041; padding:3px 10px; border-radius:20px; border:0.5px solid #9FE1CB; }
-.chipAccomp { font-size:13px; background:#FBEFD9; color:#7A4A00; padding:3px 10px; border-radius:20px; border:0.5px solid #E6C88A; }
+/* タイル内の香り・添え物チップ（フォームの .chip とは別物なので専用名にする） */
+.tagAroma { font-size:13px; background:#E1F5EE; color:#085041; padding:3px 10px; border-radius:20px; border:0.5px solid #9FE1CB; }
+.tagAccomp { font-size:13px; background:#FBEFD9; color:#7A4A00; padding:3px 10px; border-radius:20px; border:0.5px solid #E6C88A; }
 .colEmpty { font-size:13px; color:var(--text-hint); opacity:0.5; }
 .tileActions { display:flex; gap:8px; justify-content:flex-end; padding-top:6px; border-top:0.5px solid var(--border); }
 .editBtn { background:none; border:0.5px solid var(--border-strong); border-radius:6px; padding:4px 12px; font-size:12px; cursor:pointer; color:var(--text-muted); }
@@ -640,7 +641,7 @@
 .tileDate { padding-top: 2px; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileName { font-size: 17px; }
+  .tileName { font-size: 20px; line-height: 1.35; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -673,13 +674,13 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .th, .attrLabel { font-size: 15px; }
   .hexCode { font-size: 14px; letter-spacing: 0.03em; }
-  .chip, .chipAccomp { font-size: 15px; padding: 5px 12px; }
+  .tagAroma, .tagAccomp { font-size: 15px; padding: 5px 12px; }
   .colEmpty { font-size: 15px; }
   .attrValue { padding: 10px 12px; gap: 8px; }
   .attrRow { grid-template-columns: 86px minmax(0, 1fr); }
-  .cupBox svg { max-width: 118px; }
+  .cupBox svg { max-width: 100%; }
   /* タイル周辺の文字も拡大 */
-  .tileName { font-size: 17px; }
+  .tileName { font-size: 20px; line-height: 1.35; }
   .tileSub, .tilePlaceholder { font-size: 14px; }
   .tileDate { font-size: 13px; }
   .editBtn, .delBtn { font-size: 15px; padding: 9px 16px; }
