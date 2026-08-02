@@ -862,3 +862,30 @@
 /* カップとチャートは左に寄せる（中央寄せの余白をなくす） */
 .blockInner > svg { align-self: flex-start; }
 .blockInner > div:not([class]) { align-self: flex-start; }
+
+/* ═══════════════════════════════════════════════
+   v252: 開いている項目の見出しを色で示す
+   アコーディオンで1項目ずつ開くため、どこを開いているか
+   ひと目で分かるように緑で強調する。
+   ═══════════════════════════════════════════════ */
+.secHeadOpen {
+  background: var(--green-light);
+  border-color: var(--green);
+  /* 左端に太い縦線を入れて、開いている位置を目立たせる */
+  border-left: 4px solid var(--green);
+}
+.secHeadOpen .secHeadLabel { color: var(--green-dark); }
+.secHeadOpen .secHeadIcon  { color: var(--green); }
+/* 開いている項目は見出しと中身がつながって見えるようにする */
+.secHeadOpen { border-bottom-left-radius: 0; border-bottom-right-radius: 0; margin-bottom: 0; }
+.secBody {
+  border: 0.5px solid var(--green);
+  border-left: 4px solid var(--green);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 12px 14px 14px;
+  margin-bottom: 8px;
+}
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .secBody { padding: 14px 16px 16px; }
+}

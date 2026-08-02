@@ -309,7 +309,9 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   function SectionHead({ i }: { i: number }) {
     if (wizard) return null
     return (
-      <button type="button" className={styles.secHead} onClick={() => toggleSection(i)}
+      <button type="button"
+        className={`${styles.secHead} ${isOpen(i) ? styles.secHeadOpen : ''}`}
+        onClick={() => toggleSection(i)}
         aria-expanded={isOpen(i)}>
         <span className={styles.secHeadLabel}>{i + 1}/{WIZ_STEPS.length}　{WIZ_STEPS[i]}</span>
         <span className={styles.secHeadIcon}>{isOpen(i) ? '▲' : '▼'}</span>
@@ -509,7 +511,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
         {/* 飲んだ場所 */}
         <SectionHead i={0}/>
-        <div style={{ display: (show(0) && isOpen(0)) ? undefined : 'none' }}>
+        <div className={wizard ? '' : styles.secBody}
+          style={{ display: (show(0) && isOpen(0)) ? undefined : 'none' }}>
         <p className={styles.stepHint}>必須項目（<span className={styles.req}>*</span>）以外は、入力しなくても登録できます。飛ばして進んで構いません。</p>
 
         <label className={styles.label}>🏪 飲んだ場所</label>
@@ -562,7 +565,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
         {/* お茶の名前（必須） */}
         <SectionHead i={1}/>
-        <div style={{ display: (show(1) && isOpen(1)) ? undefined : 'none' }}>
+        <div className={wizard ? '' : styles.secBody}
+          style={{ display: (show(1) && isOpen(1)) ? undefined : 'none' }}>
         <label className={styles.label}>☕ お茶の名前 <span className={styles.req}>*</span>
           <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--text-hint)', marginLeft: 6 }}>{teaName.length}/20</span>
         </label>
@@ -606,7 +610,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           <div className={`${styles.colorBlock} ${wizard ? '' : styles.blockFull}`}
             style={{ display: show(2) ? undefined : 'none' }}>
             <SectionHead i={2}/>
-            <div className={wizard ? '' : styles.blockInner} style={{ display: isOpen(2) ? undefined : 'none' }}>
+            <div className={wizard ? '' : `${styles.blockInner} ${styles.secBody}`} style={{ display: isOpen(2) ? undefined : 'none' }}>
             <p className={styles.label} style={{ display: wizard ? undefined : 'none' }}>🍵 水色</p>
             <TeaCup hex={colorHex} size={72}/>
             {colorName && <p className={styles.colorName}>{colorName}</p>}
@@ -640,7 +644,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           <div className={`${styles.chartBlock} ${wizard ? '' : styles.blockFull}`}
             style={{ display: show(3) ? undefined : 'none' }}>
             <SectionHead i={3}/>
-            <div className={wizard ? '' : styles.blockInner} style={{ display: isOpen(3) ? undefined : 'none' }}>
+            <div className={wizard ? '' : `${styles.blockInner} ${styles.secBody}`} style={{ display: isOpen(3) ? undefined : 'none' }}>
             <p className={styles.label} style={{ display: wizard ? undefined : 'none' }}>📊 評価スコア</p>
             <RadarChart scores={scores} size={160}/>
             {/* スマホ入力と同じく、1〜5のボタンで直接選べるようにする */}
@@ -668,7 +672,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
         {/* 香り分析 */}
         <SectionHead i={4}/>
-        <div style={{ display: (show(4) && isOpen(4)) ? undefined : 'none' }}>
+        <div className={wizard ? '' : styles.secBody}
+          style={{ display: (show(4) && isOpen(4)) ? undefined : 'none' }}>
         <p className={styles.label}>🌸 香り分析 <span className={styles.sub}>({aromaNotes.length}/{MAX_AROMA})</span></p>
         {aromaNotes.length > 0 && (
           <div className={styles.selectedAroma}>
@@ -726,7 +731,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
         {/* ── 6/8 飲み方（添え物） ── */}
         <SectionHead i={5}/>
-        <div style={{ display: (show(5) && isOpen(5)) ? undefined : 'none' }}>
+        <div className={wizard ? '' : styles.secBody}
+          style={{ display: (show(5) && isOpen(5)) ? undefined : 'none' }}>
         <p className={styles.label}>🥛 飲み方</p>
         <p className={styles.stepHint}>選ばなくても登録できます。</p>
         <div className={styles.chips}>
@@ -749,7 +755,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
         {/* ── 7/8 抽出方法（お茶マニア向け） ── */}
         <SectionHead i={6}/>
-        <div style={{ display: (show(6) && isOpen(6)) ? undefined : 'none' }}>
+        <div className={wizard ? '' : styles.secBody}
+          style={{ display: (show(6) && isOpen(6)) ? undefined : 'none' }}>
         <p className={styles.label}>⏱ 抽出方法 <span className={styles.maniaTag}>お茶マニア向け</span></p>
         <p className={styles.stepHint}>すべて任意です。分からなければ飛ばして構いません。</p>
         <div className={styles.chips}>
@@ -780,7 +787,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         </div>
 
         <SectionHead i={7}/>
-        <div style={{ display: (show(7) && isOpen(7)) ? undefined : 'none' }}>
+        <div className={wizard ? '' : styles.secBody}
+          style={{ display: (show(7) && isOpen(7)) ? undefined : 'none' }}>
         <label className={styles.label}>📝 その他の情報（非公開） <span className={styles.sub}>({notes.length}/{MAX_NOTES})</span></label>
         <textarea className={styles.textarea} rows={2} value={notes} maxLength={MAX_NOTES}
           onChange={e => setNotes(e.target.value.slice(0, MAX_NOTES))}
