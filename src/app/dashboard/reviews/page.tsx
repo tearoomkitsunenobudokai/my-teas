@@ -596,9 +596,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             flexDirection: wizard ? undefined : 'column',
           }}>
           {/* 水色 */}
-          <div className={styles.colorBlock} style={{ display: show(2) ? undefined : 'none' }}>
+          <div className={`${styles.colorBlock} ${wizard ? '' : styles.blockFull}`}
+            style={{ display: show(2) ? undefined : 'none' }}>
             <SectionHead i={2}/>
-            <div style={{ display: isOpen(2) ? undefined : 'none' }}>
+            <div className={wizard ? '' : styles.blockInner} style={{ display: isOpen(2) ? undefined : 'none' }}>
             <p className={styles.label} style={{ display: wizard ? undefined : 'none' }}>🍵 水色</p>
             <TeaCup hex={colorHex} size={72}/>
             {colorName && <p className={styles.colorName}>{colorName}</p>}
@@ -629,9 +630,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </div>
           </div>
           {/* チャート */}
-          <div className={styles.chartBlock} style={{ display: show(3) ? undefined : 'none' }}>
+          <div className={`${styles.chartBlock} ${wizard ? '' : styles.blockFull}`}
+            style={{ display: show(3) ? undefined : 'none' }}>
             <SectionHead i={3}/>
-            <div style={{ display: isOpen(3) ? undefined : 'none' }}>
+            <div className={wizard ? '' : styles.blockInner} style={{ display: isOpen(3) ? undefined : 'none' }}>
             <p className={styles.label} style={{ display: wizard ? undefined : 'none' }}>📊 評価スコア</p>
             <RadarChart scores={scores} size={160}/>
             {/* スマホ入力と同じく、1〜5のボタンで直接選べるようにする */}

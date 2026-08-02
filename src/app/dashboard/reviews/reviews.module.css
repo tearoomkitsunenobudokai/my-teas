@@ -838,3 +838,27 @@
   .secBarHint { font-size: 17px; }
   .secBarBtn { font-size: 17px; padding: 8px 16px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v250: 一覧表示（編集時）では 3/8 水色・4/8 評価スコアも
+   他の項目と同じく左揃え・画面幅いっぱいに表示する。
+   （横並び用の固定幅120px・中央寄せは、ウィザード表示のときだけ使う）
+   ═══════════════════════════════════════════════ */
+.blockFull {
+  width: 100% !important;
+  flex: 1 1 auto !important;
+  flex-shrink: 1 !important;
+  align-items: stretch !important;
+}
+.blockFull .colorName { text-align: left; }
+/* 一覧表示では中身も左揃えにし、幅いっぱいに広げる */
+.blockInner {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+/* カップとチャートは左に寄せる（中央寄せの余白をなくす） */
+.blockInner > svg { align-self: flex-start; }
+.blockInner > div:not([class]) { align-self: flex-start; }
