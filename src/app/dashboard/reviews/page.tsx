@@ -78,7 +78,13 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
             <div className={styles.th}>水色</div>
             <div className={styles.cupBox}>
               <TeaCup hex={r.color_hex} size={128} tight/>
-              {r.color_hex && <span className={styles.hexCode}>{(r.color_hex as string).toUpperCase()}</span>}
+              {r.color_hex && (
+                <span className={styles.hexRow}>
+                  {/* 評価カードと同じ、金の枠線付きの色見本 */}
+                  <span className={styles.hexSwatch} style={{ background: r.color_hex as string }}/>
+                  <span className={styles.hexCode}>{(r.color_hex as string).toUpperCase()}</span>
+                </span>
+              )}
             </div>
           </div>
           <div className={`${styles.topCell} ${styles.colDiv}`}>
@@ -261,6 +267,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [colors,      setColors]      = useState<any[]>([])
   const [presets,     setPresets]     = useState<any[]>([])
   const [shops,       setShops]       = useState<any[]>([])
+  const [shopArea,    setShopArea]    = useState('')   // 認定店プルダウンの絞り込み用エリア
   const [pastBrands,  setPastBrands]  = useState<string[]>([])
   const [openGroup,   setOpenGroup]   = useState<string|null>(null)
   const [showDetail,  setShowDetail]  = useState(false)
@@ -269,7 +276,16 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   // 「全ての項目を一覧で表示」で従来の一覧形式へ切替可能。編集時は常に一覧形式。
   const [wizard, setWizard] = useState(!isEdit)
   const [step, setStep] = useState(0)
-  const WIZ_STEPS = ['お茶の名前・ブランド', '水色', '評価スコア', '香り分析', '飲んだ場所・日付', 'コメント・公開設定']
+  const WIZ_STEPS = [
+    '飲んだ場所・日付',      // 0
+    'お茶の名前・ブランド',  // 1
+    '水色',                  // 2
+    '評価スコア',            // 3
+    '香り分析',              // 4
+    '飲み方',                // 5
+    '抽出方法',              // 6
+    'コメント・公開設定',    // 7
+  ]
   const WIZ_LAST = WIZ_STEPS.length - 1
   // ウィザード中は該当ステップのみ表示。一覧形式では全表示
   const show = (i: number) => !wizard || step === i
@@ -303,6 +319,11 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const filteredShops = shopInput.length >= 1
     ? shops.filter(s => s.name.includes(shopInput) || s.prefecture?.includes(shopInput)).slice(0,6)
     : []
+
+  /* 認定店を「エリア→店舗」の2段プルダウンで選べるようにするための一覧。
+     エリア未選択のときは全店舗を対象にする。 */
+  const shopAreas = Array.from(new Set(shops.map(s => s.prefecture).filter(Boolean))).sort()
+  const shopsInArea = shopArea ? shops.filter(s => s.prefecture === shopArea) : shops
 
   function toggleAroma(n: string) {
     if (aromaNotes.includes(n)) { setAromaNotes(a => a.filter(x => x !== n)); return }
@@ -442,8 +463,60 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           </div>
         )}
 
-        {/* お茶の名前（必須） */}
+        {/* 飲んだ場所 */}
         <div style={{ display: show(0) ? undefined : 'none' }}>
+        <p className={styles.stepHint}>必須項目（<span className={styles.req}>*</span>）以外は、入力しなくても登録できます。飛ばして進んで構いません。</p>
+
+        <label className={styles.label}>🏪 飲んだ場所</label>
+        <div className={styles.suggestWrap}>
+          <input className={styles.input} value={shopInput}
+            onChange={e => { setShopInput(e.target.value); setShopName(e.target.value); setSelectedShopId(null); setShowShops(true) }}
+            onBlur={() => setTimeout(() => setShowShops(false), 150)}
+            placeholder="店名を入力、または認定店リストから選択"/>
+          {showShops && filteredShops.length > 0 && (
+            <div className={styles.suggestBox}>
+              {filteredShops.map(s => (
+                <div key={s.id} className={styles.suggestRow}
+                  onMouseDown={() => { setShopName(s.name); setShopInput(s.name); setSelectedShopId(s.id); setShowShops(false) }}>
+                  <span className={styles.suggestName}>{s.name}</span>
+                  <span className={styles.suggestPref}>{s.prefecture}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {selectedShopId && <p className={styles.shopHint}>✅ 認定店として登録され、「訪問済み」に自動で追加されます</p>}
+
+        {/* 認定店から選ぶ場合：エリアで絞り込んでから店舗を選べるようにする */}
+        <p className={styles.label}>📍 認定店から選ぶ</p>
+        <div className={styles.detailRow}>
+          <div>
+            <select className={styles.inputSm} value={shopArea}
+              onChange={e => setShopArea(e.target.value)}>
+              <option value="">エリアを選択</option>
+              {shopAreas.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          </div>
+          <div>
+            <select className={styles.inputSm} value={selectedShopId ?? ''}
+              onChange={e => {
+                const id = e.target.value
+                const hit = shops.find(s => String(s.id) === id)
+                if (hit) { setShopName(hit.name); setShopInput(hit.name); setSelectedShopId(hit.id) }
+                else { setSelectedShopId(null) }
+              }}>
+              <option value="">認定店を選択</option>
+              {shopsInArea.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <label className={styles.label}>📅 飲んだ日</label>
+        <input type="date" className={styles.inputDate} value={drankAt} onChange={e => setDrankAt(e.target.value)}/>
+        </div>
+
+        {/* お茶の名前（必須） */}
+        <div style={{ display: show(1) ? undefined : 'none' }}>
         <label className={styles.label}>☕ お茶の名前 <span className={styles.req}>*</span>
           <span style={{ fontWeight: 400, fontSize: 11, color: 'var(--text-hint)', marginLeft: 6 }}>{teaName.length}/20</span>
         </label>
@@ -462,13 +535,24 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         <datalist id="brand-suggestions">
           {pastBrands.map(b => <option key={b} value={b}/>)}
         </datalist>
+
+        {/* お茶マニア向けの詳細（任意） */}
+        <p className={styles.label}>🌍 原産国 <span className={styles.maniaTag}>お茶マニア向け</span></p>
+        <input className={styles.input} value={originCountry} maxLength={20}
+          onChange={e => { setOriginCountry(e.target.value.slice(0, 20)); setOriginErr('') }}
+          placeholder="例: インド"/>
+        {originErr && <p className={styles.otherAromaErr}>{originErr}</p>}
+
+        <p className={styles.label}>🌱 茶園 <span className={styles.maniaTag}>お茶マニア向け</span></p>
+        <input className={styles.input} value={teaGarden} maxLength={30}
+          onChange={e => setTeaGarden(e.target.value.slice(0, 30))} placeholder="例: ニンバン茶園"/>
         </div>
 
         {/* 水色 + レーダーチャート横並び（ウィザードでは水色/スコアを別ステップ表示） */}
         <div className={styles.rowTwo}
-          style={{ display: (show(1) || show(2)) ? undefined : 'none', justifyContent: wizard ? 'center' : undefined }}>
+          style={{ display: (show(2) || show(3)) ? undefined : 'none', justifyContent: wizard ? 'center' : undefined }}>
           {/* 水色 */}
-          <div className={styles.colorBlock} style={{ display: show(1) ? undefined : 'none' }}>
+          <div className={styles.colorBlock} style={{ display: show(2) ? undefined : 'none' }}>
             <p className={styles.label}>🍵 水色</p>
             <TeaCup hex={colorHex} size={72}/>
             {colorName && <p className={styles.colorName}>{colorName}</p>}
@@ -498,7 +582,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </div>
           </div>
           {/* チャート */}
-          <div className={styles.chartBlock} style={{ display: show(2) ? undefined : 'none' }}>
+          <div className={styles.chartBlock} style={{ display: show(3) ? undefined : 'none' }}>
             <p className={styles.label}>📊 評価スコア</p>
             <RadarChart scores={scores} size={160}/>
             {/* スマホ入力と同じく、1〜5のボタンで直接選べるようにする */}
@@ -524,7 +608,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         </div>
 
         {/* 香り分析 */}
-        <div style={{ display: show(3) ? undefined : 'none' }}>
+        <div style={{ display: show(4) ? undefined : 'none' }}>
         <p className={styles.label}>🌸 香り分析 <span className={styles.sub}>({aromaNotes.length}/{MAX_AROMA})</span></p>
         {aromaNotes.length > 0 && (
           <div className={styles.selectedAroma}>
@@ -580,37 +664,64 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         </div>
         </div>
 
-        {/* 飲んだ場所 */}
-        <div style={{ display: show(4) ? undefined : 'none' }}>
-        <label className={styles.label}>🏪 飲んだ場所</label>
-        <div className={styles.suggestWrap}>
-          <input className={styles.input} value={shopInput}
-            onChange={e => { setShopInput(e.target.value); setShopName(e.target.value); setSelectedShopId(null); setShowShops(true) }}
-            onBlur={() => setTimeout(() => setShowShops(false), 150)}
-            placeholder="店名を入力、または認定店リストから選択"/>
-          {showShops && filteredShops.length > 0 && (
-            <div className={styles.suggestBox}>
-              {filteredShops.map(s => (
-                <div key={s.id} className={styles.suggestRow}
-                  onMouseDown={() => { setShopName(s.name); setShopInput(s.name); setSelectedShopId(s.id); setShowShops(false) }}>
-                  <span className={styles.suggestName}>{s.name}</span>
-                  <span className={styles.suggestPref}>{s.prefecture}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        {selectedShopId && <p className={styles.shopHint}>✅ 認定店として登録され、「訪問済み」に自動で追加されます</p>}
-
-        <label className={styles.label}>📅 飲んだ日</label>
-        <input type="date" className={styles.inputDate} value={drankAt} onChange={e => setDrankAt(e.target.value)}/>
-        </div>
-
+        {/* ── 6/8 飲み方（添え物） ── */}
         <div style={{ display: show(5) ? undefined : 'none' }}>
-        <label className={styles.label}>📝 その他の情報 <span className={styles.sub}>({notes.length}/{MAX_NOTES})</span></label>
+        <p className={styles.label}>🥛 飲み方</p>
+        <p className={styles.stepHint}>選ばなくても登録できます。</p>
+        <div className={styles.chips}>
+          {ACCOMPANIMENTS.map(a => (
+            <button key={a} className={`${styles.chip} ${accs.includes(a)?styles.chipOn:''}`}
+              onClick={() => setAccs(p => {
+                const NONE = 'なし（ストレート）'
+                if (a === NONE) {
+                  // 「なし」は他の添え物と同時選択しない（選択中なら解除、未選択なら他を全解除して選択）
+                  return p.includes(NONE) ? [] : [NONE]
+                }
+                // 通常の添え物を選ぶ場合は「なし」を自動的に外す
+                return p.includes(a) ? p.filter(x=>x!==a) : [...p.filter(x=>x!==NONE), a]
+              })}>
+              <ChipContent iconPath={accompanimentIconPath(a)} label={a}/>
+            </button>
+          ))}
+        </div>
+        </div>
+
+        {/* ── 7/8 抽出方法（お茶マニア向け） ── */}
+        <div style={{ display: show(6) ? undefined : 'none' }}>
+        <p className={styles.label}>⏱ 抽出方法 <span className={styles.maniaTag}>お茶マニア向け</span></p>
+        <p className={styles.stepHint}>すべて任意です。分からなければ飛ばして構いません。</p>
+        <div className={styles.chips}>
+          {BREW_METHODS.map(m => (
+            <button key={m} className={`${styles.chip} ${brewMethod===m?styles.chipOn:''}`}
+              onClick={() => setBrewMethod(brewMethod===m?'':m)}>
+              <ChipContent iconPath={brewIconPath(m)} label={m}/>
+            </button>
+          ))}
+        </div>
+        <div className={styles.detailRow}>
+          <div>
+            <p className={styles.label}>淹れ時間（秒）</p>
+            <input className={styles.inputSm} type="number" value={steepSec}
+              onChange={e => setSteepSec(e.target.value)} placeholder="例: 180"/>
+          </div>
+          <div>
+            <p className={styles.label}>茶葉量（g）</p>
+            <input className={styles.inputSm} type="number" step="0.1" min="0" value={teaGrams}
+              onChange={e => setTeaGrams(e.target.value)} placeholder="例: 5"/>
+          </div>
+          <div>
+            <p className={styles.label}>水量（ml）</p>
+            <input className={styles.inputSm} type="number" step="1" min="0" value={waterMl}
+              onChange={e => setWaterMl(e.target.value)} placeholder="例: 200"/>
+          </div>
+        </div>
+        </div>
+
+        <div style={{ display: show(7) ? undefined : 'none' }}>
+        <label className={styles.label}>📝 その他の情報（非公開） <span className={styles.sub}>({notes.length}/{MAX_NOTES})</span></label>
         <textarea className={styles.textarea} rows={2} value={notes} maxLength={MAX_NOTES}
           onChange={e => setNotes(e.target.value.slice(0, MAX_NOTES))}
-          placeholder="産地・グレード・購入場所・淹れ方の工夫など、自由にメモできます"/>
+          placeholder="グレード・購入場所・淹れ方の工夫など、自由にメモできます"/>
         <p className={styles.notesHint}>
           ここに書いた内容は、AI要約（まとめる）を作るときの判断材料にも使われます。
         </p>
@@ -688,69 +799,6 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)}/>
           コミュニティに公開する
         </label>
-
-        {/* 詳細情報（折りたたみ） */}
-        <button className={styles.detailToggle} onClick={() => setShowDetail(v=>!v)}>
-          {showDetail ? '▲ 詳細を閉じる' : '▼ 詳細情報（淹れ方・添え物）'}
-        </button>
-        {showDetail && (
-          <div className={styles.detail}>
-            <p className={styles.label}>原産国</p>
-            <input className={styles.input} value={originCountry} maxLength={20}
-              onChange={e => { setOriginCountry(e.target.value.slice(0, 20)); setOriginErr('') }}
-              placeholder="例: インド"/>
-            {originErr && <p className={styles.otherAromaErr}>{originErr}</p>}
-
-            <p className={styles.label}>茶園</p>
-            <input className={styles.input} value={teaGarden} maxLength={30}
-              onChange={e => setTeaGarden(e.target.value.slice(0, 30))} placeholder="例: ニンバン茶園"/>
-
-            <p className={styles.label}>抽出方法</p>
-            <div className={styles.chips}>
-              {BREW_METHODS.map(m => (
-                <button key={m} className={`${styles.chip} ${brewMethod===m?styles.chipOn:''}`}
-                  onClick={() => setBrewMethod(brewMethod===m?'':m)}>
-                  <ChipContent iconPath={brewIconPath(m)} label={m}/>
-                </button>
-              ))}
-            </div>
-            <div className={styles.detailRow}>
-              <div>
-                <p className={styles.label}>淹れ時間（秒）</p>
-                <input className={styles.inputSm} type="number" value={steepSec}
-                  onChange={e => setSteepSec(e.target.value)} placeholder="例: 180"/>
-              </div>
-              <div>
-                <p className={styles.label}>茶葉量（g）</p>
-                <input className={styles.inputSm} type="number" step="0.1" min="0" value={teaGrams}
-                  onChange={e => setTeaGrams(e.target.value)} placeholder="例: 5"/>
-              </div>
-              <div>
-                <p className={styles.label}>水量（ml）</p>
-                <input className={styles.inputSm} type="number" step="1" min="0" value={waterMl}
-                  onChange={e => setWaterMl(e.target.value)} placeholder="例: 200"/>
-              </div>
-            </div>
-            <p className={styles.label}>添え物</p>
-            <div className={styles.chips}>
-              {ACCOMPANIMENTS.map(a => (
-                <button key={a} className={`${styles.chip} ${accs.includes(a)?styles.chipOn:''}`}
-                  onClick={() => setAccs(p => {
-                    const NONE = 'なし（ストレート）'
-                    if (a === NONE) {
-                      // 「なし」は他の添え物と同時選択しない（選択中なら解除、未選択なら他を全解除して選択）
-                      return p.includes(NONE) ? [] : [NONE]
-                    }
-                    // 通常の添え物を選ぶ場合は「なし」を自動的に外す
-                    const next = p.includes(a) ? p.filter(x=>x!==a) : [...p.filter(x=>x!==NONE), a]
-                    return next
-                  })}>
-                  <ChipContent iconPath={accompanimentIconPath(a)} label={a}/>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
         </div>
 
         {wizard ? (
@@ -762,7 +810,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             {step < WIZ_LAST ? (
               <button className={styles.saveBtn}
                 onClick={() => setStep(s => s + 1)}
-                disabled={step === 0 && !teaName.trim()}>
+                disabled={step === 1 && !teaName.trim()}>
                 次へ →
               </button>
             ) : (

@@ -70,7 +70,13 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
             <div className={styles.th}>水色</div>
             <div className={styles.cupBox}>
               <TeaCupSvg hex={colorHex} size={128} tight/>
-              {colorHex && <span className={styles.hexCode}>{colorHex.toUpperCase()}</span>}
+              {colorHex && (
+                <span className={styles.hexRow}>
+                  {/* 評価カードと同じ、金の枠線付きの色見本 */}
+                  <span className={styles.hexSwatch} style={{ background: colorHex }}/>
+                  <span className={styles.hexCode}>{colorHex.toUpperCase()}</span>
+                </span>
+              )}
             </div>
           </div>
           <div className={`${styles.topCell} ${styles.colDiv}`}>

@@ -743,3 +743,51 @@
   border-top: 0.5px solid var(--border);
   border-radius: 10px;
 }
+
+/* ═══════════════════════════════════════════════
+   v248: 評価登録ウィザードの補助表示
+   ═══════════════════════════════════════════════ */
+/* 「必須以外は飛ばせる」ことを伝える案内文 */
+.stepHint {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  border-radius: 6px;
+  padding: 7px 10px;
+  margin: 6px 0 10px;
+  line-height: 1.5;
+}
+/* お茶マニア向けの任意項目であることを示すタグ */
+.maniaTag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #7A4A00;
+  background: #FBEFD9;
+  border: 0.5px solid #E6C88A;
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .stepHint { font-size: 18px; padding: 10px 13px; }
+  .maniaTag { font-size: 15px; padding: 3px 11px; }
+}
+
+/* ═══════════════════════════════════════════════
+   v248: カラーコードの横に色見本を表示
+   評価カードと同じ意匠（金の枠線付きの四角）に揃える。
+   ═══════════════════════════════════════════════ */
+.hexRow { display: inline-flex; align-items: center; gap: 6px; }
+.hexSwatch {
+  width: 14px; height: 14px;
+  border: 1px solid #A8873F;   /* 評価カードの GOLD_DEEP と同色 */
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .hexSwatch { width: 20px; height: 20px; }
+  .hexRow { gap: 8px; }
+}
