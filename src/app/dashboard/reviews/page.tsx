@@ -7,6 +7,7 @@ import dynamic from 'next/dynamic'
 import { ReviewScores, SCORE_LABELS, SCORE_DESCRIPTIONS } from '@/types'
 import { isCommentClean, isTextClean } from '@/lib/moderation'
 import { sortByPrefecture, prefectureOrder } from '@/lib/prefectures'
+import ColorPickerModal from '@/components/ColorPickerModal'
 import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import { brewIconPath, accompanimentIconPath } from '@/lib/icons'
@@ -269,6 +270,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [presets,     setPresets]     = useState<any[]>([])
   const [shops,       setShops]       = useState<any[]>([])
   const [shopArea,    setShopArea]    = useState('')   // 認定店プルダウンの絞り込み用エリア
+  const [showPicker,  setShowPicker]  = useState(false) // 写真から水色を抽出するモーダル
   const [pastBrands,  setPastBrands]  = useState<string[]>([])
   const [openGroup,   setOpenGroup]   = useState<string|null>(null)
   const [showDetail,  setShowDetail]  = useState(false)
@@ -646,6 +648,11 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                 title="カスタムカラーを選択"/>
               <span className={styles.customColorLabel}>カスタム</span>
             </div>
+            {/* 写真から水色を取り込む */}
+            <button type="button" className={styles.photoPickBtn}
+              onClick={() => setShowPicker(true)}>
+              📷 写真から水色を取り込む
+            </button>
             </div>
           </div>
           {/* チャート */}
@@ -879,6 +886,17 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           コミュニティに公開する
         </label>
         </div>
+
+        {/* 写真から水色を抽出するモーダル */}
+        {showPicker && (
+          <ColorPickerModal
+            onClose={() => setShowPicker(false)}
+            onPick={hex6 => {
+              // 既存の透明度を保ったまま色だけ差し替える（未設定なら既定の B0）
+              const alpha = colorHex.length === 9 ? colorHex.slice(7) : 'B0'
+              setColorHex(hex6 + alpha)
+            }}/>
+        )}
 
         {wizard ? (
           <div className={styles.mFoot}>

@@ -889,3 +889,25 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .secBody { padding: 14px 16px 16px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v254: 写真から水色を取り込むボタン
+   ═══════════════════════════════════════════════ */
+.photoPickBtn {
+  margin-top: 10px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-light);
+  border: 1px solid var(--green);
+  border-radius: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+}
+.photoPickBtn:hover { background: #d3efe5; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .photoPickBtn { font-size: 19px; padding: 15px 16px; }
+}
