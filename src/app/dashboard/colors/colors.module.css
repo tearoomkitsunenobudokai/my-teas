@@ -224,6 +224,17 @@
   padding: 1.75rem 0.5rem 6px;
 }
 /* 固定部分が画面を占有しすぎないよう、余白を詰める */
+/* 固定位置の上に隙間が残ってリストが覗かないよう、要素を上方向に拡張して塞ぐ。
+   擬似要素も当たり判定を持つため、隙間ごしの誤タップも防げる。 */
+.stickyHead::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 4rem;
+  background: var(--bg);
+}
 .stickyHead .pageHeader { margin-bottom: 8px; }
 .stickyHead .toolbar { margin-bottom: 0; }
 
