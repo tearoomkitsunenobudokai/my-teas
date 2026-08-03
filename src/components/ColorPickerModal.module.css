@@ -177,6 +177,15 @@
   display: flex;
 }
 .splitHalf { flex: 1; height: 100%; }
+/* 左半分は抽出枠の中の写真。円の左半分だけが見えるよう、
+   中央を基準に拡大して配置する（切り抜きの中心＝枠の中心）。 */
+.splitHalfImg {
+  flex: 1; height: 100%;
+  background-size: 200% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #eee;
+}
 
 .rawCircle {
   width: 128px; height: 128px; max-width: 100%;

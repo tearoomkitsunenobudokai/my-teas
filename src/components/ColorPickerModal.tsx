@@ -110,6 +110,9 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
   const [maxColors, setMaxColors]   = useState<number | null>(null)
   /* 登録済みの色（重複チェック用）。抽出した時点で気づけるようにする。 */
   const [myPalette, setMyPalette]   = useState<{id:string;name:string;hex:string}[]>([])
+  /* 抽出枠の中を切り抜いた画像（比較図の左半分に使う）。
+     平らな色ではなく実際の写真なので、光沢や粒子の見え方まで比べられる。 */
+  const [cropUrl, setCropUrl]       = useState('')
   const [saving, setSaving]         = useState(false)
   const supabase = createClient()
   /* 上限に達しているか。maxColors が 0 の場合は無制限なので常に false。 */
@@ -292,6 +295,23 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
     const sum = use.reduce((acc, c) => [acc[0]+c[0], acc[1]+c[1], acc[2]+c[2]], [0,0,0])
     const to2 = (v: number) => Math.round(v / use.length).toString(16).padStart(2, '0')
     setHex(`#${to2(sum[0])}${to2(sum[1])}${to2(sum[2])}`.toUpperCase())
+
+    /* 比較図に使うため、枠の中身をそのまま切り抜いた画像も作っておく。
+       小さすぎると粗く見えるので、一定の大きさに拡大して書き出す。 */
+    try {
+      const out = document.createElement('canvas')
+      const size = 256
+      out.width = size
+      out.height = size
+      const octx = out.getContext('2d')
+      if (octx) {
+        octx.imageSmoothingQuality = 'high'
+        octx.drawImage(cv, x0, y0, w, h, 0, 0, size, size)
+        setCropUrl(out.toDataURL('image/png'))
+      }
+    } catch {
+      // 切り抜きに失敗しても、色の抽出自体には影響させない
+    }
   }
 
   /** 画像上をタップ／ドラッグして抽出位置を決める */
@@ -388,14 +408,16 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
                   <span className={styles.rawCircle} style={{ background: hex }}/>
                   <span className={styles.compareLabel}>写真の色</span>
                 </div>
-                {/* 左半分＝写真の色、右半分＝登録後の色。
-                    境目で直接くっつけると、色の差がいちばん分かりやすい。 */}
+                {/* 左半分＝抽出枠の中の写真そのもの、右半分＝登録後のカップの色。
+                    平らな色どうしではなく実物と見比べられるので、
+                    光沢や粒子まで含めた印象の違いが分かる。 */}
                 <div className={styles.compareItem}>
                   <span className={styles.splitCircle}>
-                    <span className={styles.splitHalf} style={{ background: hex }}/>
+                    <span className={styles.splitHalfImg}
+                      style={{ backgroundImage: cropUrl ? `url(${cropUrl})` : undefined }}/>
                     <span className={styles.splitHalf} style={{ background: blendedHex(hex, density) }}/>
                   </span>
-                  <span className={styles.compareLabel}>差の比較</span>
+                  <span className={styles.compareLabel}>写真とカップ</span>
                 </div>
                 <div className={styles.compareItem}>
                   {/* 実際に登録される見え方 */}
