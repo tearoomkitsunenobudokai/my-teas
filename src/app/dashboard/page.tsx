@@ -135,6 +135,8 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.page}>
+      {/* タイトル〜基本統計までを上部に固定する */}
+      <div className={styles.stickyHead}>
       <h1 className={styles.title}>🏠 ダッシュボード</h1>
 
       {/* ─── 基本統計カード ─── */}
@@ -155,6 +157,11 @@ export default function DashboardPage() {
           <span className={styles.statNum}>{topShops.length > 0 ? topShops.length : '—'}</span>
           <span className={styles.statLabel}>訪問店舗数</span>
         </div>
+      </div>
+      </div>
+
+      {/* ─── ポイント・ログインカード（固定しない） ─── */}
+      <div className={styles.statsRow}>
         <Link href="/dashboard/points" className={`${styles.statCard} ${styles.statCardLink}`}>
           <span className={styles.statNum}>{pointsUnlimited ? '∞' : (points ?? '—')}<span className={styles.statPt}>💎</span></span>
           <span className={styles.statLabel}>所持ポイント</span>

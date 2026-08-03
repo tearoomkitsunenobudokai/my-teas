@@ -68,7 +68,8 @@ export default function HomePage() {
 
   return (
     <div className={styles.wrap}>
-      {/* ヒーロー */}
+      {/* ヒーロー（お知らせより上を固定する） */}
+      <div className={styles.stickyHead}>
       <section className={styles.hero}>
         <span className={styles.heroEyebrow}>MY-TEAS</span>
         <h1 className={styles.heroTitle}>
@@ -84,6 +85,7 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+      </div>
 
       {/* お知らせ */}
       <section className={styles.section}>

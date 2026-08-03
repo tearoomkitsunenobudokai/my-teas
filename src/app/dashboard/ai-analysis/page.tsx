@@ -33,11 +33,14 @@ const TILES = [
 export default function AIAnalysisPage() {
   return (
     <div className={styles.page}>
+      <div className={styles.stickyHead}>
       <h1 className={styles.title}>🤖 AI分析</h1>
       <p className={styles.lead}>
         あなたの評価データをもとに、AIがお茶の好みを分析したり、おすすめを提案する機能です。
         現在はプロトタイプ版（β）のため、簡易ロジックによる分析結果を表示しています。
       </p>
+
+      </div>
 
       <div className={styles.grid}>
         {TILES.map(t => (

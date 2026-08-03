@@ -115,12 +115,15 @@ export default function CardPrintPage() {
 
   return (
     <div className={styles.page}>
+      <div className={styles.stickyHead}>
       <h1 className={styles.title}>🖨 印刷用に変換</h1>
       <p className={styles.lead}>
         評価カードを2枚まとめて、ハガキサイズ（{POSTCARD_W_MM}×{POSTCARD_H_MM}mm）の
         画像に変換します。コンビニのカラー印刷で「はがき」を選んで印刷し、
         線に沿って切り取ると名刺サイズのカードになります。
       </p>
+
+      </div>
 
       <div className={styles.card}>
         <div className={styles.costRow}>
