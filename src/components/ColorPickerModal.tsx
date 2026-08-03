@@ -20,6 +20,8 @@ type Props = {
   onPick: (hex8: string, name?: string) => void
   /** 自分の色として登録したときに呼ばれる（親側で色一覧を読み直すため） */
   onRegistered?: () => void
+  /** カラーパレット画面から使う場合など、登録欄を出さずに色だけ返したいときに true */
+  pickOnly?: boolean
   onClose: () => void
 }
 
@@ -61,7 +63,7 @@ function StepperRow({ label, value, min, max, onChange, suffix }: {
   )
 }
 
-export default function ColorPickerModal({ onPick, onRegistered, onClose }: Props) {
+export default function ColorPickerModal({ onPick, onRegistered, pickOnly = false, onClose }: Props) {
   const cameraRef = useRef<HTMLInputElement>(null)
   const fileRef   = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -365,8 +367,9 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
               </p>
             )}
 
-            {/* 自分の色として登録（評価カードで色名が表示されるようになる） */}
-            {hex && (
+            {/* 自分の色として登録（評価カードで色名が表示されるようになる）
+                pickOnly のときは、呼び出し元の画面側で登録するため表示しない */}
+            {hex && !pickOnly && (
               <div className={styles.registerBox}>
                 <p className={styles.label}>🏷 この色の名前</p>
                 <input className={styles.nameInput} value={colorName} maxLength={MAX_COLOR_NAME}

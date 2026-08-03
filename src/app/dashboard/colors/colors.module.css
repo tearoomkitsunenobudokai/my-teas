@@ -174,3 +174,39 @@
   .ownerTab { font-size: 23.4px; }
   .myColorCount { font-size: 19.8px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v263: カラーコードの直接入力・写真からの抽出
+   ═══════════════════════════════════════════════ */
+/* カラーコード入力欄（等幅で見やすく） */
+.hexField {
+  width: 110px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  text-transform: uppercase;
+}
+.hexField:disabled { opacity: 0.6; }
+/* 写真から抽出ボタン */
+.photoBtn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-light);
+  border: 1px solid var(--green);
+  border-radius: 8px;
+  padding: 9px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.photoBtn:hover { background: #d3efe5; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .hexField { width: 150px; font-size: 18px; padding: 12px 14px; }
+  .photoBtn { font-size: 18px; padding: 12px 16px; }
+}

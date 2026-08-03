@@ -3,6 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import TeaCupPreview from '@/components/TeaCup'
+import ColorPickerModal from '@/components/ColorPickerModal'
+import { detectCategory } from '@/lib/colorPalette'
 import styles from './colors.module.css'
 
 // 上限は管理者メニュー（plan_limits）で権限区分ごとに変更できるため、
@@ -197,6 +199,10 @@ function ColorForm({ initial, isAdmin, readOnly, onSave, onCancel }: {
   onCancel: () => void
 }) {
   const [form, setForm] = useState(initial ?? EMPTY_FORM)
+  /* カラーコードの直接入力欄。入力途中は不正な値になるため、
+     フォーム本体（form.hex）とは別に持ち、正しい形式になった時だけ反映する。 */
+  const [hexInput, setHexInput] = useState((initial ?? EMPTY_FORM).hex)
+  const [showPicker, setShowPicker] = useState(false)
   const fullHex = form.hex + form.alpha.toString(16).padStart(2,'0').toUpperCase()
   const set = (k: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement|HTMLSelectElement|HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
@@ -217,12 +223,29 @@ function ColorForm({ initial, isAdmin, readOnly, onSave, onCancel }: {
           {CAT_ORDER.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}
         </select>
         <label className={styles.label}>色を選択</label>
-        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
           <input type="color" value={form.hex}
             onChange={e => setForm(f => ({ ...f, hex: e.target.value }))}
             disabled={readOnly}
             style={{ width:48, height:36, border:'none', cursor: readOnly ? 'default' : 'pointer', borderRadius:8 }}/>
-          <code style={{ fontSize:12, color:'var(--text-muted)' }}>{form.hex}</code>
+          {/* カラーコードを直接入力できるようにする（他アプリで調べた色をそのまま使える） */}
+          <input className={styles.hexField} value={hexInput}
+            onChange={e => {
+              const v = e.target.value
+              setHexInput(v)
+              // #RRGGBB / RRGGBB / #RGB のいずれでも受け付ける
+              let t = v.trim().replace('#','')
+              if (t.length === 3) t = t.split('').map(c => c + c).join('')
+              if (/^[0-9a-fA-F]{6}$/.test(t)) setForm(f => ({ ...f, hex: '#' + t.toLowerCase() }))
+            }}
+            onBlur={() => setHexInput(form.hex)}
+            disabled={readOnly}
+            placeholder="#C8A96E" maxLength={7}/>
+          {!readOnly && (
+            <button type="button" className={styles.photoBtn} onClick={() => setShowPicker(true)}>
+              📷 写真から抽出
+            </button>
+          )}
         </div>
         <label className={styles.label}>透明度 {Math.round(form.alpha/255*100)}%</label>
         <input type="range" min={80} max={230} value={form.alpha}
@@ -238,6 +261,25 @@ function ColorForm({ initial, isAdmin, readOnly, onSave, onCancel }: {
               onChange={e => setForm(f => ({ ...f, is_official: e.target.checked }))}/>
             公式カラーとして登録（全ユーザーのパレットに表示）
           </label>
+        )}
+        {/* 写真から色を抽出する（評価入力と同じ仕組み）。
+            登録はこのフォームで行うため、モーダル側の登録欄は出さない */}
+        {showPicker && (
+          <ColorPickerModal
+            pickOnly
+            onClose={() => setShowPicker(false)}
+            onPick={(hex8) => {
+              const hex6 = hex8.slice(0, 7).toLowerCase()
+              const alpha = hex8.length === 9 ? parseInt(hex8.slice(7), 16) : form.alpha
+              setForm(f => ({
+                ...f,
+                hex: hex6,
+                // 透明度はこの画面の調整範囲（80〜230）に収める
+                alpha: Math.min(230, Math.max(80, alpha)),
+                category: detectCategory(hex6),   // 色から系統を自動判定
+              }))
+              setHexInput(hex6)
+            }}/>
         )}
         <div className={styles.formActions}>
           <button className={styles.cancelBtn} onClick={onCancel}>{readOnly ? '閉じる' : 'キャンセル'}</button>
