@@ -50,8 +50,8 @@ export default function RadarChart({
   const labels = keys.map((k, i) => {
     const text = SCORE_LABELS[k]
     const isSide = i === 1 || i === 3
-    /* 縦書きはスマホ表示のときだけ。PCは横幅に余裕があるため横書きのままにする。 */
-    return verticalSideLabels && isMobile && isSide ? text.split('') : text
+    /* 縦書きは画面幅にかかわらず適用し、スマホとPCで見た目を揃える。 */
+    return verticalSideLabels && isSide ? text.split('') : text
   })
   const data   = keys.map(k => scores[k] ?? 1)
 

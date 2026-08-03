@@ -662,7 +662,18 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               <label className={`${styles.swatchItem} ${isCustomColor ? styles.swatchItemOn : ''}`}>
                 <span className={`${styles.swatch} ${isCustomColor ? '' : styles.tileCustom}`}
                   style={{ background: isCustomColor ? hexToRgba(colorHex, 0.85) : undefined }}>
-                  {!isCustomColor && <span className={styles.tileIcon}>🎨</span>}
+                  {!isCustomColor && (
+                    <>
+                      {/* 光の三原色（加法混色）。iOS Safari は background-blend-mode の
+                          多重指定に対応しないため、円を要素として重ねて mix-blend-mode で合成する */}
+                      <span className={styles.rgbWrap} aria-hidden="true">
+                        <span className={`${styles.rgbDot} ${styles.rgbR}`}/>
+                        <span className={`${styles.rgbDot} ${styles.rgbG}`}/>
+                        <span className={`${styles.rgbDot} ${styles.rgbB}`}/>
+                      </span>
+                      <span className={styles.tileIcon}>🎨</span>
+                    </>
+                  )}
                   <input type="color"
                     value={'#' + (colorHex.replace('#','').slice(0,6) || 'C8A96E')}
                     onChange={e => {
