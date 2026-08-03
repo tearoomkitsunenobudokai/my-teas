@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react'
 import TeaCup from './TeaCup'
 import { createClient } from '@/lib/supabase'
 import { isTextClean } from '@/lib/moderation'
-import { MAX_COLOR_NAME, detectCategory } from '@/lib/colorPalette'
+import { MAX_COLOR_NAME, detectCategory, findDuplicateColor } from '@/lib/colorPalette'
 import styles from './ColorPickerModal.module.css'
 
 type Props = {
@@ -91,10 +91,14 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
   /* 登録上限。管理者メニューで権限区分ごとに変更できるため、固定値ではなく
      plan_limits から取得する。0 は「無制限」を表す。 */
   const [maxColors, setMaxColors]   = useState<number | null>(null)
+  /* 登録済みの色（重複チェック用）。抽出した時点で気づけるようにする。 */
+  const [myPalette, setMyPalette]   = useState<{id:string;name:string;hex:string}[]>([])
   const [saving, setSaving]         = useState(false)
   const supabase = createClient()
   /* 上限に達しているか。maxColors が 0 の場合は無制限なので常に false。 */
   const atLimit = myCount !== null && maxColors !== null && maxColors > 0 && myCount >= maxColors
+  /* 抽出中の色が、すでに登録済みの色と同じかどうか（透明度の違いは無視） */
+  const dupColor = hex ? findDuplicateColor(myPalette, hex) : undefined
 
   // 画像を読み込んで canvas に描画する
   function loadFile(file?: File | null) {
@@ -134,15 +138,17 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
     ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const [{ count }, { data: limitVal }] = await Promise.all([
+      const [{ count }, { data: limitVal }, { data: palette }] = await Promise.all([
         supabase.from('tea_colors')
           .select('id', { count: 'exact', head: true })
           .eq('created_by', user.id).eq('is_official', false),
         supabase.rpc('get_my_limit', { p_feature: 'colors' }),
+        supabase.from('tea_colors').select('id,name,hex,is_official,created_by'),
       ])
       if (!alive) return
       setMyCount(count ?? 0)
       setMaxColors(typeof limitVal === 'number' ? limitVal : 0)
+      setMyPalette((palette ?? []).filter(c => c.is_official || c.created_by === user.id))
     })()
     return () => { alive = false }
   }, [])
@@ -175,6 +181,17 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
     // max が 0 のときは無制限
     if (max > 0 && now >= max) {
       setNameErr(`登録できる色は${max}色までです。カラーパレット画面で不要な色を削除してください。`)
+      return false
+    }
+
+    /* すでに同じ色が登録されていないか確認する（透明度の違いは同色として扱う）。
+       公式の色と自分の色が対象。 */
+    const { data: existing } = await supabase.from('tea_colors')
+      .select('id,name,hex,is_official,created_by')
+    const visible = (existing ?? []).filter(c => c.is_official || c.created_by === user.id)
+    const dup = findDuplicateColor(visible, hex8)
+    if (dup) {
+      setNameErr(`この色はすでに「${dup.name}」として登録されています。登録のチェックを外すか、別の色をお選びください。`)
       return false
     }
 
@@ -378,7 +395,7 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
 
                 <label className={styles.registerCheck}>
                   <input type="checkbox" checked={saveAsMine}
-                    disabled={atLimit || !colorName.trim()}
+                    disabled={atLimit || !colorName.trim() || !!dupColor}
                     onChange={e => { setSaveAsMine(e.target.checked); setNameErr('') }}/>
                   <span>この色をカラーパレットにも登録する</span>
                 </label>
@@ -391,6 +408,12 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
                     </span>
                   )}
                 </p>
+                {dupColor && (
+                  <p className={styles.registerErr}>
+                    この色はすでに「{dupColor.name}」として登録されています。
+                    パレットへの登録はできませんが、この評価の色としてはそのまま使えます。
+                  </p>
+                )}
                 {atLimit && (
                   <p className={styles.registerErr}>
                     登録できる色が上限（{maxColors}色）に達しています。

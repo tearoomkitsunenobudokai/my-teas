@@ -15,6 +15,32 @@ export const MAX_COLOR_NAME = 20
 export const CAT_ORDER = ['red', 'orange', 'yellow', 'green', 'brown', 'clear', 'other'] as const
 
 /**
+ * 色コードを比較用に正規化する。
+ * 「#c8a96e」「#C8A96E」「#C8A96EB0」のような表記ゆれ・透明度の違いを吸収し、
+ * 同じ色かどうかを判定できるようにする（透明度は色そのものではないため無視する）。
+ */
+export function normalizeHex6(hex?: string | null): string {
+  let h = (hex ?? '').trim().replace('#', '')
+  if (h.length === 3 || h.length === 4) h = h.slice(0, 3).split('').map(c => c + c).join('')
+  return h.slice(0, 6).toUpperCase()
+}
+
+/**
+ * 登録済みの色の中に、同じ色がすでにあるかを探す。
+ * 見つかった場合はその色を返す（警告の文言に名前を使うため）。
+ * excludeId を渡すと、その色自身は対象から除く（編集時に使う）。
+ */
+export function findDuplicateColor(
+  colors: { id?: string; name?: string; hex?: string }[],
+  hex: string,
+  excludeId?: string,
+): { id?: string; name?: string; hex?: string } | undefined {
+  const target = normalizeHex6(hex)
+  if (!target) return undefined
+  return colors.find(c => c.id !== excludeId && normalizeHex6(c.hex) === target)
+}
+
+/**
  * 色から、おおよそのカテゴリを自動判定する。
  * 写真から取り込んだ色は利用者がカテゴリを選ばずに登録できるようにするため、
  * 色相（Hue）と彩度・明度から機械的に振り分ける。

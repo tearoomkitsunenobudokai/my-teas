@@ -78,7 +78,29 @@ export async function composePostcard(
   const positions = [topY, topY + ch + gap]
 
   images.forEach((img, i) => {
-    if (img) ctx.drawImage(img, x, positions[i], cw, ch)
+    if (!img) return
+    const y = positions[i]
+    const srcRatio = img.naturalWidth / img.naturalHeight
+    const dstRatio = cw / ch
+    if (Math.abs(srcRatio - dstRatio) < 0.01) {
+      // 評価カードのように比率が同じものは、そのまま枠いっぱいに描く
+      ctx.drawImage(img, x, y, cw, ch)
+    } else {
+      /* 自分で撮った写真は縦横比がまちまちなので、枠に合わせて引き伸ばすと
+         人物や器が歪んでしまう。比率を保ったまま中央部分を切り出して収める。 */
+      let sw = img.naturalWidth
+      let sh = img.naturalHeight
+      if (srcRatio > dstRatio) {
+        // 横長すぎる → 左右を切り落とす
+        sw = Math.round(img.naturalHeight * dstRatio)
+      } else {
+        // 縦長すぎる → 上下を切り落とす
+        sh = Math.round(img.naturalWidth / dstRatio)
+      }
+      const sx = Math.round((img.naturalWidth - sw) / 2)
+      const sy = Math.round((img.naturalHeight - sh) / 2)
+      ctx.drawImage(img, sx, sy, sw, sh, x, y, cw, ch)
+    }
   })
 
   if (cutGuide) {
@@ -92,12 +114,39 @@ export async function composePostcard(
     ctx.setLineDash([])
   }
 
+  /* 切り取り線の外側（余白部分）に、どこで作られたものかが分かる表記を入れる。
+     カード自体には影響せず、切り取ると footer は残らない。 */
+  drawFooter(ctx, W, H, topY + ch * 2 + gap)
+
   return await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
       blob => blob ? resolve(blob) : reject(new Error('画像の変換に失敗しました')),
       'image/png',
     )
   })
+}
+
+/**
+ * 切り取り枠の外に入れるフッター。
+ * ハガキの下部余白に、サイト名とURLを控えめな文字で印字する。
+ */
+function drawFooter(ctx: CanvasRenderingContext2D, W: number, H: number, bottomOfCards: number) {
+  const margin = MM(4)
+  // 下の余白の中央に置く。余白が足りない場合は下端から一定の位置に置く。
+  const available = H - bottomOfCards
+  const y = available > MM(8)
+    ? bottomOfCards + Math.round(available / 2)
+    : H - margin
+
+  ctx.save()
+  ctx.fillStyle = '#9A9186'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+
+  const fs = Math.round(MM(2.6))
+  ctx.font = `${fs}px "Helvetica Neue", Arial, sans-serif`
+  ctx.fillText('My-Teas  |  https://my-teas-omega.vercel.app', W / 2, y)
+  ctx.restore()
 }
 
 /** 生成した画像をダウンロードする */

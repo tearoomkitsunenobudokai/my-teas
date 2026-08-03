@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import TeaCupPreview from '@/components/TeaCup'
 import ColorPickerModal from '@/components/ColorPickerModal'
-import { detectCategory } from '@/lib/colorPalette'
+import { detectCategory, findDuplicateColor } from '@/lib/colorPalette'
 import styles from './colors.module.css'
 
 // 上限は管理者メニュー（plan_limits）で権限区分ごとに変更できるため、
@@ -339,6 +339,18 @@ export default function ColorsPage() {
 不要な色を削除してから追加してください。`)
         return
       }
+    }
+
+    /* 同じ色がすでに登録されていないか確認する。
+       自分が見えている色（公式＋自分の色）が対象。透明度の違いは同色として扱う。 */
+    const dup = findDuplicateColor(
+      colors.filter(c => c.is_official || c.created_by === userId),
+      fullHex,
+      editTarget?.id,
+    )
+    if (dup) {
+      alert(`この色はすでに「${dup.name}」として登録されています。\n別の色を選ぶか、登録済みの色をご利用ください。`)
+      return
     }
 
     const payload = {
