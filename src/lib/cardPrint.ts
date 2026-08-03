@@ -41,7 +41,7 @@ export interface PostcardOptions {
    * 評価カードは枠と同じ比率なので調整不要だが、
    * 自分で撮った写真は見せたい部分を選べるようにする。
    */
-  focus?: ({ x: number; y: number } | null)[]
+  focus?: ({ x: number; y: number; zoom?: number } | null)[]
 }
 
 /**
@@ -103,6 +103,11 @@ export async function composePostcard(
         // 縦長すぎる → 上下を切り落とす
         sh = Math.round(img.naturalWidth / dstRatio)
       }
+      /* 拡大するほど、元画像から切り出す範囲は狭くなる（＝寄って見える）。
+         1未満は指定できないようにし、枠の外側が写り込まないようにする。 */
+      const zoom = Math.max(1, focus[i]?.zoom ?? 1)
+      sw = Math.max(1, Math.round(sw / zoom))
+      sh = Math.max(1, Math.round(sh / zoom))
       // 既定は中央（0.5）。指定があればその位置を基準に切り出す。
       const fx = focus[i]?.x ?? 0.5
       const fy = focus[i]?.y ?? 0.5

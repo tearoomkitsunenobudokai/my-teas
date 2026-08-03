@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import CropPreview from './CropPreview'
 import { createClient } from '@/lib/supabase'
 import {
   composePostcard, downloadPostcard,
@@ -29,8 +30,8 @@ export default function CardPrintPage() {
      写真を入れたいときだけチェックを外して調整できるようにする。 */
   const [lock1, setLock1] = useState(true)
   const [lock2, setLock2] = useState(true)
-  const [focus1, setFocus1] = useState({ x: 0.5, y: 0.5 })
-  const [focus2, setFocus2] = useState({ x: 0.5, y: 0.5 })
+  const [focus1, setFocus1] = useState({ x: 0.5, y: 0.5, zoom: 1 })
+  const [focus2, setFocus2] = useState({ x: 0.5, y: 0.5, zoom: 1 })
   const [working, setWorking] = useState(false)
   const [doneMsg, setDoneMsg] = useState('')
 
@@ -147,20 +148,12 @@ export default function CardPrintPage() {
                 <p className={styles.slotTitle}>{n === 1 ? '① 上段' : '② 下段'}</p>
                 {preview ? (
                   <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {/* 実際の仕上がり（91:55 に切り取られた状態）で表示する。
-                        位置を調整すると、その結果がそのまま見える。 */}
-                    <div className={styles.slotPreviewFrame}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={preview} alt={`カード${n}`}
-                        className={styles.slotPreviewImg}
-                        style={{
-                          objectFit: (n === 1 ? lock1 : lock2) ? 'fill' : 'cover',
-                          objectPosition: (n === 1 ? lock1 : lock2)
-                            ? 'center'
-                            : `${(n === 1 ? focus1 : focus2).x * 100}% ${(n === 1 ? focus1 : focus2).y * 100}%`,
-                        }}/>
-                    </div>
+                    {/* 仕上がりと同じ枠。ドラッグとピンチで位置・大きさを合わせられる */}
+                    <CropPreview
+                      src={preview}
+                      value={n === 1 ? focus1 : focus2}
+                      onChange={v => (n === 1 ? setFocus1 : setFocus2)(v)}
+                      disabled={n === 1 ? lock1 : lock2}/>
                     <p className={styles.slotFileName}>{file?.name}</p>
 
                     {/* 位置の固定と調整 */}
@@ -173,26 +166,25 @@ export default function CardPrintPage() {
                     {!(n === 1 ? lock1 : lock2) && (
                       <div className={styles.focusBox}>
                         <p className={styles.focusHint}>
-                          枠に収まらない部分は切り取られます。見せたい位置に合わせてください。
+                          枠の中をドラッグで移動、2本指のピンチで拡大・縮小できます。
+                          はみ出した部分は切り取られます。
                         </p>
                         <div className={styles.focusRow}>
-                          <span className={styles.focusLabel}>左右</span>
-                          <input type="range" min={0} max={100}
-                            value={Math.round((n === 1 ? focus1 : focus2).x * 100)}
+                          <span className={styles.focusLabel}>大きさ</span>
+                          <input type="range" min={100} max={400}
+                            value={Math.round((n === 1 ? focus1 : focus2).zoom * 100)}
                             onChange={e => {
-                              const v = Number(e.target.value) / 100
-                              ;(n === 1 ? setFocus1 : setFocus2)(f => ({ ...f, x: v }))
+                              const z = Number(e.target.value) / 100
+                              ;(n === 1 ? setFocus1 : setFocus2)(f => ({ ...f, zoom: z }))
                             }}/>
+                          <span className={styles.focusVal}>
+                            {Math.round((n === 1 ? focus1 : focus2).zoom * 100)}%
+                          </span>
                         </div>
-                        <div className={styles.focusRow}>
-                          <span className={styles.focusLabel}>上下</span>
-                          <input type="range" min={0} max={100}
-                            value={Math.round((n === 1 ? focus1 : focus2).y * 100)}
-                            onChange={e => {
-                              const v = Number(e.target.value) / 100
-                              ;(n === 1 ? setFocus1 : setFocus2)(f => ({ ...f, y: v }))
-                            }}/>
-                        </div>
+                        <button type="button" className={styles.resetBtn}
+                          onClick={() => (n === 1 ? setFocus1 : setFocus2)({ x: 0.5, y: 0.5, zoom: 1 })}>
+                          位置をリセット
+                        </button>
                       </div>
                     )}
 
