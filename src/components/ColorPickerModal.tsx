@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from 'react'
 import TeaCup from './TeaCup'
 import { createClient } from '@/lib/supabase'
 import { isTextClean } from '@/lib/moderation'
-import { MAX_USER_COLORS, MAX_COLOR_NAME, detectCategory } from '@/lib/colorPalette'
+import { MAX_COLOR_NAME, detectCategory } from '@/lib/colorPalette'
 import styles from './ColorPickerModal.module.css'
 
 type Props = {
@@ -86,8 +86,13 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
   const [colorName, setColorName]   = useState('')
   const [nameErr, setNameErr]       = useState('')
   const [myCount, setMyCount]       = useState<number | null>(null)  // 登録済みの個人色の数
+  /* 登録上限。管理者メニューで権限区分ごとに変更できるため、固定値ではなく
+     plan_limits から取得する。0 は「無制限」を表す。 */
+  const [maxColors, setMaxColors]   = useState<number | null>(null)
   const [saving, setSaving]         = useState(false)
   const supabase = createClient()
+  /* 上限に達しているか。maxColors が 0 の場合は無制限なので常に false。 */
+  const atLimit = myCount !== null && maxColors !== null && maxColors > 0 && myCount >= maxColors
 
   // 画像を読み込んで canvas に描画する
   function loadFile(file?: File | null) {
@@ -127,10 +132,15 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
     ;(async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      const { count } = await supabase.from('tea_colors')
-        .select('id', { count: 'exact', head: true })
-        .eq('created_by', user.id).eq('is_official', false)
-      if (alive) setMyCount(count ?? 0)
+      const [{ count }, { data: limitVal }] = await Promise.all([
+        supabase.from('tea_colors')
+          .select('id', { count: 'exact', head: true })
+          .eq('created_by', user.id).eq('is_official', false),
+        supabase.rpc('get_my_limit', { p_feature: 'colors' }),
+      ])
+      if (!alive) return
+      setMyCount(count ?? 0)
+      setMaxColors(typeof limitVal === 'number' ? limitVal : 0)
     })()
     return () => { alive = false }
   }, [])
@@ -151,13 +161,18 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
     if (!user) { setNameErr('ログイン情報が取得できませんでした'); return false }
 
     // 保存の直前にも上限を確認する（別の画面で追加された場合に備える）
-    const { count } = await supabase.from('tea_colors')
-      .select('id', { count: 'exact', head: true })
-      .eq('created_by', user.id).eq('is_official', false)
+    const [{ count }, { data: limitVal }] = await Promise.all([
+      supabase.from('tea_colors')
+        .select('id', { count: 'exact', head: true })
+        .eq('created_by', user.id).eq('is_official', false),
+      supabase.rpc('get_my_limit', { p_feature: 'colors' }),
+    ])
     const now = count ?? 0
-    setMyCount(now)
-    if (now >= MAX_USER_COLORS) {
-      setNameErr(`登録できる色は${MAX_USER_COLORS}色までです。カラーパレット画面で不要な色を削除してください。`)
+    const max = typeof limitVal === 'number' ? limitVal : 0
+    setMyCount(now); setMaxColors(max)
+    // max が 0 のときは無制限
+    if (max > 0 && now >= max) {
+      setNameErr(`登録できる色は${max}色までです。カラーパレット画面で不要な色を削除してください。`)
       return false
     }
 
@@ -355,19 +370,21 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
               <div className={styles.registerBox}>
                 <label className={styles.registerCheck}>
                   <input type="checkbox" checked={saveAsMine}
-                    disabled={myCount !== null && myCount >= MAX_USER_COLORS}
+                    disabled={atLimit}
                     onChange={e => { setSaveAsMine(e.target.checked); setNameErr('') }}/>
                   <span>この色を自分の色に登録する</span>
                 </label>
                 <p className={styles.registerHint}>
                   登録すると、評価カードに「カスタム」ではなく色の名前が表示されます。
                   {myCount !== null && (
-                    <span className={styles.registerCount}>（登録済み {myCount} / {MAX_USER_COLORS}）</span>
+                    <span className={styles.registerCount}>
+                      （登録済み {myCount}{maxColors ? ` / ${maxColors}` : '（上限なし）'}）
+                    </span>
                   )}
                 </p>
-                {myCount !== null && myCount >= MAX_USER_COLORS && (
+                {atLimit && (
                   <p className={styles.registerErr}>
-                    登録できる色が上限（{MAX_USER_COLORS}色）に達しています。
+                    登録できる色が上限（{maxColors}色）に達しています。
                     カラーパレット画面で不要な色を削除すると登録できます。
                   </p>
                 )}

@@ -17,6 +17,7 @@ const LIMIT_FEATURES: { key: string; label: string }[] = [
   { key: 'reviews', label: '評価の登録上限' },
   { key: 'public',  label: 'コミュニティ公開の上限（月間）' },
   { key: 'wants',   label: '「飲みたい」の登録上限' },
+  { key: 'colors',  label: 'カラーパレットの登録上限' },
 ]
 
 export default function AdminPage() {

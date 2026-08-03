@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase'
 import TeaCupPreview from '@/components/TeaCup'
 import styles from './colors.module.css'
 
-// 上限は写真取り込みモーダルからの登録でも使うため、共通定義を参照する
-import { MAX_USER_COLORS } from '@/lib/colorPalette'
+// 上限は管理者メニュー（plan_limits）で権限区分ごとに変更できるため、
+// 固定値ではなく get_my_limit から取得する。0 は「無制限」を表す。
 
 const CAT_LABELS: Record<string, string> = {
   red: '赤系', orange: '橙系', yellow: '黄系',
@@ -254,6 +254,7 @@ function ColorForm({ initial, isAdmin, readOnly, onSave, onCancel }: {
 export default function ColorsPage() {
   const supabase = createClient()
   const [colors, setColors] = useState<any[]>([])
+  const [maxColors, setMaxColors] = useState(0)   // 0 = 無制限
   const [isAdmin, setIsAdmin] = useState(false)
   const [userId, setUserId] = useState('')
   const [loading, setLoading] = useState(true)
@@ -276,6 +277,9 @@ export default function ColorsPage() {
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     const { data } = await supabase.from('tea_colors').select('*').order('is_official', { ascending: false }).order('sort_order').order('created_at')
     setColors(data ?? [])
+    // 登録上限は管理者メニューで変更できるため、その都度取得する（0 は無制限）
+    const { data: limitVal } = await supabase.rpc('get_my_limit', { p_feature: 'colors' })
+    setMaxColors(typeof limitVal === 'number' ? limitVal : 0)
     setLoading(false)
   }, [supabase])
 
@@ -288,8 +292,8 @@ export default function ColorsPage() {
     // 新規追加かつ個人色の場合は上限チェック
     if (!editTarget && !isOfficialColor) {
       const myColors = colors.filter(c => c.created_by === userId && !c.is_official)
-      if (myColors.length >= MAX_USER_COLORS) {
-        alert(`個人で登録できる色は最大${MAX_USER_COLORS}色までです。
+      if (maxColors > 0 && myColors.length >= maxColors) {
+        alert(`個人で登録できる色は最大${maxColors}色までです。
 不要な色を削除してから追加してください。`)
         return
       }
@@ -338,11 +342,11 @@ export default function ColorsPage() {
         </div>
         {(filterOwner === 'mine' || (filterOwner === 'official' && isAdmin) || (filterOwner === 'all')) && (
           <button className={styles.addBtn} onClick={() => { setEditTarget(null); setShowForm(true) }}
-            disabled={filterOwner === 'mine' && colors.filter(c => c.created_by === userId && !c.is_official).length >= MAX_USER_COLORS}>
+            disabled={filterOwner === 'mine' && maxColors > 0 && colors.filter(c => c.created_by === userId && !c.is_official).length >= maxColors}>
             + 色を追加
             {filterOwner === 'mine' && (() => {
               const n = colors.filter(c => c.created_by === userId && !c.is_official).length
-              return n >= MAX_USER_COLORS ? <span style={{fontSize:11, marginLeft:4}}>(上限)</span> : null
+              return (maxColors > 0 && n >= maxColors) ? <span style={{fontSize:11, marginLeft:4}}>(上限)</span> : null
             })()}
           </button>
         )}
@@ -357,7 +361,7 @@ export default function ColorsPage() {
         <button className={`${styles.ownerTab} ${filterOwner==='mine' ? styles.ownerTabActive : ''}`}
           onClick={() => setFilterOwner('mine')}>
           👤 自分の色
-          {(() => { const n = colors.filter(c => c.created_by === userId && !c.is_official).length; return n > 0 ? <span className={styles.myColorCount}>{n} / {MAX_USER_COLORS}</span> : null })()}
+          {(() => { const n = colors.filter(c => c.created_by === userId && !c.is_official).length; return n > 0 ? <span className={styles.myColorCount}>{n}{maxColors ? ` / ${maxColors}` : '（上限なし）'}</span> : null })()}
         </button>
         <button className={`${styles.ownerTab} ${filterOwner==='all' ? styles.ownerTabActive : ''}`}
           onClick={() => setFilterOwner('all')}>

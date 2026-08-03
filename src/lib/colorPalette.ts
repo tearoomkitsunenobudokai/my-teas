@@ -4,8 +4,10 @@
  * 2か所から行えるため、上限やカテゴリ判定はここに集約する。
  */
 
-/** 個人で登録できる色の上限 */
-export const MAX_USER_COLORS = 16
+/* 個人で登録できる色の上限は、管理者メニュー（plan_limits の 'colors'）で
+   権限区分ごとに変更できるため、ここには定数を置かない。
+   利用側で supabase.rpc('get_my_limit', { p_feature: 'colors' }) を呼ぶこと。
+   （戻り値 0 は「無制限」を表す） */
 
 /** 色名の最大文字数 */
 export const MAX_COLOR_NAME = 20
