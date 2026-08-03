@@ -373,21 +373,29 @@
   .leftPane { overflow: visible; border-right: none; }
   .shopList { overflow: visible; flex: none; padding-bottom: 32px; }
 
-  /* 検索・絞り込みを上部に固定 */
-  .filters {
+  /* タイトル〜検索・絞り込みまでをまとめて上部に固定する。
+     以前は検索欄だけを固定していたため、スクロールすると
+     今どのページを見ているのか分からなくなっていた。 */
+  .stickyHead {
     position: sticky;
     top: 0;
-    z-index: 5;
+    z-index: 6;
     background: var(--bg-card);
-    padding: 10px 12px;
     border-bottom: 0.5px solid var(--border);
+  }
+  /* 固定部分が画面を占有しすぎないよう、余白を詰める */
+  .stickyHead .pageHeader { padding-bottom: 6px; }
+  .stickyHead .yearTabs { margin: 0; padding: 0 12px 4px; }
+  .filters {
+    position: static;
+    background: var(--bg-card);
+    padding: 6px 12px 10px;
     margin: 0;
   }
-  /* エリア見出し（「首都圏エリア 90店」）は検索欄のすぐ下に固定 */
+  /* 固定部分の高さが可変になるため、エリア見出しの固定は解除する
+     （固定位置がずれて見出しが隠れてしまうのを防ぐ） */
   .areaTitle {
-    position: sticky;
-    top: 62px;
-    z-index: 4;
+    position: static;
     font-size: 14px;
     padding: 8px 14px 6px;
   }

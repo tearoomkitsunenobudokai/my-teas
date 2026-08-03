@@ -471,6 +471,8 @@ export default function CertifiedShopsPage() {
     <div className={styles.pageWrap}>
       {/* ─── 左ペイン ─── */}
       <div className={styles.leftPane}>
+        {/* タイトル〜フィルターまでをまとめて上部に固定する */}
+        <div className={styles.stickyHead}>
         <div className={styles.pageHeader}>
           <div>
             <h1 className={styles.title}>日本紅茶協会 認定店</h1>
@@ -536,6 +538,7 @@ export default function CertifiedShopsPage() {
             <option value="casual">カジュアル</option>
           </select>
           <span className={styles.count}>{filtered.length}件</span>
+        </div>
         </div>
 
         {/* 店舗リスト */}

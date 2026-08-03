@@ -376,6 +376,8 @@ export default function ColorsPage() {
 
   return (
     <div className={styles.page}>
+      {/* タイトル〜表示切替までをまとめて上部に固定する */}
+      <div className={styles.stickyHead}>
       {/* ヘッダー */}
       <div className={styles.pageHeader}>
         <div>
@@ -420,6 +422,7 @@ export default function ColorsPage() {
           {CAT_ORDER.map(c => <option key={c} value={c}>{CAT_LABELS[c]}</option>)}
         </select>
         <span className={styles.count}>{filtered.length}色</span>
+      </div>
       </div>
 
       {/* フォーム（インライン表示） */}

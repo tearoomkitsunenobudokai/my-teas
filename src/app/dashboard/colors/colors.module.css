@@ -210,3 +210,26 @@
   .hexField { width: 150px; font-size: 18px; padding: 12px 14px; }
   .photoBtn { font-size: 18px; padding: 12px 16px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v264: タイトル〜表示切替（リスト／色相環）を上部に固定
+   スクロールしても、今どの区分を見ているかが分かるようにする。
+   ═══════════════════════════════════════════════ */
+.stickyHead {
+  position: sticky;
+  top: -1.75rem;                 /* .main の上パディング分を打ち消す */
+  z-index: 25;
+  background: var(--bg);
+  margin: -1.75rem -0.5rem 0;    /* 左右も塗りつぶし、隙間から中身が覗かないようにする */
+  padding: 1.75rem 0.5rem 6px;
+}
+/* 固定部分が画面を占有しすぎないよう、余白を詰める */
+.stickyHead .pageHeader { margin-bottom: 8px; }
+.stickyHead .toolbar { margin-bottom: 0; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  /* スマホでは固定部分が高くなりすぎるため、説明文は隠して高さを抑える */
+  .stickyHead .subtitle { display: none; }
+  .stickyHead { padding-bottom: 4px; }
+  .stickyHead .pageHeader { margin-bottom: 6px; }
+}
