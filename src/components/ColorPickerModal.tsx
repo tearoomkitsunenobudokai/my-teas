@@ -72,6 +72,9 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
   /* 濃さ（不透明度）。写真から取り込んだ色は「実際に見た色」なので既定は100%。
      撮影時の照明で濃く／薄く写った場合に、ここで微調整できるようにする。 */
   const [density, setDensity] = useState(100)
+  /* 画像の拡大率。カップだけを大きく写して、抽出位置を合わせやすくする。
+     拡大の中心は抽出枠（spot）に合わせるので、枠を動かせば見たい場所が中央に来る。 */
+  const [zoom, setZoom] = useState(1)
 
   // 画像を読み込んで canvas に描画する
   function loadFile(file?: File | null) {
@@ -100,7 +103,7 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
   useEffect(() => {
     if (imgRef.current) extract()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spot, radius])
+  }, [spot, radius, zoom])
 
   useEffect(() => () => { if (imgUrl) URL.revokeObjectURL(imgUrl) }, [imgUrl])
 
@@ -130,7 +133,9 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
     if (!rect.width || !rect.height) return
     const cx = Math.round(spot.x * cv.width)
     const cy = Math.round(spot.y * cv.height)
-    const r  = Math.max(2, Math.round(radius * (cv.width / rect.width)))
+    // 画面上の枠の半径を、canvas 上の半径に変換する。
+    // 拡大表示中は画像が引き伸ばされているぶん、対象になる範囲は狭くなる。
+    const r  = Math.max(2, Math.round(radius * (cv.width / rect.width) / zoom))
 
     const x0 = Math.max(0, cx - r), y0 = Math.max(0, cy - r)
     const w  = Math.min(cv.width  - x0, r * 2)
@@ -177,9 +182,18 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
     const wrap = wrapRef.current
     if (!wrap) return
     const rect = wrap.getBoundingClientRect()
-    const x = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
-    const y = Math.min(1, Math.max(0, (clientY - rect.top)  / rect.height))
-    setSpot({ x, y })
+    // 表示上の位置（0〜1）
+    const px = (clientX - rect.left) / rect.width
+    const py = (clientY - rect.top)  / rect.height
+    // 拡大の中心は現在の抽出枠なので、そこを基準に画像上の位置へ戻す
+    //   表示位置 = 中心 + (画像上の位置 - 中心) × 拡大率
+    //   → 画像上の位置 = 中心 + (表示位置 - 中心) ÷ 拡大率
+    const fx = spot.x + (px - spot.x) / zoom
+    const fy = spot.y + (py - spot.y) / zoom
+    setSpot({
+      x: Math.min(1, Math.max(0, fx)),
+      y: Math.min(1, Math.max(0, fy)),
+    })
   }
 
   return (
@@ -216,7 +230,12 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
               onPointerUp={() => setDragging(false)}
               onPointerLeave={() => setDragging(false)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imgUrl} alt="取り込んだ写真" className={styles.img} draggable={false}/>
+              <img src={imgUrl} alt="取り込んだ写真" className={styles.img} draggable={false}
+                style={{
+                  transform: `scale(${zoom})`,
+                  // 抽出枠の位置を拡大の中心にすることで、枠が画面外へ逃げないようにする
+                  transformOrigin: `${spot.x * 100}% ${spot.y * 100}%`,
+                }}/>
               <span className={styles.spot}
                 style={{
                   left: `${spot.x * 100}%`, top: `${spot.y * 100}%`,
@@ -224,6 +243,10 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
                 }}/>
             </div>
             <p className={styles.guideSm}>枠をドラッグして、色を取りたい場所に合わせてください</p>
+
+            {/* 取り込んだ写真は周囲が写り込んでいるため、拡大してカップに寄れるようにする */}
+            <StepperRow label="拡大" value={Math.round(zoom * 100)} min={100} max={400}
+              onChange={v => setZoom(v / 100)} suffix="%"/>
 
             <StepperRow label="枠の大きさ" value={radius} min={12} max={70}
               onChange={setRadius}/>
@@ -242,13 +265,23 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
               </button>
             </div>
             {hex && (
-              <div className={styles.previewRow}>
-                <TeaCup hex={hex + alphaHex(density)} size={72} tight/>
-                <span className={styles.previewNote}>
-                  登録するとこのように表示されます。<br/>
-                  薄くすると柔らかい印象に、濃くすると写真に近づきます。
-                </span>
+              <div className={styles.compareBox}>
+                <div className={styles.compareItem}>
+                  {/* 写真から取り込んだ色そのもの（比較用） */}
+                  <span className={styles.rawCircle} style={{ background: hex }}/>
+                  <span className={styles.compareLabel}>写真の色</span>
+                </div>
+                <div className={styles.compareItem}>
+                  {/* 実際に登録される見え方 */}
+                  <TeaCup hex={hex + alphaHex(density)} size={128} tight/>
+                  <span className={styles.compareLabel}>登録後の表示</span>
+                </div>
               </div>
+            )}
+            {hex && (
+              <p className={styles.previewNote}>
+                左右を見比べて濃さを調整してください。薄くすると柔らかい印象に、濃くすると写真に近づきます。
+              </p>
             )}
 
             <button type="button" className={styles.applyBtn} disabled={!hex}
