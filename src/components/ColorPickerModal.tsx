@@ -17,7 +17,7 @@ import styles from './ColorPickerModal.module.css'
 
 type Props = {
   /** 抽出した色を 8桁 hex（#RRGGBBAA）で返す。AA は「濃さ」スライダーの値 */
-  onPick: (hex8: string) => void
+  onPick: (hex8: string, name?: string) => void
   /** 自分の色として登録したときに呼ばれる（親側で色一覧を読み直すため） */
   onRegistered?: () => void
   onClose: () => void
@@ -368,14 +368,20 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
             {/* 自分の色として登録（評価カードで色名が表示されるようになる） */}
             {hex && (
               <div className={styles.registerBox}>
+                <p className={styles.label}>🏷 この色の名前</p>
+                <input className={styles.nameInput} value={colorName} maxLength={MAX_COLOR_NAME}
+                  onChange={e => { setColorName(e.target.value.slice(0, MAX_COLOR_NAME)); setNameErr('') }}
+                  placeholder={`例: 琥珀色（未入力だとカードに「カスタム」と表示されます）`}/>
+
                 <label className={styles.registerCheck}>
                   <input type="checkbox" checked={saveAsMine}
-                    disabled={atLimit}
+                    disabled={atLimit || !colorName.trim()}
                     onChange={e => { setSaveAsMine(e.target.checked); setNameErr('') }}/>
-                  <span>この色を自分の色に登録する</span>
+                  <span>この色をカラーパレットにも登録する</span>
                 </label>
                 <p className={styles.registerHint}>
-                  登録すると、評価カードに「カスタム」ではなく色の名前が表示されます。
+                  名前を付けるだけで、この評価のカードには色名が表示されます。
+                  パレットに登録すると、次回以降そこから選べるようになります。
                   {myCount !== null && (
                     <span className={styles.registerCount}>
                       （登録済み {myCount}{maxColors ? ` / ${maxColors}` : '（上限なし）'}）
@@ -388,14 +394,7 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
                     カラーパレット画面で不要な色を削除すると登録できます。
                   </p>
                 )}
-                {saveAsMine && (
-                  <>
-                    <input className={styles.nameInput} value={colorName} maxLength={MAX_COLOR_NAME}
-                      onChange={e => { setColorName(e.target.value.slice(0, MAX_COLOR_NAME)); setNameErr('') }}
-                      placeholder={`色の名前（例: 琥珀色）  最大${MAX_COLOR_NAME}文字`}/>
-                    {nameErr && <p className={styles.registerErr}>{nameErr}</p>}
-                  </>
-                )}
+                {nameErr && <p className={styles.registerErr}>{nameErr}</p>}
               </div>
             )}
 
@@ -403,6 +402,15 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
               onClick={async () => {
                 if (!hex) return
                 const hex8 = hex + alphaHex(density)
+                const name = colorName.trim()
+                // 名前を付けた場合は、パレットに登録しなくても不適切語の確認を行う
+                if (name) {
+                  const check = isTextClean(name)
+                  if (!check.clean) {
+                    setNameErr(check.reason ?? '入力できない語が含まれています')
+                    return
+                  }
+                }
                 if (saveAsMine) {
                   setSaving(true)
                   const ok = await registerColor(hex8)
@@ -410,11 +418,11 @@ export default function ColorPickerModal({ onPick, onRegistered, onClose }: Prop
                   if (!ok) return   // 名前の不備や上限超過のときは閉じない
                   onRegistered?.()  // 親の色一覧を更新し、色名が反映されるようにする
                 }
-                onPick(hex8)
+                onPick(hex8, name || undefined)
                 onClose()
               }}>
               {saving ? '登録しています…'
-                : saveAsMine ? 'この色を登録して水色に設定する' : 'この色を水色に設定する'}
+                : saveAsMine ? 'パレットに登録して水色に設定する' : 'この色を水色に設定する'}
             </button>
           </div>
         )}

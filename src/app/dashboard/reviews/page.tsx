@@ -8,6 +8,7 @@ import { ReviewScores, SCORE_LABELS, SCORE_DESCRIPTIONS } from '@/types'
 import { isCommentClean, isTextClean } from '@/lib/moderation'
 import { sortByPrefecture, prefectureOrder } from '@/lib/prefectures'
 import ColorPickerModal from '@/components/ColorPickerModal'
+import { MAX_COLOR_NAME } from '@/lib/colorPalette'
 import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import { brewIconPath, accompanimentIconPath } from '@/lib/icons'
@@ -237,7 +238,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           return s.toUpperCase()
         }
         const hit = (paletteRows ?? []).find(c => norm(c.hex) === norm(colorHex))
-        colorName = hit?.name ?? null
+        // ① パレットの色名 → ② 利用者が付けた名前 → ③ null（カード側で「カスタム」）
+        colorName = hit?.name ?? (customName.trim() || null)
       }
 
       // 選択された文章ソース（メモ / AI要約 / お嬢様風）
@@ -271,6 +273,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [shops,       setShops]       = useState<any[]>([])
   const [shopArea,    setShopArea]    = useState('')   // 認定店プルダウンの絞り込み用エリア
   const [showPicker,  setShowPicker]  = useState(false) // 写真から水色を抽出するモーダル
+  /* パレットに無い色（カスタム）に付ける名前。
+     未入力なら評価カードは従来どおり「カスタム」と表示される。 */
+  const [customName,    setCustomName]    = useState(initial?.color_name ?? '')
+  const [customNameErr, setCustomNameErr] = useState('')
   const [pastBrands,  setPastBrands]  = useState<string[]>([])
   const [openGroup,   setOpenGroup]   = useState<string|null>(null)
   const [showDetail,  setShowDetail]  = useState(false)
@@ -347,7 +353,11 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       })
   }, [supabase, userId])
 
-  const colorName = colors.find(c => c.hex === colorHex)?.name
+  const paletteName = colors.find(c => c.hex === colorHex)?.name
+  /* パレットに無い色かどうか。カスタム扱いのときだけ命名欄を出す。 */
+  const isCustomColor = !!colorHex && !paletteName
+  /* 画面に表示する色名（付けた名前 > パレット名） */
+  const colorName = paletteName ?? (customName.trim() || null)
   const filteredShops = shopInput.length >= 1
     ? shops.filter(s => s.name.includes(shopInput) || s.prefecture?.includes(shopInput)).slice(0,6)
     : []
@@ -403,6 +413,17 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
     }
     setOriginErr('')
 
+    // 水色に付けた名前の不適切表現チェック（他項目と同じ基準）
+    if (customName.trim()) {
+      const cn = isTextClean(customName.trim())
+      if (!cn.clean) {
+        setCustomNameErr(cn.reason ?? '入力できない語が含まれています')
+        alert('水色の名前に入力できない語が含まれています。内容をご確認ください。')
+        return
+      }
+    }
+    setCustomNameErr('')
+
     setSaving(true)
 
     // 新規登録時のみ上限チェック（権限区分ごとの上限を適用）
@@ -457,6 +478,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       brew_method: brewMethod || null,
       tea_garden: teaGarden || null,
       origin_country: originCountry || null,
+      // パレットに無い色に付けた名前（評価カードで「カスタム」表示を避けるため）
+      color_name: customName.trim() || null,
       steep_seconds: steepSec ? parseInt(steepSec) : null,
       tea_grams: teaGrams ? parseFloat(teaGrams) : null,
       water_ml: waterMl ? parseFloat(waterMl) : null,
@@ -624,35 +647,51 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             <p className={styles.label} style={{ display: wizard ? undefined : 'none' }}>🍵 水色</p>
             <TeaCup hex={colorHex} size={72}/>
             {colorName && <p className={styles.colorName}>{colorName}</p>}
-            {/* スマホ入力と同じく、色名つきのスウォッチを常時表示して選びやすくする */}
+            {/* スマホ入力と同じく、色名つきのスウォッチを常時表示して選びやすくする。
+                末尾に「カスタム」と「写真から取り込む」を同じ大きさのタイルとして並べる。 */}
             <div className={styles.swatchGrid}>
               {colors.map(c => (
                 <button key={c.hex} type="button"
                   className={`${styles.swatchItem} ${colorHex === c.hex ? styles.swatchItemOn : ''}`}
-                  onClick={() => setColorHex(colorHex === c.hex ? '' : c.hex)}>
+                  onClick={() => { setColorHex(colorHex === c.hex ? '' : c.hex); setCustomName('') }}>
                   <span className={styles.swatch} style={{ background: hexToRgba(c.hex, 0.85) }}/>
                   <span className={styles.swatchName}>{c.name}</span>
                 </button>
               ))}
+              {/* カスタム（色を直接選ぶ）。タイル全体をタップすると色選択が開く */}
+              <label className={`${styles.swatchItem} ${isCustomColor ? styles.swatchItemOn : ''}`}>
+                <span className={styles.swatch} style={{ background: isCustomColor ? hexToRgba(colorHex, 0.85) : undefined }}>
+                  {!isCustomColor && <span className={styles.tileIcon}>🎨</span>}
+                  <input type="color"
+                    value={'#' + (colorHex.replace('#','').slice(0,6) || 'C8A96E')}
+                    onChange={e => {
+                      const alpha = colorHex.length === 9 ? colorHex.slice(7) : 'B0'
+                      setColorHex(e.target.value + alpha)
+                    }}
+                    className={styles.tileColorInput}
+                    title="カスタムカラーを選択"/>
+                </span>
+                <span className={styles.swatchName}>カスタム</span>
+              </label>
+              {/* 写真から取り込む */}
+              <button type="button" className={styles.swatchItem}
+                onClick={() => setShowPicker(true)}>
+                <span className={styles.swatch}><span className={styles.tileIcon}>📷</span></span>
+                <span className={styles.swatchName}>写真から</span>
+              </button>
             </div>
-            {/* カスタムカラー入力 */}
-            <div className={styles.customColorRow}>
-              <input type="color"
-                value={'#' + (colorHex.replace('#','').slice(0,6) || 'C8A96E')}
-                onChange={e => {
-                  const hex6 = e.target.value // #RRGGBB
-                  const alpha = colorHex.length === 9 ? colorHex.slice(7) : 'B0'
-                  setColorHex(hex6 + alpha)
-                }}
-                className={styles.colorInput}
-                title="カスタムカラーを選択"/>
-              <span className={styles.customColorLabel}>カスタム</span>
-            </div>
-            {/* 写真から水色を取り込む */}
-            <button type="button" className={styles.photoPickBtn}
-              onClick={() => setShowPicker(true)}>
-              📷 写真から水色を取り込む
-            </button>
+
+            {/* パレットに無い色のときは、その場で名前を付けられるようにする。
+                名前を付けないと評価カードが「カスタム」表示になってしまうため。 */}
+            {isCustomColor && (
+              <div className={styles.customNameBox}>
+                <p className={styles.label}>🏷 この色の名前</p>
+                <input className={styles.input} value={customName} maxLength={MAX_COLOR_NAME}
+                  onChange={e => { setCustomName(e.target.value.slice(0, MAX_COLOR_NAME)); setCustomNameErr('') }}
+                  placeholder={`例: 琥珀色（未入力だとカードに「カスタム」と表示されます）`}/>
+                {customNameErr && <p className={styles.otherAromaErr}>{customNameErr}</p>}
+              </div>
+            )}
             </div>
           </div>
           {/* チャート */}
@@ -897,9 +936,12 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                 .order('is_official',{ascending:false}).order('sort_order')
                 .then(({data}) => setColors(data ?? []))
             }}
-            onPick={hex8 => {
+            onPick={(hex8, name) => {
               // モーダル側で「濃さ」まで決めているので、そのまま採用する
               setColorHex(hex8)
+              // 付けた名前は評価にも保存し、カードで「カスタム」にならないようにする
+              setCustomName(name ?? '')
+              setCustomNameErr('')
             }}/>
         )}
 
@@ -978,7 +1020,7 @@ export default function ReviewsPage() {
     setUserId(user.id)
     const [{ data }, { data: profile }] = await Promise.all([
       supabase.from('reviews')
-        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden,origin_country,tea_grams,water_ml')
+        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden,origin_country,tea_grams,water_ml,color_name')
         .eq('user_id', user.id).order('drank_at', { ascending: false }),
       supabase.from('profiles').select('is_subscribed,is_admin,is_creator').eq('id', user.id).single(),
     ])
