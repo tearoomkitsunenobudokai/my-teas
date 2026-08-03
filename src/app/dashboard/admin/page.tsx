@@ -682,8 +682,8 @@ export default function AdminPage() {
             <table className={styles.userTable}>
               <thead>
                 <tr>
-                  <th>ユーザ名</th>
-                  <th>ユーザID</th>
+                  <th>ユーザー名</th>
+                  <th>ユーザーID</th>
                   <th>権限</th>
                   <th>評価数</th>
                   <th>公開数</th>
