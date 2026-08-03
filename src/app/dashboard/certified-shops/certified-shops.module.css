@@ -378,7 +378,12 @@
      今どのページを見ているのか分からなくなっていた。 */
   .stickyHead {
     position: sticky;
-    top: 0;
+    /* ページ余白（.main の 1.75rem）と .pageWrap の負マージン（-1rem）の差である
+       0.75rem 分だけ、固定位置の上に隙間ができてリストが覗いてしまう。
+       その分だけ上に引き上げ、同じ量の余白を内側に持たせて塗りつぶす。 */
+    top: -0.75rem;
+    margin-top: -0.75rem;
+    padding-top: 0.75rem;
     z-index: 6;
     background: var(--bg-card);
     border-bottom: 0.5px solid var(--border);
