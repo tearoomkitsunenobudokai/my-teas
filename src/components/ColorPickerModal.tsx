@@ -409,17 +409,23 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
                     カップ側は拡大して縁を枠外に追い出し、中心付近だけを見せる。 */}
                 <div className={styles.compareRow}>
                   <div className={styles.compareItem}>
-                    <span className={styles.splitCircle}>
-                      <span className={styles.splitHalfImg}
-                        style={{ backgroundImage: cropUrl ? `url(${cropUrl})` : undefined }}/>
-                      <span className={styles.splitHalfCup}>
-                        <span className={styles.splitCupInner}>
-                          <TeaCup hex={hex + alphaHex(density)} tight/>
+                    {/* 外周のリングは抽出した色そのもの。
+                       写真・カップ・抽出色の3つを同時に見比べられるようにする。 */}
+                    <span className={styles.compareRing} style={{ background: hex }}>
+                      <span className={styles.splitCircle}>
+                        <span className={styles.splitHalfImg}
+                          style={{ backgroundImage: cropUrl ? `url(${cropUrl})` : undefined }}/>
+                        <span className={styles.splitHalfCup}>
+                          <span className={styles.splitCupInner}>
+                            <TeaCup hex={hex + alphaHex(density)} tight/>
+                          </span>
                         </span>
                       </span>
                     </span>
                     <span className={styles.compareLabel}>中心どうしの比較</span>
-                    <span className={styles.compareSub}>左：写真　右：カップ</span>
+                    <span className={styles.compareSub}>
+                      外周：抽出した色　左：写真　右：カップ
+                    </span>
                   </div>
                 </div>
 

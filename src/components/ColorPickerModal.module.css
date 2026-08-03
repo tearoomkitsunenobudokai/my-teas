@@ -195,12 +195,24 @@
 }
 .compareItem { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 /* 写真から取り込んだ色そのもの（カップの装飾なし） */
-/* 左右の色をくっつけた比較用の円 */
-.splitCircle {
-  width: 128px; height: 128px; max-width: 100%;
+/* 外周のリング＝抽出した色。中の円（写真／カップ）と直接接するので、
+   どちらがどれだけずれているかを一目で判断できる。 */
+.compareRing {
+  display: block;
+  width: 100%;
   aspect-ratio: 1 / 1;
   border-radius: 50%;
+  padding: 13%;              /* この余白の分がリングの太さになる */
+  box-sizing: border-box;
   border: 1.4px solid #bdb4a5;
+}
+
+/* 左右の色をくっつけた比較用の円 */
+.splitCircle {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
   overflow: hidden;
   display: flex;
 }
