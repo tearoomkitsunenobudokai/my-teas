@@ -154,64 +154,73 @@
 /* ═══════════════════════════════════════════════
    v257: 写真の色と登録後の表示を左右に並べて比較する
    ═══════════════════════════════════════════════ */
-/* 比較図（2段構成） */
+/* 比較図：左に大きな比較円、右に小さな2つを縦並び */
 .compareWrap {
   margin-top: 12px;
   padding: 14px 12px;
   background: var(--bg-muted);
   border-radius: 10px;
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   gap: 14px;
 }
-.compareRow {
+/* 左：中心どうしの比較 */
+.compareMain {
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 16px;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
-/* 上段の比較円は大きめに見せる */
-.compareRow:first-child .compareItem { max-width: 180px; width: 100%; }
-.compareRow:last-child .compareItem { width: 96px; }
-.compareSub { font-size: 11px; color: var(--text-hint); }
-/* 下段の「写真の色」 */
+/* 右：写真の色／登録後の表示 */
+.compareSide {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.compareItemSm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 72px;
+}
+.compareItemSm svg { width: 72px; height: auto; }
 .rawCircleSm {
-  width: 96px; height: 96px; max-width: 100%;
-  aspect-ratio: 1 / 1;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   border: 1.4px solid #bdb4a5;
+  flex-shrink: 0;
 }
+.compareSub { font-size: 10px; color: var(--text-hint); text-align: center; line-height: 1.5; }
 
-.compareBox {
-  display: grid;
-  /* 写真の色 ／ 半円の比較図 ／ 登録後の表示 の3列 */
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  align-items: center;
-  margin-top: 12px;
-  padding: 14px 10px;
-  background: var(--bg-muted);
-  border-radius: 10px;
-}
-.compareItem { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-/* 写真から取り込んだ色そのもの（カップの装飾なし） */
 /* 外周のリング＝抽出した色。中の円（写真／カップ）と直接接するので、
    どちらがどれだけずれているかを一目で判断できる。 */
 .compareRing {
   display: block;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  /* 高さは常に幅と同じにする（padding-bottom 100% で正方形を保つ）。
+     aspect-ratio だけだと親の伸縮に引っ張られて楕円になることがある。 */
+  height: 0;
+  padding: 0 0 100%;
+  position: relative;
   border-radius: 50%;
-  padding: 13%;              /* この余白の分がリングの太さになる */
-  box-sizing: border-box;
   border: 1.4px solid #bdb4a5;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+/* リングの太さ分だけ内側に寄せて、中の円を配置する */
+.compareRing > .splitCircle {
+  position: absolute;
+  top: 13%; left: 13%;
+  width: 74%; height: 74%;
 }
 
 /* 左右の色をくっつけた比較用の円 */
 .splitCircle {
-  width: 100%;
-  height: 100%;
-  aspect-ratio: 1 / 1;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
@@ -301,7 +310,7 @@
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .compareSub { font-size: 14px; }
-  .compareRow:first-child .compareItem { max-width: 220px; }
-  .compareRow:last-child .compareItem { width: 118px; }
-  .rawCircleSm { width: 118px; height: 118px; }
+  .compareItemSm, .compareItemSm svg { width: 96px; }
+  .rawCircleSm { width: 96px; height: 96px; }
+  .compareSide { gap: 14px; }
 }

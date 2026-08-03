@@ -403,40 +403,33 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
             </div>
             {hex && (
               <div className={styles.compareWrap}>
-                {/* ── 上段：同じ部位（液面の中心）どうしを比べる ──
-                    カップは白磁の器を表すため縁が明るく抜ける。そのまま全体を並べると
-                    比べている場所が違って色が違って見えるので、
-                    カップ側は拡大して縁を枠外に追い出し、中心付近だけを見せる。 */}
-                <div className={styles.compareRow}>
-                  <div className={styles.compareItem}>
-                    {/* 外周のリングは抽出した色そのもの。
-                       写真・カップ・抽出色の3つを同時に見比べられるようにする。 */}
-                    <span className={styles.compareRing} style={{ background: hex }}>
-                      <span className={styles.splitCircle}>
-                        <span className={styles.splitHalfImg}
-                          style={{ backgroundImage: cropUrl ? `url(${cropUrl})` : undefined }}/>
-                        <span className={styles.splitHalfCup}>
-                          <span className={styles.splitCupInner}>
-                            <TeaCup hex={hex + alphaHex(density)} tight/>
-                          </span>
+                {/* 左：同じ部位（液面の中心）どうしの比較。
+                    カップは縁が明るく抜ける設計なので、拡大して中心付近だけを見せる。
+                    外周のリングは抽出した色そのもので、3つを同時に見比べられる。 */}
+                <div className={styles.compareMain}>
+                  <span className={styles.compareRing} style={{ background: hex }}>
+                    <span className={styles.splitCircle}>
+                      <span className={styles.splitHalfImg}
+                        style={{ backgroundImage: cropUrl ? `url(${cropUrl})` : undefined }}/>
+                      <span className={styles.splitHalfCup}>
+                        <span className={styles.splitCupInner}>
+                          <TeaCup hex={hex + alphaHex(density)} tight/>
                         </span>
                       </span>
                     </span>
-                    <span className={styles.compareLabel}>中心どうしの比較</span>
-                    <span className={styles.compareSub}>
-                      外周：抽出した色　左：写真　右：カップ
-                    </span>
-                  </div>
+                  </span>
+                  <span className={styles.compareLabel}>中心どうしの比較</span>
+                  <span className={styles.compareSub}>外周：抽出色／左：写真／右：カップ</span>
                 </div>
 
-                {/* ── 下段：色そのものと、カップ全体の見え方 ── */}
-                <div className={styles.compareRow}>
-                  <div className={styles.compareItem}>
+                {/* 右：色そのものと、カップ全体の見え方を縦に並べる */}
+                <div className={styles.compareSide}>
+                  <div className={styles.compareItemSm}>
                     <span className={styles.rawCircleSm} style={{ background: hex }}/>
                     <span className={styles.compareLabel}>写真の色</span>
                   </div>
-                  <div className={styles.compareItem}>
-                    <TeaCup hex={hex + alphaHex(density)} size={96} tight/>
+                  <div className={styles.compareItemSm}>
+                    <TeaCup hex={hex + alphaHex(density)} size={72} tight/>
                     <span className={styles.compareLabel}>登録後の表示</span>
                   </div>
                 </div>
