@@ -186,6 +186,25 @@
   background-repeat: no-repeat;
   background-color: #eee;
 }
+/* 右半分はカップの描画。円の右半分だけが見えるよう、
+   幅2倍のカップを置いて左側をはみ出させる。 */
+.splitHalfCup {
+  flex: 1; height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.splitCupInner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200%;
+  height: 100%;
+}
+.splitCupInner svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
 .rawCircle {
   width: 128px; height: 128px; max-width: 100%;

@@ -415,7 +415,13 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
                   <span className={styles.splitCircle}>
                     <span className={styles.splitHalfImg}
                       style={{ backgroundImage: cropUrl ? `url(${cropUrl})` : undefined }}/>
-                    <span className={styles.splitHalf} style={{ background: blendedHex(hex, density) }}/>
+                    {/* 右半分は、実際に描かれるカップの右側をそのまま切り出して表示する。
+                        光沢や陰影まで含めて写真と見比べられるようにするため。 */}
+                    <span className={styles.splitHalfCup}>
+                      <span className={styles.splitCupInner}>
+                        <TeaCup hex={hex + alphaHex(density)} tight/>
+                      </span>
+                    </span>
                   </span>
                   <span className={styles.compareLabel}>写真とカップ</span>
                 </div>
