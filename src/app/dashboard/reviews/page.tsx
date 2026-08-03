@@ -660,7 +660,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               ))}
               {/* カスタム（色を直接選ぶ）。タイル全体をタップすると色選択が開く */}
               <label className={`${styles.swatchItem} ${isCustomColor ? styles.swatchItemOn : ''}`}>
-                <span className={styles.swatch} style={{ background: isCustomColor ? hexToRgba(colorHex, 0.85) : undefined }}>
+                <span className={`${styles.swatch} ${isCustomColor ? '' : styles.tileCustom}`}
+                  style={{ background: isCustomColor ? hexToRgba(colorHex, 0.85) : undefined }}>
                   {!isCustomColor && <span className={styles.tileIcon}>🎨</span>}
                   <input type="color"
                     value={'#' + (colorHex.replace('#','').slice(0,6) || 'C8A96E')}
@@ -676,8 +677,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               {/* 写真から取り込む */}
               <button type="button" className={styles.swatchItem}
                 onClick={() => setShowPicker(true)}>
-                <span className={styles.swatch}><span className={styles.tileIcon}>📷</span></span>
-                <span className={styles.swatchName}>写真から</span>
+                <span className={`${styles.swatch} ${styles.tilePhoto}`}>
+                  <span className={styles.tileIcon}>📷</span>
+                </span>
+                <span className={styles.swatchName}>写真から抽出</span>
               </button>
             </div>
 

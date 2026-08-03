@@ -915,10 +915,35 @@
 /* ═══════════════════════════════════════════════
    v260: 水色タイル（カスタム／写真から）と命名欄
    ═══════════════════════════════════════════════ */
-/* タイル内のアイコン（カスタム・写真から） */
+/* タイル内のアイコン（カスタム・写真から抽出）
+   枠いっぱいに近い大きさで、中央に配置する */
 .tileIcon {
   display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 100%; font-size: 22px;
+  width: 100%; height: 100%;
+  font-size: 52px;
+  line-height: 1;
+}
+
+/* ── カスタムのタイル ──
+   光の三原色（赤・緑・青）の円を重ねた加法混色を背景にする。
+   3つが重なる中心は白になるので、そこに絵文字を置く。 */
+.tileCustom {
+  border: 2px solid var(--border-strong);
+  background:
+    /* 中心を白く抜いて絵文字を読みやすくする */
+    radial-gradient(circle at 50% 50%, #fff 0%, #fff 26%, rgba(255,255,255,0) 34%),
+    /* 赤・緑・青の円（重なった部分が混色されるよう screen で合成） */
+    radial-gradient(circle at 50% 33%,  rgba(255,0,0,0.85) 0%, rgba(255,0,0,0.85) 33%, rgba(255,0,0,0) 34%),
+    radial-gradient(circle at 33% 66%,  rgba(0,255,0,0.85) 0%, rgba(0,255,0,0.85) 33%, rgba(0,255,0,0) 34%),
+    radial-gradient(circle at 67% 66%,  rgba(0,0,255,0.85) 0%, rgba(0,0,255,0.85) 33%, rgba(0,0,255,0) 34%),
+    #fff;
+  background-blend-mode: normal, screen, screen, screen, normal;
+}
+
+/* ── 写真から抽出のタイル ── */
+.tilePhoto {
+  border: 2px solid #8FC7E8;
+  background: #E4F2FA;   /* 薄い水色 */
 }
 /* タイル全体をタップすると色選択が開くよう、入力自体は透明にして重ねる */
 .tileColorInput {
@@ -931,5 +956,5 @@
 .customNameBox { width: 100%; margin-top: 12px; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileIcon { font-size: 30px; }
+  .tileIcon { font-size: 64px; }
 }
