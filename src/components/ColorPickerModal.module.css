@@ -154,6 +154,34 @@
 /* ═══════════════════════════════════════════════
    v257: 写真の色と登録後の表示を左右に並べて比較する
    ═══════════════════════════════════════════════ */
+/* 比較図（2段構成） */
+.compareWrap {
+  margin-top: 12px;
+  padding: 14px 12px;
+  background: var(--bg-muted);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.compareRow {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+}
+/* 上段の比較円は大きめに見せる */
+.compareRow:first-child .compareItem { max-width: 180px; width: 100%; }
+.compareRow:last-child .compareItem { width: 96px; }
+.compareSub { font-size: 11px; color: var(--text-hint); }
+/* 下段の「写真の色」 */
+.rawCircleSm {
+  width: 96px; height: 96px; max-width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: 1.4px solid #bdb4a5;
+}
+
 .compareBox {
   display: grid;
   /* 写真の色 ／ 半円の比較図 ／ 登録後の表示 の3列 */
@@ -193,12 +221,19 @@
   position: relative;
   overflow: hidden;
 }
+/* カップは縁が明るく抜ける設計のため、そのまま並べると
+   写真の中心と比べる場所がずれてしまう。
+   1.7倍に拡大して縁を枠外へ追い出し、中心付近だけを見せる。 */
 .splitCupInner {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 200%;
-  height: 100%;
+  top: 50%;
+  /* カップの中心をちょうど境目に合わせる。
+     幅340%（=半円の3.4倍）なので、その半分の170%だけ左へずらすと
+     カップの中心が右半分の左端（＝写真との境目）に来る。 */
+  left: -170%;
+  width: 340%;
+  aspect-ratio: 1 / 1;
+  transform: translateY(-50%);
 }
 .splitCupInner svg {
   width: 100%;
@@ -250,4 +285,11 @@
   .registerHint { font-size: 15px; }
   .registerErr { font-size: 16px; }
   .nameInput { font-size: 19px; padding: 14px; }
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .compareSub { font-size: 14px; }
+  .compareRow:first-child .compareItem { max-width: 220px; }
+  .compareRow:last-child .compareItem { width: 118px; }
+  .rawCircleSm { width: 118px; height: 118px; }
 }
