@@ -25,6 +25,23 @@ type Props = {
   onClose: () => void
 }
 
+/**
+ * 濃さを反映した「登録後の色」を求める。
+ * カップは白磁の地色（#F8F2E6）に色を重ねて描いているため、
+ * 同じ計算で合成した色を比較用の半円に使う。
+ */
+function blendedHex(hex6: string, density: number): string {
+  const h = hex6.replace('#', '')
+  if (h.length < 6) return hex6
+  const a = Math.min(100, Math.max(0, density)) / 100
+  const base = [248, 242, 230]
+  const c = [0, 2, 4].map(i => {
+    const v = parseInt(h.slice(i, i + 2), 16)
+    return Math.round(v * a + base[i / 2] * (1 - a))
+  })
+  return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('').toUpperCase()
+}
+
 /** 濃さ(40〜100%) を 2桁の16進(不透明度)に変換する */
 function alphaHex(density: number): string {
   return Math.round(Math.min(100, Math.max(0, density)) / 100 * 255)
@@ -370,6 +387,15 @@ export default function ColorPickerModal({ onPick, onRegistered, pickOnly = fals
                   {/* 写真から取り込んだ色そのもの（比較用） */}
                   <span className={styles.rawCircle} style={{ background: hex }}/>
                   <span className={styles.compareLabel}>写真の色</span>
+                </div>
+                {/* 左半分＝写真の色、右半分＝登録後の色。
+                    境目で直接くっつけると、色の差がいちばん分かりやすい。 */}
+                <div className={styles.compareItem}>
+                  <span className={styles.splitCircle}>
+                    <span className={styles.splitHalf} style={{ background: hex }}/>
+                    <span className={styles.splitHalf} style={{ background: blendedHex(hex, density) }}/>
+                  </span>
+                  <span className={styles.compareLabel}>差の比較</span>
                 </div>
                 <div className={styles.compareItem}>
                   {/* 実際に登録される見え方 */}
