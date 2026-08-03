@@ -24,6 +24,13 @@ export default function CardPrintPage() {
   const [preview1, setPreview1] = useState('')
   const [preview2, setPreview2] = useState('')
   const [cutGuide, setCutGuide] = useState(true)
+  /* 段ごとの「位置を固定」設定と、切り出し位置（0〜1）。
+     評価カードは枠と同じ比率なので位置調整は不要。既定は固定（中央）にしておき、
+     写真を入れたいときだけチェックを外して調整できるようにする。 */
+  const [lock1, setLock1] = useState(true)
+  const [lock2, setLock2] = useState(true)
+  const [focus1, setFocus1] = useState({ x: 0.5, y: 0.5 })
+  const [focus2, setFocus2] = useState({ x: 0.5, y: 0.5 })
   const [working, setWorking] = useState(false)
   const [doneMsg, setDoneMsg] = useState('')
 
@@ -89,7 +96,11 @@ export default function CardPrintPage() {
         if (row && typeof row.remaining === 'number') setPoints(row.remaining)
       }
 
-      const blob = await composePostcard([slot1, slot2], { cutGuide })
+      const blob = await composePostcard([slot1, slot2], {
+        cutGuide,
+        // 位置を固定している段は中央のまま（＝評価カードは従来どおり）
+        focus: [lock1 ? null : focus1, lock2 ? null : focus2],
+      })
       downloadPostcard(blob)
       setDoneMsg('印刷用ファイルをダウンロードしました。')
     } catch (e: any) {
@@ -137,8 +148,54 @@ export default function CardPrintPage() {
                 {preview ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={preview} alt={`カード${n}`} className={styles.slotPreview}/>
+                    {/* 実際の仕上がり（91:55 に切り取られた状態）で表示する。
+                        位置を調整すると、その結果がそのまま見える。 */}
+                    <div className={styles.slotPreviewFrame}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={preview} alt={`カード${n}`}
+                        className={styles.slotPreviewImg}
+                        style={{
+                          objectFit: (n === 1 ? lock1 : lock2) ? 'fill' : 'cover',
+                          objectPosition: (n === 1 ? lock1 : lock2)
+                            ? 'center'
+                            : `${(n === 1 ? focus1 : focus2).x * 100}% ${(n === 1 ? focus1 : focus2).y * 100}%`,
+                        }}/>
+                    </div>
                     <p className={styles.slotFileName}>{file?.name}</p>
+
+                    {/* 位置の固定と調整 */}
+                    <label className={styles.lockRow}>
+                      <input type="checkbox"
+                        checked={n === 1 ? lock1 : lock2}
+                        onChange={e => (n === 1 ? setLock1 : setLock2)(e.target.checked)}/>
+                      <span>位置を固定する（評価カード向け）</span>
+                    </label>
+                    {!(n === 1 ? lock1 : lock2) && (
+                      <div className={styles.focusBox}>
+                        <p className={styles.focusHint}>
+                          枠に収まらない部分は切り取られます。見せたい位置に合わせてください。
+                        </p>
+                        <div className={styles.focusRow}>
+                          <span className={styles.focusLabel}>左右</span>
+                          <input type="range" min={0} max={100}
+                            value={Math.round((n === 1 ? focus1 : focus2).x * 100)}
+                            onChange={e => {
+                              const v = Number(e.target.value) / 100
+                              ;(n === 1 ? setFocus1 : setFocus2)(f => ({ ...f, x: v }))
+                            }}/>
+                        </div>
+                        <div className={styles.focusRow}>
+                          <span className={styles.focusLabel}>上下</span>
+                          <input type="range" min={0} max={100}
+                            value={Math.round((n === 1 ? focus1 : focus2).y * 100)}
+                            onChange={e => {
+                              const v = Number(e.target.value) / 100
+                              ;(n === 1 ? setFocus1 : setFocus2)(f => ({ ...f, y: v }))
+                            }}/>
+                        </div>
+                      </div>
+                    )}
+
                     <div className={styles.slotActions}>
                       <label className={styles.slotChangeBtn}>
                         変更

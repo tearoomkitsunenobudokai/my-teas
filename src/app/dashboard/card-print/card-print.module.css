@@ -132,6 +132,39 @@
   border: 0.5px solid var(--border);
   background: #fff;
 }
+/* 仕上がりと同じ 91:55 の枠でプレビューする */
+.slotPreviewFrame {
+  width: 100%;
+  aspect-ratio: 91 / 55;
+  border-radius: 8px;
+  border: 0.5px solid var(--border);
+  background: #fff;
+  overflow: hidden;
+}
+.slotPreviewImg { width: 100%; height: 100%; display: block; }
+
+/* 位置の固定・調整 */
+.lockRow {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text); cursor: pointer; margin-top: 8px;
+}
+.lockRow input { width: 17px; height: 17px; }
+.focusBox {
+  margin-top: 8px; padding: 10px;
+  background: var(--bg-muted); border-radius: 8px;
+}
+.focusHint { font-size: 11px; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px; }
+.focusRow { display: flex; align-items: center; gap: 10px; }
+.focusRow + .focusRow { margin-top: 6px; }
+.focusRow input { flex: 1; min-width: 0; }
+.focusLabel { font-size: 12px; color: var(--text-muted); width: 32px; flex-shrink: 0; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .lockRow { font-size: 17px; }
+  .lockRow input { width: 24px; height: 24px; }
+  .focusHint { font-size: 15px; }
+  .focusLabel { font-size: 16px; width: 44px; }
+}
 .slotFileName {
   font-size: 11px;
   color: var(--text-hint);

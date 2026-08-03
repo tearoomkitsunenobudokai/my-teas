@@ -36,6 +36,12 @@ function loadImageFile(file: File): Promise<HTMLImageElement> {
 export interface PostcardOptions {
   /** 切り取り線を入れるか */
   cutGuide?: boolean
+  /**
+   * 段ごとの切り出し位置（0〜1）。0=左/上端、0.5=中央、1=右/下端。
+   * 評価カードは枠と同じ比率なので調整不要だが、
+   * 自分で撮った写真は見せたい部分を選べるようにする。
+   */
+  focus?: ({ x: number; y: number } | null)[]
 }
 
 /**
@@ -46,7 +52,7 @@ export async function composePostcard(
   files: (File | null)[],
   options: PostcardOptions = {},
 ): Promise<Blob> {
-  const { cutGuide = true } = options
+  const { cutGuide = true, focus = [] } = options
   const slots = files.slice(0, 2)
   if (!slots.some(Boolean)) throw new Error('画像を1枚以上選んでください')
 
@@ -97,8 +103,11 @@ export async function composePostcard(
         // 縦長すぎる → 上下を切り落とす
         sh = Math.round(img.naturalWidth / dstRatio)
       }
-      const sx = Math.round((img.naturalWidth - sw) / 2)
-      const sy = Math.round((img.naturalHeight - sh) / 2)
+      // 既定は中央（0.5）。指定があればその位置を基準に切り出す。
+      const fx = focus[i]?.x ?? 0.5
+      const fy = focus[i]?.y ?? 0.5
+      const sx = Math.round((img.naturalWidth  - sw) * Math.min(1, Math.max(0, fx)))
+      const sy = Math.round((img.naturalHeight - sh) * Math.min(1, Math.max(0, fy)))
       ctx.drawImage(img, sx, sy, sw, sh, x, y, cw, ch)
     }
   })
