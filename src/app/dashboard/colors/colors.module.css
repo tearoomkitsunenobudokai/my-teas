@@ -244,3 +244,32 @@
   .stickyHead { padding-bottom: 4px; }
   .stickyHead .pageHeader { margin-bottom: 6px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v271: スマホでは1行1色にして、カップの位置を縦に揃える
+   2列に並べると幅が足りず説明文が何行にも折り返され、
+   カードの高さがバラバラになってカップの位置もずれてしまう。
+   1列にして横幅を活かし、行の高さを揃える。
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .colorGrid { grid-template-columns: 1fr; gap: 8px; }
+  .colorCard {
+    align-items: center;      /* カップと文字の中心を合わせる */
+    gap: 14px;
+    padding: 0.75rem 0.875rem;
+  }
+  /* 色名・英語名・カラーコード・公式バッジを1行にまとめる */
+  .colorCardHeader { margin-bottom: 3px; align-items: center; }
+  /* 色名の行とカラーコードの行を詰めて、1色あたりを細く見せる */
+  .colorHex { margin-top: 2px; }
+  /* 説明文は2行までにして、どの行も同じ高さに保つ */
+  .colorDesc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.5;
+  }
+  /* 編集・削除は縦積みをやめて横並びにし、行を細く保つ */
+  .colorCardActions { flex-direction: row; align-items: center; gap: 6px; }
+}
