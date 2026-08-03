@@ -10,11 +10,16 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import TeaCup from './TeaCup'
+import { createClient } from '@/lib/supabase'
+import { isTextClean } from '@/lib/moderation'
+import { MAX_USER_COLORS, MAX_COLOR_NAME, detectCategory } from '@/lib/colorPalette'
 import styles from './ColorPickerModal.module.css'
 
 type Props = {
   /** 抽出した色を 8桁 hex（#RRGGBBAA）で返す。AA は「濃さ」スライダーの値 */
   onPick: (hex8: string) => void
+  /** 自分の色として登録したときに呼ばれる（親側で色一覧を読み直すため） */
+  onRegistered?: () => void
   onClose: () => void
 }
 
@@ -56,7 +61,7 @@ function StepperRow({ label, value, min, max, onChange, suffix }: {
   )
 }
 
-export default function ColorPickerModal({ onPick, onClose }: Props) {
+export default function ColorPickerModal({ onPick, onRegistered, onClose }: Props) {
   const cameraRef = useRef<HTMLInputElement>(null)
   const fileRef   = useRef<HTMLInputElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -75,6 +80,14 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
   /* 画像の拡大率。カップだけを大きく写して、抽出位置を合わせやすくする。
      拡大の中心は抽出枠（spot）に合わせるので、枠を動かせば見たい場所が中央に来る。 */
   const [zoom, setZoom] = useState(1)
+  /* 「自分の色として登録する」関連。
+     登録しておくと、評価カードで「カスタム」ではなく色名が表示される。 */
+  const [saveAsMine, setSaveAsMine] = useState(false)
+  const [colorName, setColorName]   = useState('')
+  const [nameErr, setNameErr]       = useState('')
+  const [myCount, setMyCount]       = useState<number | null>(null)  // 登録済みの個人色の数
+  const [saving, setSaving]         = useState(false)
+  const supabase = createClient()
 
   // 画像を読み込んで canvas に描画する
   function loadFile(file?: File | null) {
@@ -106,6 +119,59 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
   }, [spot, radius, zoom])
 
   useEffect(() => () => { if (imgUrl) URL.revokeObjectURL(imgUrl) }, [imgUrl])
+
+  /* 登録済みの個人色の数を先に取得しておく。
+     上限に達している場合は、登録のチェックボックス自体を使えないようにする。 */
+  useEffect(() => {
+    let alive = true
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { count } = await supabase.from('tea_colors')
+        .select('id', { count: 'exact', head: true })
+        .eq('created_by', user.id).eq('is_official', false)
+      if (alive) setMyCount(count ?? 0)
+    })()
+    return () => { alive = false }
+  }, [])
+
+  /** 「自分の色」として登録する。成功したら true を返す */
+  async function registerColor(hex8: string): Promise<boolean> {
+    const name = colorName.trim()
+    if (!name) { setNameErr('色の名前を入力してください'); return false }
+
+    // 他の入力項目と同じ基準で、不適切な語が含まれていないか確認する
+    const check = isTextClean(name)
+    if (!check.clean) {
+      setNameErr(check.reason ?? '入力できない語が含まれています')
+      return false
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setNameErr('ログイン情報が取得できませんでした'); return false }
+
+    // 保存の直前にも上限を確認する（別の画面で追加された場合に備える）
+    const { count } = await supabase.from('tea_colors')
+      .select('id', { count: 'exact', head: true })
+      .eq('created_by', user.id).eq('is_official', false)
+    const now = count ?? 0
+    setMyCount(now)
+    if (now >= MAX_USER_COLORS) {
+      setNameErr(`登録できる色は${MAX_USER_COLORS}色までです。カラーパレット画面で不要な色を削除してください。`)
+      return false
+    }
+
+    const { error } = await supabase.from('tea_colors').insert({
+      name,
+      hex: hex8,
+      category: detectCategory(hex8.slice(0, 7)),  // 色から自動で分類する
+      is_official: false,
+      created_by: user.id,
+    })
+    if (error) { setNameErr('登録に失敗しました。時間をおいて試してください。'); return false }
+    setMyCount(now + 1)
+    return true
+  }
 
   /** canvas に画像を実寸で描画（色の取得はこの canvas から行う） */
   function draw() {
@@ -284,9 +350,54 @@ export default function ColorPickerModal({ onPick, onClose }: Props) {
               </p>
             )}
 
-            <button type="button" className={styles.applyBtn} disabled={!hex}
-              onClick={() => { if (hex) { onPick(hex + alphaHex(density)); onClose() } }}>
-              この色を水色に設定する
+            {/* 自分の色として登録（評価カードで色名が表示されるようになる） */}
+            {hex && (
+              <div className={styles.registerBox}>
+                <label className={styles.registerCheck}>
+                  <input type="checkbox" checked={saveAsMine}
+                    disabled={myCount !== null && myCount >= MAX_USER_COLORS}
+                    onChange={e => { setSaveAsMine(e.target.checked); setNameErr('') }}/>
+                  <span>この色を自分の色に登録する</span>
+                </label>
+                <p className={styles.registerHint}>
+                  登録すると、評価カードに「カスタム」ではなく色の名前が表示されます。
+                  {myCount !== null && (
+                    <span className={styles.registerCount}>（登録済み {myCount} / {MAX_USER_COLORS}）</span>
+                  )}
+                </p>
+                {myCount !== null && myCount >= MAX_USER_COLORS && (
+                  <p className={styles.registerErr}>
+                    登録できる色が上限（{MAX_USER_COLORS}色）に達しています。
+                    カラーパレット画面で不要な色を削除すると登録できます。
+                  </p>
+                )}
+                {saveAsMine && (
+                  <>
+                    <input className={styles.nameInput} value={colorName} maxLength={MAX_COLOR_NAME}
+                      onChange={e => { setColorName(e.target.value.slice(0, MAX_COLOR_NAME)); setNameErr('') }}
+                      placeholder={`色の名前（例: 琥珀色）  最大${MAX_COLOR_NAME}文字`}/>
+                    {nameErr && <p className={styles.registerErr}>{nameErr}</p>}
+                  </>
+                )}
+              </div>
+            )}
+
+            <button type="button" className={styles.applyBtn} disabled={!hex || saving}
+              onClick={async () => {
+                if (!hex) return
+                const hex8 = hex + alphaHex(density)
+                if (saveAsMine) {
+                  setSaving(true)
+                  const ok = await registerColor(hex8)
+                  setSaving(false)
+                  if (!ok) return   // 名前の不備や上限超過のときは閉じない
+                  onRegistered?.()  // 親の色一覧を更新し、色名が反映されるようにする
+                }
+                onPick(hex8)
+                onClose()
+              }}>
+              {saving ? '登録しています…'
+                : saveAsMine ? 'この色を登録して水色に設定する' : 'この色を水色に設定する'}
             </button>
           </div>
         )}

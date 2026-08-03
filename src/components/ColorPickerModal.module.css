@@ -179,3 +179,33 @@
   .compareLabel { font-size: 16px; }
   .previewNote { font-size: 15px; }
 }
+
+/* ═══════════════════════════════════════════════
+   v258: 自分の色として登録する
+   ═══════════════════════════════════════════════ */
+.registerBox {
+  margin-top: 12px;
+  padding: 12px;
+  border: 0.5px solid var(--border);
+  border-radius: 10px;
+}
+.registerCheck { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text); }
+.registerCheck input { width: 18px; height: 18px; }
+.registerHint { font-size: 11px; line-height: 1.6; color: var(--text-muted); margin-top: 6px; }
+.registerCount { white-space: nowrap; }
+.registerErr { font-size: 12px; color: #dc2626; font-weight: 600; margin-top: 6px; line-height: 1.6; }
+.nameInput {
+  width: 100%; margin-top: 10px;
+  font-family: inherit; font-size: 14px;
+  padding: 11px 12px;
+  border: 0.5px solid var(--border-strong); border-radius: 8px;
+  background: var(--bg); color: var(--text);
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .registerCheck { font-size: 18px; }
+  .registerCheck input { width: 24px; height: 24px; }
+  .registerHint { font-size: 15px; }
+  .registerErr { font-size: 16px; }
+  .nameInput { font-size: 19px; padding: 14px; }
+}

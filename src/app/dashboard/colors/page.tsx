@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase'
 import TeaCupPreview from '@/components/TeaCup'
 import styles from './colors.module.css'
 
-const MAX_USER_COLORS = 16  // 個人で登録できる色の上限
+// 上限は写真取り込みモーダルからの登録でも使うため、共通定義を参照する
+import { MAX_USER_COLORS } from '@/lib/colorPalette'
 
 const CAT_LABELS: Record<string, string> = {
   red: '赤系', orange: '橙系', yellow: '黄系',

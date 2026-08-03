@@ -891,6 +891,12 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         {showPicker && (
           <ColorPickerModal
             onClose={() => setShowPicker(false)}
+            onRegistered={() => {
+              // 登録した色をすぐ反映（評価カードで色名が出るようにする）
+              supabase.from('tea_colors').select('hex,name')
+                .order('is_official',{ascending:false}).order('sort_order')
+                .then(({data}) => setColors(data ?? []))
+            }}
             onPick={hex8 => {
               // モーダル側で「濃さ」まで決めているので、そのまま採用する
               setColorHex(hex8)
