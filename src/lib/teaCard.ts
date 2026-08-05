@@ -563,23 +563,28 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }).format(now)
   // フッターのQRコード位置（罫線の長さもここに合わせる）
   const qrSize = 84
-  const qrX = nameX + 320
-  const footerRuleEnd = qrX + qrSize   // 罫線はQRコードの右端まで伸ばす
-
-  ctx.strokeStyle = 'rgba(168,135,63,0.45)'
-  ctx.lineWidth = 1
-  ctx.beginPath(); ctx.moveTo(nameX, H - 132); ctx.lineTo(footerRuleEnd, H - 132); ctx.stroke()
-  ctx.font = `400 14px ${SERIF}`
-  ctx.fillStyle = INK_SOFT
-  ctx.textAlign = 'left'
-  ctx.textBaseline = 'alphabetic'
+  ctx.font = `400 16px ${SERIF}`
   const footer = [
     '© 2026 My-Teas',
     `Generated: ${jst} JST`,
     'Website: https://my-teas.jp',
     'X: @myteas_kbk',
   ]
-  footer.forEach((line, i) => ctx.fillText(line, nameX, H - 110 + i * 19))
+  // URLが短くなった分、文字の右端に合わせてQRコードを少し左へ寄せる
+  // （固定オフセットのままだと、短くなった文字とQRの間に余白が空いてしまうため）
+  const footerTextMaxW = Math.max(...footer.map(line => ctx.measureText(line).width))
+  const qrGap = 28
+  const qrX = nameX + footerTextMaxW + qrGap
+  const footerRuleEnd = qrX + qrSize   // 罫線はQRコードの右端まで伸ばす
+
+  ctx.strokeStyle = 'rgba(168,135,63,0.45)'
+  ctx.lineWidth = 1
+  ctx.beginPath(); ctx.moveTo(nameX, H - 132); ctx.lineTo(footerRuleEnd, H - 132); ctx.stroke()
+  ctx.fillStyle = INK_SOFT
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'alphabetic'
+  // 印刷時につぶれて見えなくならないよう、行間も少し広げる
+  footer.forEach((line, i) => ctx.fillText(line, nameX, H - 112 + i * 21))
 
   // フッター右のQRコード。public/card/qr.png を差し替えるだけで変更できる
   // （画像が無い場合は何も描画しないので、カード生成は失敗しない）
