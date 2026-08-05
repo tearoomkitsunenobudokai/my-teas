@@ -576,7 +576,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const footer = [
     '© 2026 My-Teas',
     `Generated: ${jst} JST`,
-    'Website: https://my-teas-omega.vercel.app',
+    'Website: https://my-teas.jp',
     'X: @myteas_kbk',
   ]
   footer.forEach((line, i) => ctx.fillText(line, nameX, H - 110 + i * 19))

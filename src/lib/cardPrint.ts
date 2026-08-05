@@ -159,7 +159,7 @@ function drawFooter(ctx: CanvasRenderingContext2D, W: number, H: number, bottomO
 
   const fs = Math.round(MM(2.6))
   ctx.font = `${fs}px "Helvetica Neue", Arial, sans-serif`
-  ctx.fillText('My-Teas  |  https://my-teas-omega.vercel.app', W / 2, y)
+  ctx.fillText('My-Teas  |  https://my-teas.jp', W / 2, y)
   ctx.restore()
 }
 
