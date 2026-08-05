@@ -77,7 +77,13 @@ export default function AuthPage() {
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: { data: { name: form.name } },
+      options: {
+        data: { name: form.name },
+        /* 確認メールのリンク先。指定しないと Supabase の Site URL
+           （既定では localhost）が使われ、メールのリンクが開けなくなる。
+           実際にアクセスしているドメインを渡すことで、本番・開発のどちらでも正しく戻れる。 */
+        emailRedirectTo: `${window.location.origin}/auth`,
+      },
     })
     if (error) { setError(error.message); setLoading(false); return }
     setError('')
