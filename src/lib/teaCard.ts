@@ -284,7 +284,18 @@ function drawRadar(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius
     ctx.strokeStyle = 'rgba(168,135,63,0.30)'; ctx.lineWidth = 1; ctx.stroke()
     ctx.fillStyle = INK
     const lx = cx + (radius + 22) * Math.cos(a), ly = cy + (radius + 22) * Math.sin(a)
-    ctx.fillText(labels[i], lx, ly)
+    /* 上下（香り・水色）は横書きのまま。左右（コク・渋み）はアプリの
+       レーダーチャート表示と合わせて、1文字ずつ縦に並べる。
+       左右のラベルは占有幅が2文字→1文字に減るぶん、軸の見た目もすっきりする。 */
+    const isSide = i === 1 || i === 3
+    if (isSide) {
+      const chars = labels[i].split('')
+      const lineH = 24
+      const startY = ly - ((chars.length - 1) * lineH) / 2
+      chars.forEach((ch, ci) => ctx.fillText(ch, lx, startY + ci * lineH))
+    } else {
+      ctx.fillText(labels[i], lx, ly)
+    }
   }
 
   ctx.beginPath()
