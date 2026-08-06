@@ -468,8 +468,11 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ty += 16
 
   // ── レーダー配置（先に決めて本文エリアの下限に使う） ──
+  // コメントが上限（300字）まで書かれたときに本文と近づきすぎないよう、
+  // 中心を少し下げている。右側のセクション（香り分析など）もこの座標を
+  // 基準に配置されるため、一緒に下へ移動する。
   const radarCx = 745
-  const radarCy = H - 245
+  const radarCy = H - 225
   const radarR = 110
 
   if (data.comment) {
