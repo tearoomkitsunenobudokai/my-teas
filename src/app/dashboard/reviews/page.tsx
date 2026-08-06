@@ -627,8 +627,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         {originErr && <p className={styles.otherAromaErr}>{originErr}</p>}
 
         <p className={styles.label}>🌱 茶園 <span className={styles.maniaTag}>お茶マニア向け</span></p>
-        <input className={styles.input} value={teaGarden} maxLength={30}
-          onChange={e => setTeaGarden(e.target.value.slice(0, 30))} placeholder="例: ニンバン茶園"/>
+        <input className={styles.input} value={teaGarden} maxLength={20}
+          onChange={e => setTeaGarden(e.target.value.slice(0, 20))} placeholder="例: ニンバン茶園"/>
         </div>
 
         {/* 水色 + レーダーチャート横並び（ウィザードでは水色/スコアを別ステップ表示） */}
