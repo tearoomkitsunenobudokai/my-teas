@@ -1,7 +1,8 @@
+/* 他のタブ（ポイント・AI分析・管理者メニュー等）と同じく左揃えにする。
+   margin: 0 auto を外し、内側の padding も削除（親の .main が既に
+   1.75rem の余白を持っているため、二重に入って左端がずれていた）。 */
 .wrap {
   max-width: 640px;
-  margin: 0 auto;
-  padding: 1.5rem;
 }
 .title {
   font-size: 20px;
