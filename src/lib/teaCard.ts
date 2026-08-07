@@ -5,8 +5,12 @@
 //   ・金罫の二重フレーム + 四隅の飾り（印刷時の縁取りとして機能）
 //   ・左上: 水色の円（金の二重リングで枠内に収める）
 //   ・円の下: ブランド（金・斜体）→ 紅茶名（大）→ 飾り罫 → 茶園
-//   ・右上: TASTING CARD → 紅茶名 → Tea taster+飲んだ日 → at 店 → 罫線 → メモ
-//   ・右下: レーダーチャート + その右に 香り分析/水色/淹れ方/添え物
+//   ・右上: TASTING CARD（右端に飲んだ日）→ 紅茶名 → Tea taster + at 店
+//           → 罫線 → メモ
+//   ・右下: レーダーチャート + その右に 香り分析/水色/淹れ方/添え物を
+//           細い金罫の角丸枠で囲って縦に並べる（見出しは枠の上辺に重ねる）
+//   ・淹れ方/添え物の枠は右側に画像用の正方形（ICON）を常に確保する。
+//     画像を後から public/icons/ に置いてもレイアウトが動かないようにするため。
 //   ・左下: フッター（クレジット・生成日時・リンク）
 //
 // フォント: いろはマル（SIL OFL 1.1 / public/fonts/irohamaru に同梱）
@@ -311,20 +315,6 @@ function drawRadar(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius
   ctx.strokeStyle = GOLD_DEEP; ctx.lineWidth = 2.5; ctx.stroke()
 }
 
-// セクション見出し（タイトル + 短い金罫）
-function sectionTitle(ctx: CanvasRenderingContext2D, title: string, x: number, y: number) {
-  ctx.font = `700 17px ${MINCHO}`
-  ctx.fillStyle = GOLD_DEEP
-  ctx.fillText(title, x, y)
-  const tw = ctx.measureText(title).width
-  ctx.strokeStyle = 'rgba(168,135,63,0.6)'
-  ctx.lineWidth = 1
-  ctx.beginPath()
-  ctx.moveTo(x + tw + 10, y - 5)
-  ctx.lineTo(x + tw + 46, y - 5)
-  ctx.stroke()
-}
-
 // 画像の読み込みを試みる。存在しない（404等）場合はnullを返す＝呼び出し側で
 // 従来の文字表示にフォールバックできる。DB登録不要でアイコンを差し込むための仕組み。
 function tryLoadImage(src: string): Promise<HTMLImageElement | null> {
@@ -420,12 +410,21 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const rightX = 560
   const rightW = W - 64 - rightX
   const indentX = rightX + 10   // Tea taster / at 行のインデント（半角スペース1個分程度）
-  // アイライン（小さな英字見出し）
-  ctx.font = `700 13px ${SERIF}`
-  ctx.fillStyle = GOLD_DEEP
-  ctx.fillText('T A S T I N G   C A R D', rightX, 78)
+  const drankDate = data.drank_at ? data.drank_at.slice(0, 10).replace(/-/g, '/') : ''
 
-  let ty = 122
+  // アイライン（小さな英字見出し）。飲んだ日は同じ行の右端に置く
+  ctx.font = `700 15px ${SERIF}`
+  ctx.fillStyle = GOLD_DEEP
+  ctx.fillText('T A S T I N G   C A R D', rightX, 64)
+  if (drankDate) {
+    ctx.font = `italic 400 21px ${SERIF}`
+    ctx.fillStyle = INK_SOFT
+    ctx.textAlign = 'right'
+    ctx.fillText(drankDate, W - 64, 64)
+    ctx.textAlign = 'left'
+  }
+
+  let ty = 108
   const heading = data.tea_name || '（お茶の名前）'
   let headFont = 34
   for (const fs of [34, 32, 30, 28, 26, 24, 22, 20, 18]) {
@@ -441,25 +440,26 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const headLines = wrapText(ctx, heading, rightX, ty, rightW, headLh, 2)
   ty += (headLines - 1) * headLh + 30
 
-  const drankDate = data.drank_at ? data.drank_at.slice(0, 10).replace(/-/g, '/') : ''
-  const tasterLine = [
-    data.user_name ? `Tea taster ${data.user_name}` : '',
-    drankDate,
-  ].filter(Boolean).join('　　')
-  if (tasterLine) {
-    const tf = fitFontSize(ctx, tasterLine, 20, rightW - 10, s => `italic 400 ${s}px ${SERIF}`, 14)
-    ctx.font = `italic 400 ${tf}px ${SERIF}`
-    ctx.fillStyle = INK_SOFT
-    wrapText(ctx, tasterLine, indentX, ty, rightW - 10, tf + 4, 1)
-    ty += 28
-  }
-  if (data.shop_name) {
-    const shopLine = `at ${data.shop_name}`
-    const sf = fitFontSize(ctx, shopLine, 20, rightW - 10, s => `italic 400 ${s}px ${SERIF}`, 14)
-    ctx.font = `italic 400 ${sf}px ${SERIF}`
-    ctx.fillStyle = INK_SOFT
-    wrapText(ctx, shopLine, indentX, ty, rightW - 10, sf + 4, 1)
-    ty += 28
+  // 評価者と店名は同じ行に並べる。1行に収まらない場合だけ店名を次の行に送る
+  const tasterText = data.user_name ? `Tea taster ${data.user_name}` : ''
+  const shopText = data.shop_name ? `at ${data.shop_name}` : ''
+  if (tasterText || shopText) {
+    const availW = rightW - 10
+    const oneLine = [tasterText, shopText].filter(Boolean).join('　　')
+    ctx.font = `italic 400 20px ${SERIF}`
+    if (ctx.measureText(oneLine).width <= availW) {
+      ctx.fillStyle = INK_SOFT
+      ctx.fillText(oneLine, indentX, ty)
+      ty += 28
+    } else {
+      for (const line of [tasterText, shopText].filter(Boolean)) {
+        const f = fitFontSize(ctx, line, 20, availW, s => `italic 400 ${s}px ${SERIF}`, 14)
+        ctx.font = `italic 400 ${f}px ${SERIF}`
+        ctx.fillStyle = INK_SOFT
+        wrapText(ctx, line, indentX, ty, availW, f + 4, 1)
+        ty += 28
+      }
+    }
   }
   // メモの前に細い罫線
   ctx.strokeStyle = 'rgba(168,135,63,0.45)'
@@ -472,13 +472,15 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // 中心を少し下げている。右側のセクション（香り分析など）もこの座標を
   // 基準に配置されるため、一緒に下へ移動する。
   const radarCx = 745
-  const radarCy = H - 225
+  const radarCy = H - 195
   const radarR = 110
+  // 右側の枠囲みセクション（香り分析など）の開始位置。コメント欄はここより
+  // 上で終わらせる必要があるため、先に定義しておく。
+  const boxTop = 404
 
   if (data.comment) {
     // コメントは最大300字。長さに応じて文字サイズを自動選択して必ず収める
-    const radarTopY = radarCy - radarR - 22
-    const available = radarTopY - 14 - ty
+    const available = boxTop - 14 - ty
     const candidates: Array<[number, number]> = [[22, 36], [20, 32], [18, 28], [16, 25], [15, 23], [14, 21], [13, 19]]
     let chosen = candidates[candidates.length - 1]
     for (const [fs, lh] of candidates) {
@@ -497,63 +499,109 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     [data.score_aroma, data.score_richness, data.score_color_depth, data.score_astringency],
     ['香り', 'コク', '水色', '渋み'])
 
-  // ── レーダーの右横: 香り分析 + 水色 + 淹れ方 + 添え物 ──
+  // ── レーダーの右横: 香り分析 / 水色 / 淹れ方 / 添え物（細枠で囲う） ──
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
-  const secX = radarCx + radarR + 22 + 52
-  const secW = W - 64 - secX
-  let sy = radarCy - radarR - 16
-  const section = (title: string, body: string) => {
-    sectionTitle(ctx, title, secX, sy)
-    sy += 27
-    ctx.font = `400 17px ${MINCHO}`
-    ctx.fillStyle = INK
-    const used = wrapText(ctx, body, secX, sy, secW, 24, 2)
-    sy += used * 24 + 12
+  const boxX = 902
+  const boxRight = W - 58
+  const boxW = boxRight - boxX
+  const boxPad = 16
+  const boxGap = 10
+  const BODY_FS = 17
+  const BODY_LH = 24
+  // 淹れ方・添え物に差し込む画像用の確保サイズ。画像が無い間も同じ寸法を
+  // 空けておくので、あとから画像を置いてもレイアウトはずれない。
+  const ICON = 54
+  let by = boxTop
+
+  // 細い金罫の角丸枠。上辺の左寄りに切れ目を作り、そこに見出しを重ねる。
+  // （背景がグラデーション＋模様なので、塗りつぶしで隠さず切れ目で抜く）
+  const drawBox = (title: string, top: number, height: number) => {
+    const r = 10
+    ctx.font = `700 16px ${MINCHO}`
+    const tw = ctx.measureText(title).width
+    const gapStart = boxX + 14
+    const gapEnd = gapStart + tw + 12
+    ctx.strokeStyle = 'rgba(168,135,63,0.75)'
+    ctx.lineWidth = 1.2
+    ctx.beginPath()
+    ctx.moveTo(gapEnd, top)
+    ctx.lineTo(boxX + boxW - r, top)
+    ctx.arcTo(boxX + boxW, top, boxX + boxW, top + r, r)
+    ctx.lineTo(boxX + boxW, top + height - r)
+    ctx.arcTo(boxX + boxW, top + height, boxX + boxW - r, top + height, r)
+    ctx.lineTo(boxX + r, top + height)
+    ctx.arcTo(boxX, top + height, boxX, top + height - r, r)
+    ctx.lineTo(boxX, top + r)
+    ctx.arcTo(boxX, top, boxX + r, top, r)
+    ctx.lineTo(gapStart, top)
+    ctx.stroke()
+    ctx.fillStyle = GOLD_DEEP
+    ctx.fillText(title, gapStart + 6, top + 6)
   }
-  // アイコン画像があれば絵、無ければ従来の文字のみで表示（DB登録不要・画像を置くだけで自動切替）
-  const sectionWithIcons = async (title: string, iconPaths: (string | null)[], body: string) => {
-    sectionTitle(ctx, title, secX, sy)
-    sy += 27
-    const icons = (await Promise.all(iconPaths.filter((p): p is string => !!p).map(tryLoadImage)))
-      .filter((img): img is HTMLImageElement => !!img)
-    let bx = secX
-    for (const img of icons.slice(0, 6)) {
-      ctx.drawImage(img, bx, sy - 18, 22, 22)
-      bx += 26
+
+  // 確保した正方形の中に画像を収める（縦横比は保ったまま中央寄せ）。
+  // 複数ある場合は同じ枠内に2×2までで並べ、外側の寸法は変えない。
+  const drawIcons = (imgs: HTMLImageElement[], x: number, y: number, size: number) => {
+    const list = imgs.slice(0, 4)
+    const put = (img: HTMLImageElement, ox: number, oy: number, s: number) => {
+      const k = Math.min(s / img.width, s / img.height)
+      const w = img.width * k, h = img.height * k
+      ctx.drawImage(img, ox + (s - w) / 2, oy + (s - h) / 2, w, h)
     }
-    if (icons.length) sy += 4
-    ctx.font = `400 17px ${MINCHO}`
-    ctx.fillStyle = INK
-    const bodyX = icons.length ? secX : secX
-    const bodyY = icons.length ? sy + 20 : sy
-    const used = wrapText(ctx, body, bodyX, icons.length ? bodyY : sy, secW, 24, 2)
-    sy += (icons.length ? 20 : 0) + used * 24 + 12
+    if (list.length === 1) { put(list[0], x, y, size); return }
+    const cell = (size - 4) / 2
+    list.forEach((img, i) => put(img, x + (i % 2) * (cell + 4), y + Math.floor(i / 2) * (cell + 4), cell))
   }
+
+  // 枠付きセクションを1つ描く。reserveIcon=true のときだけ右側に画像枠を空ける
+  const infoBox = async (title: string, body: string, iconPaths: (string | null)[] = []) => {
+    const reserveIcon = iconPaths.length > 0
+    const imgs = reserveIcon
+      ? (await Promise.all(iconPaths.filter((p): p is string => !!p).map(tryLoadImage)))
+        .filter((img): img is HTMLImageElement => !!img)
+      : []
+    const textW = boxW - boxPad * 2 - (reserveIcon ? ICON + 14 : 0)
+    ctx.font = `400 ${BODY_FS}px ${MINCHO}`
+    const lines = computeLines(ctx, body, textW, 2)
+    const textH = 34 + (lines.length - 1) * BODY_LH + 18
+    const height = reserveIcon ? Math.max(textH, ICON + 22) : textH
+
+    drawBox(title, by, height)
+    ctx.font = `400 ${BODY_FS}px ${MINCHO}`
+    ctx.fillStyle = INK
+    const firstY = by + (height - (lines.length - 1) * BODY_LH) / 2 + 6
+    lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * BODY_LH))
+    if (imgs.length) drawIcons(imgs, boxRight - boxPad - ICON, by + (height - ICON) / 2, ICON)
+    by += height + boxGap
+  }
+
   if (data.aroma_notes && data.aroma_notes.length) {
-    section('香り分析', data.aroma_notes.slice(0, 8).join('・'))
+    await infoBox('香り分析', data.aroma_notes.slice(0, 8).join('・'))
   }
   // 水色: パレット登録色なら色名、未登録なら「カスタム」。右にカラーコードと色見本
   if (data.color_hex) {
     const hexNorm = normalizeHex(data.color_hex)
-    sectionTitle(ctx, '水色', secX, sy)
-    sy += 27
-    ctx.font = `400 17px ${MINCHO}`
-    ctx.fillStyle = INK
     const label = `${data.color_name || 'カスタム'}　${hexNorm}`
-    ctx.fillText(label, secX, sy)
-    const labelW = ctx.measureText(label).width
-    const swX = secX + labelW + 10
-    if (swX + 20 <= W - 64) {
+    const innerW = boxW - boxPad * 2
+    const lf = fitFontSize(ctx, label, BODY_FS, innerW - 28, s => `400 ${s}px ${MINCHO}`, 12)
+    const height = 52
+    drawBox('水色', by, height)
+    ctx.font = `400 ${lf}px ${MINCHO}`
+    ctx.fillStyle = INK
+    const baseY = by + height / 2 + 6
+    ctx.fillText(label, boxX + boxPad, baseY)
+    const swX = boxX + boxPad + ctx.measureText(label).width + 10
+    if (swX + 18 <= boxRight - boxPad) {
       const [sr, sg, sb, sa] = parseHex(hexNorm)
       const sbase = mix([sr, sg, sb], [248, 242, 230], 1 - sa)
       ctx.fillStyle = rgbStr(sbase)
-      ctx.fillRect(swX, sy - 14, 18, 18)
+      ctx.fillRect(swX, baseY - 14, 18, 18)
       ctx.strokeStyle = GOLD_DEEP
       ctx.lineWidth = 1
-      ctx.strokeRect(swX, sy - 14, 18, 18)
+      ctx.strokeRect(swX, baseY - 14, 18, 18)
     }
-    sy += 24 + 12
+    by += height + boxGap
   }
   const details: string[] = []
   if (data.brew_method) details.push(data.brew_method)
@@ -561,12 +609,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const amount = formatLeafWater(data.tea_grams, data.water_ml, data.tea_grams_per_100ml)
   if (amount) details.push(amount)
   if (data.steep_seconds) details.push(`${data.steep_seconds}秒`)
+  // 淹れ方・添え物は右側に画像枠を確保する（画像未設置でも寸法は同じ）
   if (details.length) {
-    await sectionWithIcons('淹れ方', [data.brew_method ? brewIconPath(data.brew_method) : null], details.join(' / '))
+    await infoBox('淹れ方', details.join(' / '), [data.brew_method ? brewIconPath(data.brew_method) : null])
   }
   if (data.accompaniments && data.accompaniments.length) {
     const accList = data.accompaniments.slice(0, 5)
-    await sectionWithIcons('添え物', accList.map(accompanimentIconPath), accList.join('・'))
+    await infoBox('添え物', accList.join('・'), accList.map(accompanimentIconPath))
   }
 
   // ── 左下: フッター（上に細罫を敷く） ──
