@@ -562,13 +562,26 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
         .filter((img): img is HTMLImageElement => !!img)
       : []
     const textW = boxW - boxPad * 2 - (reserveIcon ? ICON + 14 : 0)
-    ctx.font = `400 ${BODY_FS}px ${MINCHO}`
-    const lines = computeLines(ctx, body, textW, 2)
+    // 2行に割れると「180 / 秒」のように末尾だけが次行に落ちて見栄えが悪いため、
+    // 少しだけ文字を縮めて1行に収まるなら、そちらを優先する
+    let fs = BODY_FS
+    let lines = computeLines(ctx, body, textW, 2)
+    if (lines.length > 1) {
+      for (const cand of [16, 15]) {
+        ctx.font = `400 ${cand}px ${MINCHO}`
+        const trial = computeLines(ctx, body, textW, 2)
+        if (trial.length === 1) { fs = cand; lines = trial; break }
+      }
+    }
+    if (fs === BODY_FS) {
+      ctx.font = `400 ${BODY_FS}px ${MINCHO}`
+      lines = computeLines(ctx, body, textW, 2)
+    }
     const textH = 34 + (lines.length - 1) * BODY_LH + 18
     const height = reserveIcon ? Math.max(textH, ICON + 22) : textH
 
     drawBox(title, by, height)
-    ctx.font = `400 ${BODY_FS}px ${MINCHO}`
+    ctx.font = `400 ${fs}px ${MINCHO}`
     ctx.fillStyle = INK
     const firstY = by + (height - (lines.length - 1) * BODY_LH) / 2 + 6
     lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * BODY_LH))

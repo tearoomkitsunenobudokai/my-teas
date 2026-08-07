@@ -9,8 +9,10 @@
    利用側で supabase.rpc('get_my_limit', { p_feature: 'colors' }) を呼ぶこと。
    （戻り値 0 は「無制限」を表す） */
 
-/** 色名の最大文字数 */
-export const MAX_COLOR_NAME = 20
+/** 色名の最大文字数。
+    評価カードでは「色名　#RRGGBBAA」を1行に収める必要があり、
+    8桁のカラーコードと並べても枠からはみ出さない長さとして10文字とする。 */
+export const MAX_COLOR_NAME = 10
 
 export const CAT_ORDER = ['red', 'orange', 'yellow', 'green', 'brown', 'clear', 'other'] as const
 
