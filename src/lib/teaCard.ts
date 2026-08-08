@@ -262,6 +262,10 @@ function drawTeaCircle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
 }
 
 // ── レーダーチャート ──
+// レーダーの外周からラベル中心までの距離。チャートを大きくした分ここを詰めて、
+// 右隣の枠囲みセクションとの間隔を確保している。
+const RADAR_LABEL_GAP = 14
+
 function drawRadar(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number, scores: number[], labels: string[]) {
   const n = scores.length
   const angle = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / n
@@ -287,7 +291,7 @@ function drawRadar(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius
     ctx.lineTo(cx + radius * Math.cos(a), cy + radius * Math.sin(a))
     ctx.strokeStyle = 'rgba(168,135,63,0.30)'; ctx.lineWidth = 1; ctx.stroke()
     ctx.fillStyle = INK
-    const lx = cx + (radius + 22) * Math.cos(a), ly = cy + (radius + 22) * Math.sin(a)
+    const lx = cx + (radius + RADAR_LABEL_GAP) * Math.cos(a), ly = cy + (radius + RADAR_LABEL_GAP) * Math.sin(a)
     /* 上下（香り・水色）は横書きのまま。左右（コク・渋み）はアプリの
        レーダーチャート表示と合わせて、1文字ずつ縦に並べる。
        左右のラベルは占有幅が2文字→1文字に減るぶん、軸の見た目もすっきりする。 */
@@ -413,11 +417,11 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const drankDate = data.drank_at ? data.drank_at.slice(0, 10).replace(/-/g, '/') : ''
 
   // アイライン（小さな英字見出し）。飲んだ日は同じ行の右端に置く
-  ctx.font = `700 15px ${SERIF}`
+  ctx.font = `700 20px ${SERIF}`
   ctx.fillStyle = GOLD_DEEP
   ctx.fillText('T A S T I N G   C A R D', rightX, 64)
   if (drankDate) {
-    ctx.font = `italic 400 21px ${SERIF}`
+    ctx.font = `italic 400 20px ${SERIF}`
     ctx.fillStyle = INK_SOFT
     ctx.textAlign = 'right'
     ctx.fillText(drankDate, W - 64, 64)
@@ -473,71 +477,103 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // 基準に配置されるため、一緒に下へ移動する。
   const radarCx = 745
   const radarCy = H - 195
-  const radarR = 110
-  // 右側の枠囲みセクション（香り分析など）の開始位置。コメント欄はここより
-  // 上で終わらせる必要があるため、先に定義しておく。
-  const boxTop = 360
+  const radarR = 120
+  // レーダーの一番下のラベル（水色）の下端。右側の枠囲みセクションは
+  // 内容量で高さが変わるので、上からではなくこの線に下端を合わせて積む。
+  const RADAR_LABEL_BOTTOM = radarCy + radarR + RADAR_LABEL_GAP + 11
+  // コメントとレーダー・枠囲みエリアを分ける区切り線の位置。
+  // 枠囲みの上端がこれより上に来ないよう boxTop で下限を決めている。
+  const DIVIDER_Y = 384
+  const boxTop = DIVIDER_Y + 14
 
   if (data.comment) {
     // コメントは最大300字。長さに応じて文字サイズを自動選択して必ず収める
-    const available = boxTop - 14 - ty
-    const candidates: Array<[number, number]> = [[22, 36], [20, 32], [18, 28], [16, 25], [15, 23], [14, 21], [13, 19]]
+    const available = DIVIDER_Y - 16 - ty
+    const candidates: Array<[number, number]> = [[22, 34], [21, 32], [20, 31], [19, 29], [18, 27], [17, 26], [16, 24], [15, 23], [14, 21]]
     let chosen = candidates[candidates.length - 1]
     for (const [fs, lh] of candidates) {
       ctx.font = `400 ${fs}px ${MINCHO}`
       const lines = computeLines(ctx, data.comment, rightW, 99)
-      if (lines.length * lh <= available) { chosen = [fs, lh]; break }
+      // 最終行は行送りではなく文字の高さだけあればよい
+      if ((lines.length - 1) * lh + fs <= available) { chosen = [fs, lh]; break }
     }
     const [fs, lh] = chosen
     ctx.font = `400 ${fs}px ${MINCHO}`
     ctx.fillStyle = INK
-    wrapText(ctx, data.comment, rightX, ty, rightW, lh, Math.max(1, Math.floor(available / lh)))
+    // 上の判定と同じ数え方にしないと、収まるはずの行が「…」で切られてしまう
+    const maxLines = Math.max(1, Math.floor((available - fs) / lh) + 1)
+    wrapText(ctx, data.comment, rightX, ty, rightW, lh, maxLines)
   }
+
+  // コメントとレーダー・枠囲みエリアの区切り線
+  ctx.strokeStyle = 'rgba(168,135,63,0.45)'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(rightX, DIVIDER_Y)
+  ctx.lineTo(rightX + rightW, DIVIDER_Y)
+  ctx.stroke()
 
   // ── 右下: レーダーチャート ──
   drawRadar(ctx, radarCx, radarCy, radarR,
     [data.score_aroma, data.score_richness, data.score_color_depth, data.score_astringency],
     ['香り', 'コク', '水色', '渋み'])
 
-  // ── レーダーの右横: 香り分析 / 水色 / 淹れ方 / 添え物（細枠で囲う） ──
+  // ── レーダーの右横: 香り分析 / 水色 / 淹れ方 / 添え物 ──
+  // 位置と大きさは固定。未入力の項目があっても枠は詰めず、空のまま同じ場所に
+  // 描く（カードごとに配置がずれると見比べにくいため）。
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
   const boxX = 902
   const boxRight = W - 58
   const boxW = boxRight - boxX
-  const boxPad = 16
-  const boxGap = 10
+  const boxPad = 14
   const BODY_FS = 17
   const BODY_LH = 24
-  // 淹れ方・添え物に差し込む画像用の確保サイズ。画像が無い間も同じ寸法を
-  // 空けておくので、あとから画像を置いてもレイアウトはずれない。
-  const ICON = 44
-  let by = boxTop
+
+  // 上から: 香り分析 → 水色 → （淹れ方 ＋ 添え物 の2列）
+  const AROMA_TOP = boxTop
+  const AROMA_H = 70
+  const COLOR_TOP = AROMA_TOP + AROMA_H + 8
+  const COLOR_H = 44
+  const LOWER_TOP = COLOR_TOP + COLOR_H + 8
+  const LOWER_BOTTOM = RADAR_LABEL_BOTTOM
+  const LOWER_H = LOWER_BOTTOM - LOWER_TOP
+  const COL_GAP = 8
+  const BREW_W = 116
+  const BREW_X = boxX
+  const ACC_X = BREW_X + BREW_W + COL_GAP
+  const ACC_W = boxRight - ACC_X
+
+  // マス（文字＋図）の寸法。淹れ方・添え物で共通
+  const CELL_W = 52
+  const CELL_H = 58
+  const CELL_GAP = 3
+  const CELL_ICON = 36
 
   // 細い金罫の角丸枠。上辺の左寄りに切れ目を作り、そこに見出しを重ねる。
   // （背景がグラデーション＋模様なので、塗りつぶしで隠さず切れ目で抜く）
-  const drawBox = (title: string, top: number, height: number) => {
+  const drawBox = (title: string, x: number, top: number, w: number, height: number) => {
     const r = 10
     ctx.font = `700 16px ${MINCHO}`
     const tw = ctx.measureText(title).width
-    const gapStart = boxX + 14
-    const gapEnd = gapStart + tw + 12
+    const gapStart = x + 12
+    const gapEnd = gapStart + tw + 10
     ctx.strokeStyle = 'rgba(168,135,63,0.45)'
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(gapEnd, top)
-    ctx.lineTo(boxX + boxW - r, top)
-    ctx.arcTo(boxX + boxW, top, boxX + boxW, top + r, r)
-    ctx.lineTo(boxX + boxW, top + height - r)
-    ctx.arcTo(boxX + boxW, top + height, boxX + boxW - r, top + height, r)
-    ctx.lineTo(boxX + r, top + height)
-    ctx.arcTo(boxX, top + height, boxX, top + height - r, r)
-    ctx.lineTo(boxX, top + r)
-    ctx.arcTo(boxX, top, boxX + r, top, r)
+    ctx.lineTo(x + w - r, top)
+    ctx.arcTo(x + w, top, x + w, top + r, r)
+    ctx.lineTo(x + w, top + height - r)
+    ctx.arcTo(x + w, top + height, x + w - r, top + height, r)
+    ctx.lineTo(x + r, top + height)
+    ctx.arcTo(x, top + height, x, top + height - r, r)
+    ctx.lineTo(x, top + r)
+    ctx.arcTo(x, top, x + r, top, r)
     ctx.lineTo(gapStart, top)
     ctx.stroke()
     ctx.fillStyle = GOLD_DEEP
-    ctx.fillText(title, gapStart + 6, top + 6)
+    ctx.fillText(title, gapStart + 5, top + 6)
   }
 
   // 確保した正方形の中に画像を収める（縦横比は保ったまま中央寄せ）
@@ -547,140 +583,52 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.drawImage(img, ox + (s - w) / 2, oy + (s - h) / 2, w, h)
   }
 
-  // 指定パスの画像をまとめて読み込む。1つでも欠けている場合は空配列を返し、
-  // 呼び出し側が「文字で表示する」フォールバックに切り替えられるようにする。
-  const loadIcons = async (paths: (string | null)[]): Promise<HTMLImageElement[]> => {
-    if (!paths.length || paths.some(p => !p)) return []
-    const imgs = await Promise.all((paths as string[]).map(tryLoadImage))
-    return imgs.every(Boolean) ? (imgs as HTMLImageElement[]) : []
+  // 1マス分（上に文字・下に図）。図が未用意でも枠と文字は必ず描く
+  const drawCell = (label: string, img: HTMLImageElement | null, x: number, y: number) => {
+    const r = 6
+    ctx.strokeStyle = 'rgba(168,135,63,0.45)'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(x + r, y)
+    ctx.arcTo(x + CELL_W, y, x + CELL_W, y + r, r)
+    ctx.arcTo(x + CELL_W, y + CELL_H, x + CELL_W - r, y + CELL_H, r)
+    ctx.arcTo(x, y + CELL_H, x, y + CELL_H - r, r)
+    ctx.arcTo(x, y, x + r, y, r)
+    ctx.closePath()
+    ctx.stroke()
+    const lf = fitFontSize(ctx, label, 12, CELL_W - 8, s => `400 ${s}px ${MINCHO}`, 8)
+    ctx.font = `400 ${lf}px ${MINCHO}`
+    ctx.fillStyle = INK_SOFT
+    ctx.textAlign = 'center'
+    ctx.fillText(label, x + CELL_W / 2, y + 15)
+    ctx.textAlign = 'left'
+    if (img) putIcon(img, x + (CELL_W - CELL_ICON) / 2, y + 18, CELL_ICON)
   }
 
-  // 添え物用。1マスに「文字（小）＋図」を縦に積み、細い線で囲って横に並べる。
-  // マスの寸法は個数によらず固定なので、複数のカードを見比べても大きさが揃う。
-  const CELL_W = 54
-  const CELL_H = 62
-  const CELL_GAP = 3
-  const CELL_ICON = 38
-  const cellsBox = (
-    title: string,
-    items: { label: string; img: HTMLImageElement | null }[],
-    trailing = '',
-  ) => {
-    const height = 24 + CELL_H + 12
-    drawBox(title, by, height)
-    let cx = boxX + boxPad
-    const cy = by + 24
-    for (const it of items) {
-      const r = 6
-      ctx.strokeStyle = 'rgba(168,135,63,0.45)'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.moveTo(cx + r, cy)
-      ctx.arcTo(cx + CELL_W, cy, cx + CELL_W, cy + r, r)
-      ctx.arcTo(cx + CELL_W, cy + CELL_H, cx + CELL_W - r, cy + CELL_H, r)
-      ctx.arcTo(cx, cy + CELL_H, cx, cy + CELL_H - r, r)
-      ctx.arcTo(cx, cy, cx + r, cy, r)
-      ctx.closePath()
-      ctx.stroke()
-      // 文字はマス幅に収まるまで縮める（図が主役なので小さくてよい）
-      const lf = fitFontSize(ctx, it.label, 12, CELL_W - 8, s => `400 ${s}px ${MINCHO}`, 8)
-      ctx.font = `400 ${lf}px ${MINCHO}`
-      ctx.fillStyle = INK_SOFT
-      ctx.textAlign = 'center'
-      ctx.fillText(it.label, cx + CELL_W / 2, cy + 15)
-      ctx.textAlign = 'left'
-      if (it.img) putIcon(it.img, cx + (CELL_W - CELL_ICON) / 2, cy + 19, CELL_ICON)
-      cx += CELL_W + CELL_GAP
-    }
-    // マスの右に続きの文字（淹れ方の茶葉量・湯量・抽出時間）を縦中央で置く
-    if (trailing) {
-      const tX = cx + 9
-      const tW = boxRight - boxPad - tX
-      const tf = fitFontSize(ctx, trailing, BODY_FS, tW, s => `400 ${s}px ${MINCHO}`, 12)
-      ctx.font = `400 ${tf}px ${MINCHO}`
-      ctx.fillStyle = INK
-      ctx.fillText(trailing, tX, cy + CELL_H / 2 + 6)
-    }
-    by += height + boxGap
-  }
+  // 指定パスの画像をまとめて読み込む。欠けている分は null のまま返す
+  const loadIcons = async (paths: (string | null)[]): Promise<(HTMLImageElement | null)[]> =>
+    Promise.all(paths.map(p => (p ? tryLoadImage(p) : Promise.resolve(null))))
 
-  // 枠付きセクションを1つ描く。
-  //   icons + 'right'  … 文字の右に画像1つ（淹れ方）
-  //   icons + 'bottom' … 文字の下に画像を横一列（添え物）
-  const infoBox = (
-    title: string,
-    body: string,
-    icons: HTMLImageElement[] = [],
-    place: 'right' | 'bottom' = 'right',
-  ) => {
-    const atRight = icons.length > 0 && place === 'right'
-    const atBottom = icons.length > 0 && place === 'bottom'
-    const textW = boxW - boxPad * 2 - (atRight ? ICON + 14 : 0)
-
-    // 2行に割れると末尾だけが次行に落ちて見栄えが悪いため、
-    // 少しだけ文字を縮めて1行に収まるならそちらを優先する
-    let fs = BODY_FS
-    let lines: string[] = []
-    if (body) {
-      ctx.font = `400 ${BODY_FS}px ${MINCHO}`
-      lines = computeLines(ctx, body, textW, 2)
-      if (lines.length > 1) {
-        for (const cand of [16, 15]) {
-          ctx.font = `400 ${cand}px ${MINCHO}`
-          const trial = computeLines(ctx, body, textW, 2)
-          if (trial.length === 1) { fs = cand; lines = trial; break }
-        }
-        if (fs === BODY_FS) {
-          ctx.font = `400 ${BODY_FS}px ${MINCHO}`
-          lines = computeLines(ctx, body, textW, 2)
-        }
-      }
-    }
-
-    const textH = lines.length ? 34 + (lines.length - 1) * BODY_LH + 18 : 0
-    let height: number
-    if (atBottom) height = (lines.length ? textH - 6 : 24) + ICON + 16
-    else if (atRight) height = Math.max(textH, ICON + 22)
-    else height = textH || ICON + 22
-
-    drawBox(title, by, height)
-    if (lines.length) {
-      ctx.font = `400 ${fs}px ${MINCHO}`
-      ctx.fillStyle = INK
-      const block = (lines.length - 1) * BODY_LH
-      const firstY = atBottom ? by + 34 : by + (height - block) / 2 + 6
-      lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * BODY_LH))
-    }
-    if (atRight) {
-      putIcon(icons[0], boxRight - boxPad - ICON, by + (height - ICON) / 2, ICON)
-    } else if (atBottom) {
-      const gapX = 10
-      const total = icons.length * ICON + (icons.length - 1) * gapX
-      let ix = boxX + boxPad
-      // 収まらない場合だけ間隔を詰める
-      const g = total > boxW - boxPad * 2
-        ? Math.max(2, (boxW - boxPad * 2 - icons.length * ICON) / Math.max(1, icons.length - 1))
-        : gapX
-      const iy = by + height - ICON - 12
-      for (const img of icons) { putIcon(img, ix, iy, ICON); ix += ICON + g }
-    }
-    by += height + boxGap
-  }
-
+  // ── 香り分析 ──
+  drawBox('香り分析', boxX, AROMA_TOP, boxW, AROMA_H)
   if (data.aroma_notes && data.aroma_notes.length) {
-    infoBox('香り分析', data.aroma_notes.slice(0, 8).join('・'))
+    const body = data.aroma_notes.slice(0, 8).join('・')
+    ctx.font = `400 ${BODY_FS}px ${MINCHO}`
+    const lines = computeLines(ctx, body, boxW - boxPad * 2, 2)
+    ctx.fillStyle = INK
+    const firstY = AROMA_TOP + (AROMA_H - (lines.length - 1) * BODY_LH) / 2 + 8
+    lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * BODY_LH))
   }
-  // 水色: パレット登録色なら色名、未登録なら「カスタム」。右にカラーコードと色見本
+
+  // ── 水色（パレット登録色なら色名、未登録なら「カスタム」＋色見本） ──
+  drawBox('水色', boxX, COLOR_TOP, boxW, COLOR_H)
   if (data.color_hex) {
     const hexNorm = normalizeHex(data.color_hex)
     const label = `${data.color_name || 'カスタム'}　${hexNorm}`
-    const innerW = boxW - boxPad * 2
-    const lf = fitFontSize(ctx, label, BODY_FS, innerW - 28, s => `400 ${s}px ${MINCHO}`, 12)
-    const height = 52
-    drawBox('水色', by, height)
+    const lf = fitFontSize(ctx, label, BODY_FS, boxW - boxPad * 2 - 28, s => `400 ${s}px ${MINCHO}`, 12)
     ctx.font = `400 ${lf}px ${MINCHO}`
     ctx.fillStyle = INK
-    const baseY = by + height / 2 + 6
+    const baseY = COLOR_TOP + COLOR_H / 2 + 10
     ctx.fillText(label, boxX + boxPad, baseY)
     const swX = boxX + boxPad + ctx.measureText(label).width + 10
     if (swX + 18 <= boxRight - boxPad) {
@@ -692,38 +640,47 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       ctx.lineWidth = 1
       ctx.strokeRect(swX, baseY - 14, 18, 18)
     }
-    by += height + boxGap
   }
+
+  // ── 淹れ方（左列・1マス＋詳細を縦書き） ──
   const details: string[] = []
   if (data.brew_method) details.push(data.brew_method)
   // 茶葉量と水量。新形式（g・ml）を優先し、無ければ旧形式（g/100ml）を表示する
   const amount = formatLeafWater(data.tea_grams, data.water_ml, data.tea_grams_per_100ml)
-  if (amount) details.push(amount)
+  // 枠が細いので「5.5g / 350ml」はスラッシュで分けて1行ずつ並べる
+  if (amount) details.push(...amount.split('/').map(t => t.trim()).filter(Boolean))
   if (data.steep_seconds) details.push(`${data.steep_seconds}秒`)
-  // 淹れ方: アイコンがあれば方式名（リーフ等）は絵に任せ、文字は量と時間だけにする
+  drawBox('淹れ方', BREW_X, LOWER_TOP, BREW_W, LOWER_H)
   if (details.length) {
-    const brewImgs = await loadIcons([data.brew_method ? brewIconPath(data.brew_method) : null])
-    if (brewImgs.length) {
-      // 添え物と同じマスを左端に1つ。残り（茶葉量・湯量・時間）はマスの右に置く
-      cellsBox('淹れ方', [{ label: details[0], img: brewImgs[0] }], details.slice(1).join(' / '))
-    } else {
-      infoBox('淹れ方', details.join(' / '))
-    }
-  }
-  // 添え物: 「文字＋図」の固定マスを横に並べる。
-  // 画像が1つでも欠けている間は、従来どおり文字だけの1行で表示する
-  if (data.accompaniments && data.accompaniments.length) {
-    const accList = data.accompaniments.slice(0, 5)
-    const accImgs = await loadIcons(accList.map(accompanimentIconPath))
-    if (accImgs.length) {
-      cellsBox('添え物', accList.map((label, i) => ({
-        label: accompanimentShortLabel(label), img: accImgs[i] ?? null,
-      })))
-    } else {
-      infoBox('添え物', accList.join('・'))
+    const [brewImg] = await loadIcons([data.brew_method ? brewIconPath(data.brew_method) : null])
+    const cellX = BREW_X + (BREW_W - CELL_W) / 2
+    drawCell(details[0], brewImg, cellX, LOWER_TOP + 22)
+    // 茶葉量・湯量・抽出時間はマスの下に1行ずつ
+    ctx.font = `400 ${BODY_FS}px ${MINCHO}`
+    ctx.fillStyle = INK
+    let dy = LOWER_TOP + 22 + CELL_H + 30
+    for (const d of details.slice(1)) {
+      const f = fitFontSize(ctx, d, BODY_FS, BREW_W - boxPad * 2, s => `400 ${s}px ${MINCHO}`, 11)
+      ctx.font = `400 ${f}px ${MINCHO}`
+      ctx.textAlign = 'center'
+      ctx.fillText(d, BREW_X + BREW_W / 2, dy)
+      ctx.textAlign = 'left'
+      dy += 28
     }
   }
 
+  // ── 添え物（右列・マスを3つずつ折り返して並べる） ──
+  drawBox('添え物', ACC_X, LOWER_TOP, ACC_W, LOWER_H)
+  if (data.accompaniments && data.accompaniments.length) {
+    const accList = data.accompaniments.slice(0, 5)
+    const accImgs = await loadIcons(accList.map(accompanimentIconPath))
+    const perRow = Math.max(1, Math.floor((ACC_W - boxPad * 2 + CELL_GAP) / (CELL_W + CELL_GAP)))
+    accList.forEach((label, i) => {
+      const cx = ACC_X + boxPad + (i % perRow) * (CELL_W + CELL_GAP)
+      const cy = LOWER_TOP + 22 + Math.floor(i / perRow) * (CELL_H + CELL_GAP + 3)
+      drawCell(accompanimentShortLabel(label), accImgs[i] ?? null, cx, cy)
+    })
+  }
   // ── 左下: フッター（上に細罫を敷く） ──
   const now = new Date()
   const jst = new Intl.DateTimeFormat('ja-JP', {
