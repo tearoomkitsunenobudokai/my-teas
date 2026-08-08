@@ -41,6 +41,17 @@ export const ACCOMPANIMENT_ICON_KEYS: Record<string, string> = {
   'アイス（グラス）': 'ice',
 }
 
+/** 評価カードの狭いマスに入れるための短縮名。括弧書きを落とすだけ。
+    定義が無いものはそのままの表記を使う。 */
+export const ACCOMPANIMENT_SHORT_LABELS: Record<string, string> = {
+  'なし（ストレート）': 'ストレート',
+  'アイス（グラス）': 'アイス',
+}
+
+export function accompanimentShortLabel(label: string): string {
+  return ACCOMPANIMENT_SHORT_LABELS[label] ?? label
+}
+
 export function brewIconPath(label: string): string | null {
   const key = BREW_ICON_KEYS[label]
   return key ? `/icons/brew/${key}.png` : null

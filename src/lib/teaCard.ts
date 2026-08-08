@@ -16,7 +16,7 @@
 // フォント: いろはマル（SIL OFL 1.1 / public/fonts/irohamaru に同梱）
 // ─────────────────────────────────────────────────────────
 
-import { brewIconPath, accompanimentIconPath } from './icons'
+import { brewIconPath, accompanimentIconPath, accompanimentShortLabel } from './icons'
 import { formatGardenOrigin, formatLeafWater } from './reviewFormat'
 
 export interface TeaCardData {
@@ -476,7 +476,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const radarR = 110
   // 右側の枠囲みセクション（香り分析など）の開始位置。コメント欄はここより
   // 上で終わらせる必要があるため、先に定義しておく。
-  const boxTop = 398
+  const boxTop = 382
 
   if (data.comment) {
     // コメントは最大300字。長さに応じて文字サイズを自動選択して必ず収める
@@ -553,6 +553,42 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     if (!paths.length || paths.some(p => !p)) return []
     const imgs = await Promise.all((paths as string[]).map(tryLoadImage))
     return imgs.every(Boolean) ? (imgs as HTMLImageElement[]) : []
+  }
+
+  // 添え物用。1マスに「文字（小）＋図」を縦に積み、細い線で囲って横に並べる。
+  // マスの寸法は個数によらず固定なので、複数のカードを見比べても大きさが揃う。
+  const CELL_W = 54
+  const CELL_H = 62
+  const CELL_GAP = 3
+  const CELL_ICON = 38
+  const cellsBox = (title: string, items: { label: string; img: HTMLImageElement | null }[]) => {
+    const height = 24 + CELL_H + 12
+    drawBox(title, by, height)
+    let cx = boxX + boxPad
+    const cy = by + 24
+    for (const it of items) {
+      const r = 6
+      ctx.strokeStyle = 'rgba(168,135,63,0.45)'
+      ctx.lineWidth = 1
+      ctx.beginPath()
+      ctx.moveTo(cx + r, cy)
+      ctx.arcTo(cx + CELL_W, cy, cx + CELL_W, cy + r, r)
+      ctx.arcTo(cx + CELL_W, cy + CELL_H, cx + CELL_W - r, cy + CELL_H, r)
+      ctx.arcTo(cx, cy + CELL_H, cx, cy + CELL_H - r, r)
+      ctx.arcTo(cx, cy, cx + r, cy, r)
+      ctx.closePath()
+      ctx.stroke()
+      // 文字はマス幅に収まるまで縮める（図が主役なので小さくてよい）
+      const lf = fitFontSize(ctx, it.label, 12, CELL_W - 8, s => `400 ${s}px ${MINCHO}`, 8)
+      ctx.font = `400 ${lf}px ${MINCHO}`
+      ctx.fillStyle = INK_SOFT
+      ctx.textAlign = 'center'
+      ctx.fillText(it.label, cx + CELL_W / 2, cy + 15)
+      ctx.textAlign = 'left'
+      if (it.img) putIcon(it.img, cx + (CELL_W - CELL_ICON) / 2, cy + 19, CELL_ICON)
+      cx += CELL_W + CELL_GAP
+    }
+    by += height + boxGap
   }
 
   // 枠付きセクションを1つ描く。
@@ -654,15 +690,20 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // 淹れ方: アイコンがあれば方式名（リーフ等）は絵に任せ、文字は量と時間だけにする
   if (details.length) {
     const brewImgs = await loadIcons([data.brew_method ? brewIconPath(data.brew_method) : null])
-    const body = brewImgs.length ? details.slice(1).join(' / ') : details.join(' / ')
-    infoBox('淹れ方', body, brewImgs, 'right')
+    infoBox('淹れ方', details.join(' / '), brewImgs, 'right')
   }
-  // 添え物: 選んだもの全部にアイコンが揃っていれば絵だけを横一列に並べる。
-  // 1つでも欠けていたら従来どおり文字で表示する（混在させない）
+  // 添え物: 「文字＋図」の固定マスを横に並べる。
+  // 画像が1つでも欠けている間は、従来どおり文字だけの1行で表示する
   if (data.accompaniments && data.accompaniments.length) {
     const accList = data.accompaniments.slice(0, 5)
     const accImgs = await loadIcons(accList.map(accompanimentIconPath))
-    infoBox('添え物', accImgs.length ? '' : accList.join('・'), accImgs, 'bottom')
+    if (accImgs.length) {
+      cellsBox('添え物', accList.map((label, i) => ({
+        label: accompanimentShortLabel(label), img: accImgs[i] ?? null,
+      })))
+    } else {
+      infoBox('添え物', accList.join('・'))
+    }
   }
 
   // ── 左下: フッター（上に細罫を敷く） ──
