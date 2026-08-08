@@ -476,7 +476,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const radarR = 110
   // 右側の枠囲みセクション（香り分析など）の開始位置。コメント欄はここより
   // 上で終わらせる必要があるため、先に定義しておく。
-  const boxTop = 404
+  const boxTop = 398
 
   if (data.comment) {
     // コメントは最大300字。長さに応じて文字サイズを自動選択して必ず収める
@@ -511,7 +511,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const BODY_LH = 24
   // 淹れ方・添え物に差し込む画像用の確保サイズ。画像が無い間も同じ寸法を
   // 空けておくので、あとから画像を置いてもレイアウトはずれない。
-  const ICON = 54
+  const ICON = 44
   let by = boxTop
 
   // 細い金罫の角丸枠。上辺の左寄りに切れ目を作り、そこに見出しを重ねる。
@@ -522,8 +522,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const tw = ctx.measureText(title).width
     const gapStart = boxX + 14
     const gapEnd = gapStart + tw + 12
-    ctx.strokeStyle = 'rgba(168,135,63,0.75)'
-    ctx.lineWidth = 1.2
+    ctx.strokeStyle = 'rgba(168,135,63,0.45)'
+    ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(gapEnd, top)
     ctx.lineTo(boxX + boxW - r, top)
@@ -540,57 +540,86 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.fillText(title, gapStart + 6, top + 6)
   }
 
-  // 確保した正方形の中に画像を収める（縦横比は保ったまま中央寄せ）。
-  // 複数ある場合は同じ枠内に2×2までで並べ、外側の寸法は変えない。
-  const drawIcons = (imgs: HTMLImageElement[], x: number, y: number, size: number) => {
-    const list = imgs.slice(0, 4)
-    const put = (img: HTMLImageElement, ox: number, oy: number, s: number) => {
-      const k = Math.min(s / img.width, s / img.height)
-      const w = img.width * k, h = img.height * k
-      ctx.drawImage(img, ox + (s - w) / 2, oy + (s - h) / 2, w, h)
-    }
-    if (list.length === 1) { put(list[0], x, y, size); return }
-    const cell = (size - 4) / 2
-    list.forEach((img, i) => put(img, x + (i % 2) * (cell + 4), y + Math.floor(i / 2) * (cell + 4), cell))
+  // 確保した正方形の中に画像を収める（縦横比は保ったまま中央寄せ）
+  const putIcon = (img: HTMLImageElement, ox: number, oy: number, s: number) => {
+    const k = Math.min(s / img.width, s / img.height)
+    const w = img.width * k, h = img.height * k
+    ctx.drawImage(img, ox + (s - w) / 2, oy + (s - h) / 2, w, h)
   }
 
-  // 枠付きセクションを1つ描く。reserveIcon=true のときだけ右側に画像枠を空ける
-  const infoBox = async (title: string, body: string, iconPaths: (string | null)[] = []) => {
-    const reserveIcon = iconPaths.length > 0
-    const imgs = reserveIcon
-      ? (await Promise.all(iconPaths.filter((p): p is string => !!p).map(tryLoadImage)))
-        .filter((img): img is HTMLImageElement => !!img)
-      : []
-    const textW = boxW - boxPad * 2 - (reserveIcon ? ICON + 14 : 0)
-    // 2行に割れると「180 / 秒」のように末尾だけが次行に落ちて見栄えが悪いため、
-    // 少しだけ文字を縮めて1行に収まるなら、そちらを優先する
+  // 指定パスの画像をまとめて読み込む。1つでも欠けている場合は空配列を返し、
+  // 呼び出し側が「文字で表示する」フォールバックに切り替えられるようにする。
+  const loadIcons = async (paths: (string | null)[]): Promise<HTMLImageElement[]> => {
+    if (!paths.length || paths.some(p => !p)) return []
+    const imgs = await Promise.all((paths as string[]).map(tryLoadImage))
+    return imgs.every(Boolean) ? (imgs as HTMLImageElement[]) : []
+  }
+
+  // 枠付きセクションを1つ描く。
+  //   icons + 'right'  … 文字の右に画像1つ（淹れ方）
+  //   icons + 'bottom' … 文字の下に画像を横一列（添え物）
+  const infoBox = (
+    title: string,
+    body: string,
+    icons: HTMLImageElement[] = [],
+    place: 'right' | 'bottom' = 'right',
+  ) => {
+    const atRight = icons.length > 0 && place === 'right'
+    const atBottom = icons.length > 0 && place === 'bottom'
+    const textW = boxW - boxPad * 2 - (atRight ? ICON + 14 : 0)
+
+    // 2行に割れると末尾だけが次行に落ちて見栄えが悪いため、
+    // 少しだけ文字を縮めて1行に収まるならそちらを優先する
     let fs = BODY_FS
-    let lines = computeLines(ctx, body, textW, 2)
-    if (lines.length > 1) {
-      for (const cand of [16, 15]) {
-        ctx.font = `400 ${cand}px ${MINCHO}`
-        const trial = computeLines(ctx, body, textW, 2)
-        if (trial.length === 1) { fs = cand; lines = trial; break }
-      }
-    }
-    if (fs === BODY_FS) {
+    let lines: string[] = []
+    if (body) {
       ctx.font = `400 ${BODY_FS}px ${MINCHO}`
       lines = computeLines(ctx, body, textW, 2)
+      if (lines.length > 1) {
+        for (const cand of [16, 15]) {
+          ctx.font = `400 ${cand}px ${MINCHO}`
+          const trial = computeLines(ctx, body, textW, 2)
+          if (trial.length === 1) { fs = cand; lines = trial; break }
+        }
+        if (fs === BODY_FS) {
+          ctx.font = `400 ${BODY_FS}px ${MINCHO}`
+          lines = computeLines(ctx, body, textW, 2)
+        }
+      }
     }
-    const textH = 34 + (lines.length - 1) * BODY_LH + 18
-    const height = reserveIcon ? Math.max(textH, ICON + 22) : textH
+
+    const textH = lines.length ? 34 + (lines.length - 1) * BODY_LH + 18 : 0
+    let height: number
+    if (atBottom) height = (lines.length ? textH - 6 : 24) + ICON + 16
+    else if (atRight) height = Math.max(textH, ICON + 22)
+    else height = textH || ICON + 22
 
     drawBox(title, by, height)
-    ctx.font = `400 ${fs}px ${MINCHO}`
-    ctx.fillStyle = INK
-    const firstY = by + (height - (lines.length - 1) * BODY_LH) / 2 + 6
-    lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * BODY_LH))
-    if (imgs.length) drawIcons(imgs, boxRight - boxPad - ICON, by + (height - ICON) / 2, ICON)
+    if (lines.length) {
+      ctx.font = `400 ${fs}px ${MINCHO}`
+      ctx.fillStyle = INK
+      const block = (lines.length - 1) * BODY_LH
+      const firstY = atBottom ? by + 34 : by + (height - block) / 2 + 6
+      lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * BODY_LH))
+    }
+    if (atRight) {
+      putIcon(icons[0], boxRight - boxPad - ICON, by + (height - ICON) / 2, ICON)
+    } else if (atBottom) {
+      const gapX = 10
+      const total = icons.length * ICON + (icons.length - 1) * gapX
+      let ix = boxX + boxPad
+      // 収まらない場合だけ間隔を詰める
+      const g = total > boxW - boxPad * 2
+        ? Math.max(2, (boxW - boxPad * 2 - icons.length * ICON) / Math.max(1, icons.length - 1))
+        : gapX
+      const iy = by + height - ICON - 12
+      for (const img of icons) { putIcon(img, ix, iy, ICON); ix += ICON + g }
+    }
     by += height + boxGap
   }
 
   if (data.aroma_notes && data.aroma_notes.length) {
-    await infoBox('香り分析', data.aroma_notes.slice(0, 8).join('・'))
+    infoBox('香り分析', data.aroma_notes.slice(0, 8).join('・'))
   }
   // 水色: パレット登録色なら色名、未登録なら「カスタム」。右にカラーコードと色見本
   if (data.color_hex) {
@@ -622,13 +651,18 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const amount = formatLeafWater(data.tea_grams, data.water_ml, data.tea_grams_per_100ml)
   if (amount) details.push(amount)
   if (data.steep_seconds) details.push(`${data.steep_seconds}秒`)
-  // 淹れ方・添え物は右側に画像枠を確保する（画像未設置でも寸法は同じ）
+  // 淹れ方: アイコンがあれば方式名（リーフ等）は絵に任せ、文字は量と時間だけにする
   if (details.length) {
-    await infoBox('淹れ方', details.join(' / '), [data.brew_method ? brewIconPath(data.brew_method) : null])
+    const brewImgs = await loadIcons([data.brew_method ? brewIconPath(data.brew_method) : null])
+    const body = brewImgs.length ? details.slice(1).join(' / ') : details.join(' / ')
+    infoBox('淹れ方', body, brewImgs, 'right')
   }
+  // 添え物: 選んだもの全部にアイコンが揃っていれば絵だけを横一列に並べる。
+  // 1つでも欠けていたら従来どおり文字で表示する（混在させない）
   if (data.accompaniments && data.accompaniments.length) {
     const accList = data.accompaniments.slice(0, 5)
-    await infoBox('添え物', accList.join('・'), accList.map(accompanimentIconPath))
+    const accImgs = await loadIcons(accList.map(accompanimentIconPath))
+    infoBox('添え物', accImgs.length ? '' : accList.join('・'), accImgs, 'bottom')
   }
 
   // ── 左下: フッター（上に細罫を敷く） ──
