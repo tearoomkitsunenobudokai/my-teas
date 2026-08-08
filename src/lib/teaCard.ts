@@ -476,7 +476,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const radarR = 110
   // 右側の枠囲みセクション（香り分析など）の開始位置。コメント欄はここより
   // 上で終わらせる必要があるため、先に定義しておく。
-  const boxTop = 382
+  const boxTop = 360
 
   if (data.comment) {
     // コメントは最大300字。長さに応じて文字サイズを自動選択して必ず収める
@@ -561,7 +561,11 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const CELL_H = 62
   const CELL_GAP = 3
   const CELL_ICON = 38
-  const cellsBox = (title: string, items: { label: string; img: HTMLImageElement | null }[]) => {
+  const cellsBox = (
+    title: string,
+    items: { label: string; img: HTMLImageElement | null }[],
+    trailing = '',
+  ) => {
     const height = 24 + CELL_H + 12
     drawBox(title, by, height)
     let cx = boxX + boxPad
@@ -587,6 +591,15 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       ctx.textAlign = 'left'
       if (it.img) putIcon(it.img, cx + (CELL_W - CELL_ICON) / 2, cy + 19, CELL_ICON)
       cx += CELL_W + CELL_GAP
+    }
+    // マスの右に続きの文字（淹れ方の茶葉量・湯量・抽出時間）を縦中央で置く
+    if (trailing) {
+      const tX = cx + 9
+      const tW = boxRight - boxPad - tX
+      const tf = fitFontSize(ctx, trailing, BODY_FS, tW, s => `400 ${s}px ${MINCHO}`, 12)
+      ctx.font = `400 ${tf}px ${MINCHO}`
+      ctx.fillStyle = INK
+      ctx.fillText(trailing, tX, cy + CELL_H / 2 + 6)
     }
     by += height + boxGap
   }
@@ -690,7 +703,12 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // 淹れ方: アイコンがあれば方式名（リーフ等）は絵に任せ、文字は量と時間だけにする
   if (details.length) {
     const brewImgs = await loadIcons([data.brew_method ? brewIconPath(data.brew_method) : null])
-    infoBox('淹れ方', details.join(' / '), brewImgs, 'right')
+    if (brewImgs.length) {
+      // 添え物と同じマスを左端に1つ。残り（茶葉量・湯量・時間）はマスの右に置く
+      cellsBox('淹れ方', [{ label: details[0], img: brewImgs[0] }], details.slice(1).join(' / '))
+    } else {
+      infoBox('淹れ方', details.join(' / '))
+    }
   }
   // 添え物: 「文字＋図」の固定マスを横に並べる。
   // 画像が1つでも欠けている間は、従来どおり文字だけの1行で表示する
