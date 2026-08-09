@@ -17,7 +17,7 @@
 // ─────────────────────────────────────────────────────────
 
 import { brewIconPath, accompanimentIconPath, accompanimentShortLabel } from './icons'
-import { formatGardenOrigin, formatLeafWater } from './reviewFormat'
+import { formatGardenOrigin } from './reviewFormat'
 
 export interface TeaCardData {
   tea_name: string
@@ -643,28 +643,36 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     }
   }
 
-  // ── 淹れ方（左列・1マス＋詳細を縦書き） ──
-  const details: string[] = []
-  if (data.brew_method) details.push(data.brew_method)
-  // 茶葉量と水量。新形式（g・ml）を優先し、無ければ旧形式（g/100ml）を表示する
-  const amount = formatLeafWater(data.tea_grams, data.water_ml, data.tea_grams_per_100ml)
-  // 枠が細いので「5.5g / 350ml」はスラッシュで分けて1行ずつ並べる
-  if (amount) details.push(...amount.split('/').map(t => t.trim()).filter(Boolean))
-  if (data.steep_seconds) details.push(`${data.steep_seconds}秒`)
+  // ── 淹れ方（右列・1マス＋補足を「項目名＋値」で縦に並べる） ──
+  // 文字列を分解すると旧形式（g/100ml）と区別できないため、データから直接組み立てる
+  const brewRows: Array<{ label: string; value: string }> = []
+  if (data.tea_grams != null) brewRows.push({ label: '茶葉量', value: `${data.tea_grams}g` })
+  if (data.water_ml != null) brewRows.push({ label: '水量', value: `${data.water_ml}ml` })
+  if (!brewRows.length && data.tea_grams_per_100ml != null) {
+    brewRows.push({ label: '茶葉量', value: `${data.tea_grams_per_100ml}g/100ml` })
+  }
+  if (data.steep_seconds) brewRows.push({ label: '時間', value: `${data.steep_seconds}秒` })
+
   drawBox('淹れ方', BREW_X, LOWER_TOP, BREW_W, LOWER_H)
-  if (details.length) {
+  if (data.brew_method || brewRows.length) {
     const [brewImg] = await loadIcons([data.brew_method ? brewIconPath(data.brew_method) : null])
-    const cellX = BREW_X + (BREW_W - CELL_W) / 2
-    drawCell(details[0], brewImg, cellX, LOWER_TOP + 22)
-    // 茶葉量・湯量・抽出時間はマスの下に1行ずつ
-    ctx.font = `400 ${BODY_FS}px ${MINCHO}`
-    ctx.fillStyle = INK
-    let dy = LOWER_TOP + 22 + CELL_H + 30
-    for (const d of details.slice(1)) {
-      const f = fitFontSize(ctx, d, BODY_FS, BREW_W - boxPad * 2, s => `400 ${s}px ${MINCHO}`, 11)
-      ctx.font = `400 ${f}px ${MINCHO}`
-      ctx.textAlign = 'center'
-      ctx.fillText(d, BREW_X + BREW_W / 2, dy)
+    if (data.brew_method) {
+      drawCell(data.brew_method, brewImg, BREW_X + (BREW_W - CELL_W) / 2, LOWER_TOP + 22)
+    }
+    // 左に項目名（小さく）、右に値。値が長い場合は値だけ縮める
+    const rowX = BREW_X + boxPad
+    const rowRight = BREW_X + BREW_W - boxPad
+    let dy = LOWER_TOP + 22 + CELL_H + 32
+    for (const row of brewRows) {
+      ctx.font = `400 11px ${MINCHO}`
+      ctx.fillStyle = INK_SOFT
+      ctx.fillText(row.label, rowX, dy)
+      const labelW = ctx.measureText(row.label).width
+      const vf = fitFontSize(ctx, row.value, 16, rowRight - rowX - labelW - 6, s => `400 ${s}px ${MINCHO}`, 9)
+      ctx.font = `400 ${vf}px ${MINCHO}`
+      ctx.fillStyle = INK
+      ctx.textAlign = 'right'
+      ctx.fillText(row.value, rowRight, dy)
       ctx.textAlign = 'left'
       dy += 28
     }
