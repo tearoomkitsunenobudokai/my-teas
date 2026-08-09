@@ -526,7 +526,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
   const boxX = 902
-  const boxRight = W - 58
+  const boxRight = W - 46
   const boxW = boxRight - boxX
   const boxPad = 14
   const BODY_FS = 17
@@ -588,25 +588,25 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }
 
   // 1マス分（上に文字・下に図）。図が未用意でも枠と文字は必ず描く
-  const drawCell = (label: string, img: HTMLImageElement | null, x: number, y: number) => {
+  const drawCell = (label: string, img: HTMLImageElement | null, x: number, y: number, w = CELL_W) => {
     const r = 6
     ctx.strokeStyle = 'rgba(168,135,63,0.45)'
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(x + r, y)
-    ctx.arcTo(x + CELL_W, y, x + CELL_W, y + r, r)
-    ctx.arcTo(x + CELL_W, y + CELL_H, x + CELL_W - r, y + CELL_H, r)
+    ctx.arcTo(x + w, y, x + w, y + r, r)
+    ctx.arcTo(x + w, y + CELL_H, x + w - r, y + CELL_H, r)
     ctx.arcTo(x, y + CELL_H, x, y + CELL_H - r, r)
     ctx.arcTo(x, y, x + r, y, r)
     ctx.closePath()
     ctx.stroke()
-    const lf = fitFontSize(ctx, label, 12, CELL_W - 8, s => `400 ${s}px ${MINCHO}`, 8)
+    const lf = fitFontSize(ctx, label, 12, w - 8, s => `400 ${s}px ${MINCHO}`, 8)
     ctx.font = `400 ${lf}px ${MINCHO}`
     ctx.fillStyle = INK_SOFT
     ctx.textAlign = 'center'
-    ctx.fillText(label, x + CELL_W / 2, y + 15)
+    ctx.fillText(label, x + w / 2, y + 15)
     ctx.textAlign = 'left'
-    if (img) putIcon(img, x + (CELL_W - CELL_ICON) / 2, y + 18, CELL_ICON)
+    if (img) putIcon(img, x + (w - CELL_ICON) / 2, y + 18, CELL_ICON)
   }
 
   // 指定パスの画像をまとめて読み込む。欠けている分は null のまま返す
@@ -660,7 +660,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   if (data.brew_method || brewRows.length) {
     const [brewImg] = await loadIcons([data.brew_method ? brewIconPath(data.brew_method) : null])
     if (data.brew_method) {
-      drawCell(data.brew_method, brewImg, BREW_X + (BREW_W - CELL_W) / 2, LOWER_TOP + 22)
+      // 淹れ方は1つだけなので、マスを枠幅いっぱいの長方形にする
+      drawCell(data.brew_method, brewImg, BREW_X + 8, LOWER_TOP + 22, BREW_W - 16)
     }
     // 左に項目名（小さく）、右に値。値が長い場合は値だけ縮める
     const rowX = BREW_X + 8
