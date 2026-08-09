@@ -538,11 +538,12 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const LOWER_TOP = COLOR_TOP + COLOR_H + 8
   const LOWER_BOTTOM = RADAR_LABEL_BOTTOM
   const LOWER_H = LOWER_BOTTOM - LOWER_TOP
+  // 下段は左に添え物（マスを3つ並べるので広い方）、右に淹れ方
   const COL_GAP = 8
   const BREW_W = 116
-  const BREW_X = boxX
-  const ACC_X = BREW_X + BREW_W + COL_GAP
-  const ACC_W = boxRight - ACC_X
+  const ACC_X = boxX
+  const ACC_W = boxW - COL_GAP - BREW_W
+  const BREW_X = ACC_X + ACC_W + COL_GAP
 
   // マス（文字＋図）の寸法。淹れ方・添え物で共通
   const CELL_W = 52
