@@ -483,7 +483,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const RADAR_LABEL_BOTTOM = radarCy + radarR + RADAR_LABEL_GAP + 11
   // コメントとレーダー・枠囲みエリアを分ける区切り線の位置。
   // 枠囲みの上端がこれより上に来ないよう boxTop で下限を決めている。
-  const DIVIDER_Y = 384
+  const DIVIDER_Y = 410
   const boxTop = DIVIDER_Y + 14
 
   if (data.comment) {
@@ -662,7 +662,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     // 左に項目名（小さく）、右に値。値が長い場合は値だけ縮める
     const rowX = BREW_X + boxPad
     const rowRight = BREW_X + BREW_W - boxPad
-    let dy = LOWER_TOP + 22 + CELL_H + 32
+    let dy = LOWER_TOP + 22 + CELL_H + 24
     for (const row of brewRows) {
       ctx.font = `400 11px ${MINCHO}`
       ctx.fillStyle = INK_SOFT
