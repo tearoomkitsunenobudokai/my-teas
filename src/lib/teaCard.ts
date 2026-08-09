@@ -489,13 +489,15 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   if (data.comment) {
     // コメントは最大300字。長さに応じて文字サイズを自動選択して必ず収める
     const available = DIVIDER_Y - 16 - ty
-    const candidates: Array<[number, number]> = [[22, 34], [21, 32], [20, 31], [19, 29], [18, 27], [17, 26], [16, 24], [15, 23], [14, 21]]
-    let chosen = candidates[candidates.length - 1]
-    for (const [fs, lh] of candidates) {
+    // 大きい方から順に試し、行送りを詰めれば収まるならそのサイズを採用する。
+    // 行送りは文字サイズの1.3倍を下限とし、余裕があれば1.55倍まで広げる。
+    let chosen: [number, number] = [13, 19]
+    for (let fs = 22; fs >= 13; fs--) {
       ctx.font = `400 ${fs}px ${MINCHO}`
       const lines = computeLines(ctx, data.comment, rightW, 99)
-      // 最終行は行送りではなく文字の高さだけあればよい
-      if ((lines.length - 1) * lh + fs <= available) { chosen = [fs, lh]; break }
+      if (lines.length <= 1) { chosen = [fs, Math.round(fs * 1.55)]; break }
+      const fit = (available - fs) / (lines.length - 1)
+      if (fit >= fs * 1.3) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
     }
     const [fs, lh] = chosen
     ctx.font = `400 ${fs}px ${MINCHO}`
@@ -529,14 +531,15 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const boxPad = 14
   const BODY_FS = 17
   const BODY_LH = 24
+  const AROMA_LH = 22   // 3行入れるため香り分析だけ行送りを詰める
 
   // 上から: 香り分析 → 水色 → （淹れ方 ＋ 添え物 の2列）
   const AROMA_TOP = boxTop
-  const AROMA_H = 70
+  const AROMA_H = 88   // 香りは最大3つ選べるので3行分を確保する
   const COLOR_TOP = AROMA_TOP + AROMA_H + 8
   const COLOR_H = 44
   const LOWER_TOP = COLOR_TOP + COLOR_H + 8
-  const LOWER_BOTTOM = RADAR_LABEL_BOTTOM
+  const LOWER_BOTTOM = 730   // 内罫(740)の手前まで使う
   const LOWER_H = LOWER_BOTTOM - LOWER_TOP
   // 下段は左に添え物（マスを3つ並べるので広い方）、右に淹れ方
   const COL_GAP = 8
@@ -615,10 +618,10 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   if (data.aroma_notes && data.aroma_notes.length) {
     const body = data.aroma_notes.slice(0, 8).join('・')
     ctx.font = `400 ${BODY_FS}px ${MINCHO}`
-    const lines = computeLines(ctx, body, boxW - boxPad * 2, 2)
+    const lines = computeLines(ctx, body, boxW - boxPad * 2, 3)
     ctx.fillStyle = INK
-    const firstY = AROMA_TOP + (AROMA_H - (lines.length - 1) * BODY_LH) / 2 + 8
-    lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * BODY_LH))
+    const firstY = AROMA_TOP + (AROMA_H - (lines.length - 1) * AROMA_LH) / 2 + 8
+    lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * AROMA_LH))
   }
 
   // ── 水色（パレット登録色なら色名、未登録なら「カスタム」＋色見本） ──
@@ -660,21 +663,26 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       drawCell(data.brew_method, brewImg, BREW_X + (BREW_W - CELL_W) / 2, LOWER_TOP + 22)
     }
     // 左に項目名（小さく）、右に値。値が長い場合は値だけ縮める
-    const rowX = BREW_X + boxPad
-    const rowRight = BREW_X + BREW_W - boxPad
-    let dy = LOWER_TOP + 22 + CELL_H + 24
+    const rowX = BREW_X + 8
+    const rowRight = BREW_X + BREW_W - 8
+    const rowW = rowRight - rowX
+    let dy = LOWER_TOP + 22 + CELL_H + 18
     for (const row of brewRows) {
-      ctx.font = `400 11px ${MINCHO}`
+      // 項目名と値は同じ文字サイズ。両方入る最大サイズを選ぶ
+      let rf = 16
+      for (const cand of [16, 15, 14, 13, 12, 11, 10]) {
+        ctx.font = `400 ${cand}px ${MINCHO}`
+        if (ctx.measureText(row.label).width + 6 + ctx.measureText(row.value).width <= rowW) { rf = cand; break }
+        rf = cand
+      }
+      ctx.font = `400 ${rf}px ${MINCHO}`
       ctx.fillStyle = INK_SOFT
       ctx.fillText(row.label, rowX, dy)
-      const labelW = ctx.measureText(row.label).width
-      const vf = fitFontSize(ctx, row.value, 16, rowRight - rowX - labelW - 6, s => `400 ${s}px ${MINCHO}`, 9)
-      ctx.font = `400 ${vf}px ${MINCHO}`
       ctx.fillStyle = INK
       ctx.textAlign = 'right'
       ctx.fillText(row.value, rowRight, dy)
       ctx.textAlign = 'left'
-      dy += 28
+      dy += 26
     }
   }
 
