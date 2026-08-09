@@ -507,12 +507,17 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     wrapText(ctx, data.comment, rightX, ty, rightW, lh, maxLines)
   }
 
-  // コメントとレーダー・枠囲みエリアの区切り線
+  // 右側の枠囲みセクションの左右位置（区切り線の右端をこれに合わせる）
+  const boxX = 902
+  const boxRight = W - 46
+  const boxW = boxRight - boxX
+
+  // コメントとレーダー・枠囲みエリアの区切り線。右端は香り分析の枠と揃える
   ctx.strokeStyle = 'rgba(168,135,63,0.45)'
   ctx.lineWidth = 1
   ctx.beginPath()
   ctx.moveTo(rightX, DIVIDER_Y)
-  ctx.lineTo(rightX + rightW, DIVIDER_Y)
+  ctx.lineTo(boxRight, DIVIDER_Y)
   ctx.stroke()
 
   // ── 右下: レーダーチャート ──
@@ -525,9 +530,6 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // 描く（カードごとに配置がずれると見比べにくいため）。
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
-  const boxX = 902
-  const boxRight = W - 46
-  const boxW = boxRight - boxX
   const boxPad = 14
   const BODY_FS = 17
   const BODY_LH = 24
@@ -616,9 +618,11 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // ── 香り分析 ──
   drawBox('香り分析', boxX, AROMA_TOP, boxW, AROMA_H)
   if (data.aroma_notes && data.aroma_notes.length) {
-    const body = data.aroma_notes.slice(0, 8).join('・')
+    // 香りは最大3つ。「・」でつないで折り返すのではなく、1つずつ改行して並べる
     ctx.font = `400 ${BODY_FS}px ${MINCHO}`
-    const lines = computeLines(ctx, body, boxW - boxPad * 2, 3)
+    const lines = data.aroma_notes.slice(0, 3)
+      .map(n => computeLines(ctx, n, boxW - boxPad * 2, 1)[0] ?? '')
+      .filter(Boolean)
     ctx.fillStyle = INK
     const firstY = AROMA_TOP + (AROMA_H - (lines.length - 1) * AROMA_LH) / 2 + 8
     lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * AROMA_LH))
