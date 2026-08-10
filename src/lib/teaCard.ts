@@ -266,6 +266,10 @@ function drawTeaCircle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
 // 右隣の枠囲みセクションとの間隔を確保している。
 const RADAR_LABEL_GAP = 14
 
+/** カードに載せるコメントの最大文字数。入力欄側の MAX_COMMENT と揃える。
+    上限を下げる前に登録された長いコメントは、ここで切り詰めて表示する。 */
+const CARD_MAX_COMMENT = 200
+
 function drawRadar(ctx: CanvasRenderingContext2D, cx: number, cy: number, radius: number, scores: number[], labels: string[]) {
   const n = scores.length
   const angle = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / n
@@ -472,7 +476,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ty += 16
 
   // ── レーダー配置（先に決めて本文エリアの下限に使う） ──
-  // コメントが上限（300字）まで書かれたときに本文と近づきすぎないよう、
+  // コメントが上限（200字）まで書かれたときに本文と近づきすぎないよう、
   // 中心を少し下げている。右側のセクション（香り分析など）もこの座標を
   // 基準に配置されるため、一緒に下へ移動する。
   const radarCx = 745
@@ -487,14 +491,16 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const boxTop = DIVIDER_Y + 14
 
   if (data.comment) {
-    // コメントは最大300字。長さに応じて文字サイズを自動選択して必ず収める
+    // コメントは最大200字。上限変更前に登録された長いコメントもここで切り、
+    // 長さに応じて文字サイズを自動選択して必ず収める
+    const commentText = data.comment.slice(0, CARD_MAX_COMMENT)
     const available = DIVIDER_Y - 16 - ty
     // 大きい方から順に試し、行送りを詰めれば収まるならそのサイズを採用する。
     // 行送りは文字サイズの1.3倍を下限とし、余裕があれば1.55倍まで広げる。
     let chosen: [number, number] = [13, 19]
     for (let fs = 22; fs >= 13; fs--) {
       ctx.font = `400 ${fs}px ${MINCHO}`
-      const lines = computeLines(ctx, data.comment, rightW, 99)
+      const lines = computeLines(ctx, commentText, rightW, 99)
       if (lines.length <= 1) { chosen = [fs, Math.round(fs * 1.55)]; break }
       const fit = (available - fs) / (lines.length - 1)
       if (fit >= fs * 1.3) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
@@ -504,7 +510,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.fillStyle = INK
     // 上の判定と同じ数え方にしないと、収まるはずの行が「…」で切られてしまう
     const maxLines = Math.max(1, Math.floor((available - fs) / lh) + 1)
-    wrapText(ctx, data.comment, rightX, ty, rightW, lh, maxLines)
+    wrapText(ctx, commentText, rightX, ty, rightW, lh, maxLines)
   }
 
   // 右側の枠囲みセクションの左右位置（区切り線の右端をこれに合わせる）
@@ -697,9 +703,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const accList = data.accompaniments.slice(0, 5)
     const accImgs = await loadIcons(accList.map(accompanimentIconPath))
     const perRow = Math.max(1, Math.floor((ACC_W - boxPad * 2 + CELL_GAP) / (CELL_W + CELL_GAP)))
+    // 1行に入る数が決まったら、余った幅を均等に配分してマスの間隔にする。
+    // 左右の余白と各マスの間隔が揃い、上下の間隔も同じ値を使う。
+    const inner = ACC_W - boxPad * 2
+    const gap = perRow > 1 ? (inner - perRow * CELL_W) / (perRow - 1) : CELL_GAP
     accList.forEach((label, i) => {
-      const cx = ACC_X + boxPad + (i % perRow) * (CELL_W + CELL_GAP)
-      const cy = LOWER_TOP + 22 + Math.floor(i / perRow) * (CELL_H + CELL_GAP + 3)
+      const cx = ACC_X + boxPad + (i % perRow) * (CELL_W + gap)
+      const cy = LOWER_TOP + 22 + Math.floor(i / perRow) * (CELL_H + gap)
       drawCell(accompanimentShortLabel(label), accImgs[i] ?? null, cx, cy)
     })
   }

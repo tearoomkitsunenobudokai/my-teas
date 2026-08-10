@@ -38,7 +38,7 @@ function ChipContent({ iconPath, label }: { iconPath: string | null; label: stri
 }
 const MAX_AROMA = 3
 const MAX_OTHER_AROMA = 10
-const MAX_COMMENT = 300
+const MAX_COMMENT = 200
 const MAX_NOTES = 300
 
 function hexToRgba(hex: string, a = 0.78): string {
