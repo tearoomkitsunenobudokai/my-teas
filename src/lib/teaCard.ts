@@ -487,8 +487,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const RADAR_LABEL_BOTTOM = radarCy + radarR + RADAR_LABEL_GAP + 11
   // コメントとレーダー・枠囲みエリアを分ける区切り線の位置。
   // 枠囲みの上端がこれより上に来ないよう boxTop で下限を決めている。
-  const DIVIDER_Y = 410
-  const boxTop = DIVIDER_Y + 14
+  const DIVIDER_Y = 396   // 200字のコメントが22pxで収まる限界（392）に余裕を見た位置
+  const boxTop = DIVIDER_Y + 16
 
   if (data.comment) {
     // コメントは最大200字。上限変更前に登録された長いコメントもここで切り、
@@ -542,25 +542,28 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const AROMA_LH = 22   // 3行入れるため香り分析だけ行送りを詰める
 
   // 上から: 香り分析 → 水色 → （淹れ方 ＋ 添え物 の2列）
+  const BOX_GAP = 16   // 枠どうしの間隔
   const AROMA_TOP = boxTop
-  const AROMA_H = 88   // 香りは最大3つ選べるので3行分を確保する
-  const COLOR_TOP = AROMA_TOP + AROMA_H + 8
+  const AROMA_H = 86   // 香りは最大3つ選べるので3行分を確保する
+  const COLOR_TOP = AROMA_TOP + AROMA_H + BOX_GAP
   const COLOR_H = 44
-  const LOWER_TOP = COLOR_TOP + COLOR_H + 8
-  const LOWER_BOTTOM = 730   // 内罫(740)の手前まで使う
+  const LOWER_TOP = COLOR_TOP + COLOR_H + BOX_GAP
+  const LOWER_BOTTOM = 734   // 内罫(740)の手前まで使う
   const LOWER_H = LOWER_BOTTOM - LOWER_TOP
   // 下段は左に添え物（マスを3つ並べるので広い方）、右に淹れ方
   const COL_GAP = 8
-  const BREW_W = 116
+  const BREW_W = 108
   const ACC_X = boxX
   const ACC_W = boxW - COL_GAP - BREW_W
   const BREW_X = ACC_X + ACC_W + COL_GAP
 
   // マス（文字＋図）の寸法。淹れ方・添え物で共通
-  const CELL_W = 52
-  const CELL_H = 58
+  const CELL_W = 57
+  const CELL_H = 62
   const CELL_GAP = 3
-  const CELL_ICON = 36
+  const CELL_ICON = 40
+  const CELL_PAD = 10   // マスを並べる左右の余白（文字の boxPad とは別）
+  const CELL_TOP = 18   // 枠の上辺から1行目のマスまで
 
   // 細い金罫の角丸枠。上辺の左寄りに切れ目を作り、そこに見出しを重ねる。
   // （背景がグラデーション＋模様なので、塗りつぶしで隠さず切れ目で抜く）
@@ -671,13 +674,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const [brewImg] = await loadIcons([data.brew_method ? brewIconPath(data.brew_method) : null])
     if (data.brew_method) {
       // 淹れ方は1つだけなので、マスを枠幅いっぱいの長方形にする
-      drawCell(data.brew_method, brewImg, BREW_X + 8, LOWER_TOP + 22, BREW_W - 16)
+      drawCell(data.brew_method, brewImg, BREW_X + 8, LOWER_TOP + CELL_TOP, BREW_W - 16)
     }
     // 左に項目名（小さく）、右に値。値が長い場合は値だけ縮める
     const rowX = BREW_X + 8
     const rowRight = BREW_X + BREW_W - 8
     const rowW = rowRight - rowX
-    let dy = LOWER_TOP + 22 + CELL_H + 18
+    let dy = LOWER_TOP + CELL_TOP + CELL_H + 18
     for (const row of brewRows) {
       // 項目名と値は同じ文字サイズ。両方入る最大サイズを選ぶ
       let rf = 16
@@ -702,14 +705,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   if (data.accompaniments && data.accompaniments.length) {
     const accList = data.accompaniments.slice(0, 5)
     const accImgs = await loadIcons(accList.map(accompanimentIconPath))
-    const perRow = Math.max(1, Math.floor((ACC_W - boxPad * 2 + CELL_GAP) / (CELL_W + CELL_GAP)))
+    const perRow = Math.max(1, Math.floor((ACC_W - CELL_PAD * 2 + CELL_GAP) / (CELL_W + CELL_GAP)))
     // 1行に入る数が決まったら、余った幅を均等に配分してマスの間隔にする。
     // 左右の余白と各マスの間隔が揃い、上下の間隔も同じ値を使う。
-    const inner = ACC_W - boxPad * 2
+    const inner = ACC_W - CELL_PAD * 2
     const gap = perRow > 1 ? (inner - perRow * CELL_W) / (perRow - 1) : CELL_GAP
     accList.forEach((label, i) => {
-      const cx = ACC_X + boxPad + (i % perRow) * (CELL_W + gap)
-      const cy = LOWER_TOP + 22 + Math.floor(i / perRow) * (CELL_H + gap)
+      const cx = ACC_X + CELL_PAD + (i % perRow) * (CELL_W + gap)
+      const cy = LOWER_TOP + CELL_TOP + Math.floor(i / perRow) * (CELL_H + gap)
       drawCell(accompanimentShortLabel(label), accImgs[i] ?? null, cx, cy)
     })
   }
