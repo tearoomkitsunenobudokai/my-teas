@@ -11,7 +11,7 @@ import ColorPickerModal from '@/components/ColorPickerModal'
 import { MAX_COLOR_NAME } from '@/lib/colorPalette'
 import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
-import { brewIconPath, accompanimentIconPath } from '@/lib/icons'
+import { brewIconPath, accompanimentIconPath, ACCOMPANIMENT_ORDER } from '@/lib/icons'
 import TeaCup from '@/components/TeaCup'
 import styles from './reviews.module.css'
 
@@ -19,7 +19,8 @@ const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr
 
 const INIT_SCORES: ReviewScores = { score_aroma: 3, score_astringency: 3, score_richness: 3, score_color_depth: 3 }
 const BREW_METHODS = ['リーフ','ティーバッグ','手鍋','粉末','希釈液','不明']
-const ACCOMPANIMENTS = ['なし（ストレート）','蜂蜜','ミルク','砂糖','レモン','アイス（グラス）']
+// 並び順は評価カードと共通（src/lib/icons.ts の ACCOMPANIMENT_ORDER）
+const ACCOMPANIMENTS = [...ACCOMPANIMENT_ORDER]
 
 // チップの中身。指定パスに画像があればアイコン表示、無ければ（404）文字表示にフォールバックする。
 // → 画像をpublicフォルダに置くだけで自動的に絵が使われ、コード修正は不要。

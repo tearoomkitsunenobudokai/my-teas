@@ -16,7 +16,7 @@
 // フォント: いろはマル（SIL OFL 1.1 / public/fonts/irohamaru に同梱）
 // ─────────────────────────────────────────────────────────
 
-import { brewIconPath, accompanimentIconPath, accompanimentShortLabel } from './icons'
+import { brewIconPath, accompanimentIconPath, accompanimentShortLabel, ACCOMPANIMENT_ORDER } from './icons'
 import { formatGardenOrigin } from './reviewFormat'
 
 export interface TeaCardData {
@@ -606,9 +606,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }
 
   // 1マス分（上に文字・下に図）。図が未用意でも枠と文字は必ず描く
-  const drawCell = (label: string, img: HTMLImageElement | null, x: number, y: number, w = CELL_W) => {
+  const drawCell = (label: string, img: HTMLImageElement | null, x: number, y: number, w = CELL_W, dim = false) => {
     const r = 6
-    ctx.strokeStyle = 'rgba(168,135,63,0.45)'
+    ctx.strokeStyle = dim ? 'rgba(168,135,63,0.22)' : 'rgba(168,135,63,0.45)'
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(x + r, y)
@@ -620,12 +620,17 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.stroke()
     const lf = fitFontSize(ctx, label, 12, w - 8, s => `400 ${s}px ${MINCHO}`, 8)
     ctx.font = `400 ${lf}px ${MINCHO}`
-    ctx.fillStyle = INK_SOFT
+    ctx.fillStyle = dim ? 'rgba(122,106,85,0.38)' : INK_SOFT
     ctx.textAlign = 'center'
     ctx.fillText(label, x + w / 2, y + 15)
     ctx.textAlign = 'left'
     // 文字とのあいだに少し間隔をあける（詰まって見えないように）
-    if (img) putIcon(img, x + (w - CELL_ICON) / 2, y + 23, CELL_ICON)
+    if (img) {
+      ctx.save()
+      if (dim) ctx.globalAlpha = 0.28
+      putIcon(img, x + (w - CELL_ICON) / 2, y + 23, CELL_ICON)
+      ctx.restore()
+    }
   }
 
   // 指定パスの画像をまとめて読み込む。欠けている分は null のまま返す
@@ -713,17 +718,19 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }
 
   // ── 添え物（右列・マスを3つずつ折り返して並べる） ──
+  // 添え物は選択肢6つを常に同じ位置に並べ、選ばれたものだけ濃く表示する。
+  // （選んだものだけ描くとカードごとに位置が変わり、見比べにくいため）
   drawBox('添え物', ACC_X, LOWER_TOP, ACC_W, LOWER_H)
-  if (data.accompaniments && data.accompaniments.length) {
-    const accList = data.accompaniments.slice(0, 5)
-    const accImgs = await loadIcons(accList.map(accompanimentIconPath))
+  {
+    const selected = new Set(data.accompaniments ?? [])
+    const accImgs = await loadIcons(ACCOMPANIMENT_ORDER.map(accompanimentIconPath))
     const perRow = Math.max(1, Math.floor((ACC_W - CELL_GAP) / (CELL_W + CELL_GAP)))
     // 余った幅を「左端・マスの間・右端」に均等配分する
     const gapX = (ACC_W - perRow * CELL_W) / (perRow + 1)
-    accList.forEach((label, i) => {
+    ACCOMPANIMENT_ORDER.forEach((label, i) => {
       const cx = ACC_X + gapX + (i % perRow) * (CELL_W + gapX)
       const cy = LOWER_TOP + CELL_TOP + Math.floor(i / perRow) * (CELL_H + CELL_TOP)
-      drawCell(accompanimentShortLabel(label), accImgs[i] ?? null, cx, cy)
+      drawCell(accompanimentShortLabel(label), accImgs[i] ?? null, cx, cy, CELL_W, !selected.has(label))
     })
   }
   // ── 左下: フッター（上に細罫を敷く） ──

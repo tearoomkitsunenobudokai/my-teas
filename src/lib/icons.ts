@@ -41,6 +41,13 @@ export const ACCOMPANIMENT_ICON_KEYS: Record<string, string> = {
   'アイス（グラス）': 'ice',
 }
 
+/** 添え物の並び順（入力フォーム・評価カードで共通）。
+    カードは3列×2行のマスに、この順で必ず6つとも表示する。 */
+export const ACCOMPANIMENT_ORDER = [
+  'なし（ストレート）', 'ミルク', '砂糖',
+  '蜂蜜', 'レモン', 'アイス（グラス）',
+] as const
+
 /** 評価カードの狭いマスに入れるための短縮名。括弧書きを落とすだけ。
     定義が無いものはそのままの表記を使う。 */
 export const ACCOMPANIMENT_SHORT_LABELS: Record<string, string> = {
