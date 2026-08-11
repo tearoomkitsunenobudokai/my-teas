@@ -493,14 +493,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const RADAR_LABEL_BOTTOM = radarCy + radarR + RADAR_LABEL_GAP + 11
   // コメントとレーダー・枠囲みエリアを分ける区切り線の位置。
   // 枠囲みの上端がこれより上に来ないよう boxTop で下限を決めている。
-  const DIVIDER_Y = 396   // 200字のコメントが22pxで収まる限界（392）に余裕を見た位置
+  const DIVIDER_Y = 376   // 200字のコメントが23pxで収まる限界に合わせた位置
   const boxTop = DIVIDER_Y + 16
 
   if (data.comment) {
     // コメントは最大200字。上限変更前に登録された長いコメントもここで切り、
     // 長さに応じて文字サイズを自動選択して必ず収める
     const commentText = data.comment.slice(0, CARD_MAX_COMMENT)
-    const available = DIVIDER_Y - 16 - ty
+    const available = DIVIDER_Y - 14 - ty
     // 大きい方から順に試し、行送りを詰めれば収まるならそのサイズを採用する。
     // 行送りは文字サイズの1.25倍を下限とし、余裕があれば1.55倍まで広げる。
     let chosen: [number, number] = [13, 19]
@@ -508,14 +508,16 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       ctx.font = `400 ${fs}px ${MINCHO}`
       const lines = computeLines(ctx, commentText, rightW, 99)
       if (lines.length <= 1) { chosen = [fs, Math.round(fs * 1.55)]; break }
-      const fit = (available - fs) / (lines.length - 1)
+      // 最終行はベースラインより下に descender 分だけあればよい。
+      // ここで文字サイズ1つ分を確保すると、1行分近い余白が下に残ってしまう。
+      const fit = (available - fs * 0.3) / (lines.length - 1)
       if (fit >= fs * 1.25) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
     }
     const [fs, lh] = chosen
     ctx.font = `400 ${fs}px ${MINCHO}`
     ctx.fillStyle = INK
     // 上の判定と同じ数え方にしないと、収まるはずの行が「…」で切られてしまう
-    const maxLines = Math.max(1, Math.floor((available - fs) / lh) + 1)
+    const maxLines = Math.max(1, Math.floor((available - fs * 0.3) / lh) + 1)
     wrapText(ctx, commentText, rightX, ty, rightW, lh, maxLines)
   }
 
@@ -540,15 +542,15 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const boxPad = 14
   const BODY_FS = 17
   const BODY_LH = 24
-  const AROMA_FS = 19   // 香り分析は他より少し大きく見せる
-  const AROMA_LH = 25
+  const AROMA_FS = 20   // 香り分析は他より少し大きく見せる
+  const AROMA_LH = 26
 
   // 上から: 香り分析 → 水色 → （淹れ方 ＋ 添え物 の2列）
   const BOX_GAP = 14   // 枠どうしの間隔
   const AROMA_TOP = boxTop
-  const AROMA_H = 94   // 香りは最大3つ選べるので3行分を確保する
+  const AROMA_H = 104   // 香りは最大3つ選べるので3行分を確保する
   const COLOR_TOP = AROMA_TOP + AROMA_H + BOX_GAP
-  const COLOR_H = 44
+  const COLOR_H = 48
   const LOWER_TOP = COLOR_TOP + COLOR_H + BOX_GAP
   const LOWER_BOTTOM = 734   // 内罫(740)の手前まで使う
   const LOWER_H = LOWER_BOTTOM - LOWER_TOP
@@ -561,9 +563,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // マス（文字＋図）の寸法。淹れ方・添え物で共通
   const CELL_W = 57
-  const CELL_H = 62
+  const CELL_H = 66
   const CELL_GAP = 3
-  const CELL_ICON = 40
+  const CELL_ICON = 44
   const CELL_PAD = 10   // マスを並べる左右の余白（文字の boxPad とは別）
   const CELL_TOP = 16   // 枠の上辺から1行目のマスまで
 
