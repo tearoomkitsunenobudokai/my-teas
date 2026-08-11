@@ -493,14 +493,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const RADAR_LABEL_BOTTOM = radarCy + radarR + RADAR_LABEL_GAP + 11
   // コメントとレーダー・枠囲みエリアを分ける区切り線の位置。
   // 枠囲みの上端がこれより上に来ないよう boxTop で下限を決めている。
-  const DIVIDER_Y = 370   // 200字のコメントが23pxで収まる限界に合わせた位置
+  const DIVIDER_Y = 364   // 200字のコメントが23pxで収まる限界に合わせた位置
   const boxTop = DIVIDER_Y + 16
 
   if (data.comment) {
     // コメントは最大200字。上限変更前に登録された長いコメントもここで切り、
     // 長さに応じて文字サイズを自動選択して必ず収める
     const commentText = data.comment.slice(0, CARD_MAX_COMMENT)
-    const available = DIVIDER_Y - 14 - ty
+    const available = DIVIDER_Y - 8 - ty
     // 大きい方から順に試し、行送りを詰めれば収まるならそのサイズを採用する。
     // 行送りは文字サイズの1.2倍を下限とし、余裕があれば1.55倍まで広げる。
     let chosen: [number, number] = [13, 19]
@@ -564,11 +564,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // マス（文字＋図）の寸法。淹れ方・添え物で共通
   const CELL_W = 57
-  const CELL_H = 66
+  const CELL_H = 69
   const CELL_GAP = 3
-  const CELL_ICON = 44
-  const CELL_PAD = 10   // マスを並べる左右の余白（文字の boxPad とは別）
-  const CELL_TOP = 16   // 枠の上辺から1行目のマスまで
+  const CELL_ICON = 46
+  // マスの余白は上下左右すべて均等にする。縦は常に2行ぶんで計算するので、
+  // 添え物が1行でも淹れ方のマスと高さが揃う。
+  const CELL_ROWS = 2
+  const CELL_TOP = (LOWER_H - CELL_ROWS * CELL_H) / (CELL_ROWS + 1)
 
   // 細い金罫の角丸枠。上辺の左寄りに切れ目を作り、そこに見出しを重ねる。
   // （背景がグラデーション＋模様なので、塗りつぶしで隠さず切れ目で抜く）
@@ -648,7 +650,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   if (data.color_hex) {
     const hexNorm = normalizeHex(data.color_hex)
     const label = `${data.color_name || 'カスタム'}　${hexNorm}`
-    const lf = fitFontSize(ctx, label, BODY_FS, boxW - boxPad * 2 - 28, s => `400 ${s}px ${MINCHO}`, 12)
+    // 香り分析と同じ大きさに揃える（長い色名のときだけ自動で縮む）
+    const lf = fitFontSize(ctx, label, AROMA_FS, boxW - boxPad * 2 - 28, s => `400 ${s}px ${MINCHO}`, 12)
     ctx.font = `400 ${lf}px ${MINCHO}`
     ctx.fillStyle = INK
     const baseY = COLOR_TOP + COLOR_H / 2 + 10
@@ -711,14 +714,12 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   if (data.accompaniments && data.accompaniments.length) {
     const accList = data.accompaniments.slice(0, 5)
     const accImgs = await loadIcons(accList.map(accompanimentIconPath))
-    const perRow = Math.max(1, Math.floor((ACC_W - CELL_PAD * 2 + CELL_GAP) / (CELL_W + CELL_GAP)))
-    // 1行に入る数が決まったら、余った幅を均等に配分してマスの間隔にする。
-    // 左右の余白と各マスの間隔が揃い、上下の間隔も同じ値を使う。
-    const inner = ACC_W - CELL_PAD * 2
-    const gap = perRow > 1 ? (inner - perRow * CELL_W) / (perRow - 1) : CELL_GAP
+    const perRow = Math.max(1, Math.floor((ACC_W - CELL_GAP) / (CELL_W + CELL_GAP)))
+    // 余った幅を「左端・マスの間・右端」に均等配分する
+    const gapX = (ACC_W - perRow * CELL_W) / (perRow + 1)
     accList.forEach((label, i) => {
-      const cx = ACC_X + CELL_PAD + (i % perRow) * (CELL_W + gap)
-      const cy = LOWER_TOP + CELL_TOP + Math.floor(i / perRow) * (CELL_H + gap)
+      const cx = ACC_X + gapX + (i % perRow) * (CELL_W + gapX)
+      const cy = LOWER_TOP + CELL_TOP + Math.floor(i / perRow) * (CELL_H + CELL_TOP)
       drawCell(accompanimentShortLabel(label), accImgs[i] ?? null, cx, cy)
     })
   }
