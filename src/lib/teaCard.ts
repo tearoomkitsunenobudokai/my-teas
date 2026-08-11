@@ -542,6 +542,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const boxPad = 14
   const BODY_FS = 17
   const BODY_LH = 24
+  const LEGEND_FS = 19   // 枠の見出し（香り分析・水色・添え物・淹れ方）
   const AROMA_FS = 20   // 香り分析は他より少し大きく見せる
   const AROMA_LH = 26
 
@@ -573,7 +574,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // （背景がグラデーション＋模様なので、塗りつぶしで隠さず切れ目で抜く）
   const drawBox = (title: string, x: number, top: number, w: number, height: number) => {
     const r = 10
-    ctx.font = `700 16px ${MINCHO}`
+    ctx.font = `700 ${LEGEND_FS}px ${MINCHO}`
     const tw = ctx.measureText(title).width
     const gapStart = x + 12
     const gapEnd = gapStart + tw + 10
@@ -592,7 +593,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.lineTo(gapStart, top)
     ctx.stroke()
     ctx.fillStyle = GOLD_DEEP
-    ctx.fillText(title, gapStart + 5, top + 6)
+    ctx.fillText(title, gapStart + 5, top + LEGEND_FS / 2 - 2)
   }
 
   // 確保した正方形の中に画像を収める（縦横比は保ったまま中央寄せ）
