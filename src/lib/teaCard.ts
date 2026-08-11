@@ -608,7 +608,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // 1マス分（上に文字・下に図）。図が未用意でも枠と文字は必ず描く
   const drawCell = (label: string, img: HTMLImageElement | null, x: number, y: number, w = CELL_W, dim = false) => {
     const r = 6
-    ctx.strokeStyle = dim ? 'rgba(168,135,63,0.22)' : 'rgba(168,135,63,0.45)'
+    ctx.strokeStyle = dim ? 'rgba(168,135,63,0.16)' : 'rgba(168,135,63,0.45)'
     ctx.lineWidth = 1
     ctx.beginPath()
     ctx.moveTo(x + r, y)
@@ -620,14 +620,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.stroke()
     const lf = fitFontSize(ctx, label, 12, w - 8, s => `400 ${s}px ${MINCHO}`, 8)
     ctx.font = `400 ${lf}px ${MINCHO}`
-    ctx.fillStyle = dim ? 'rgba(122,106,85,0.38)' : INK_SOFT
+    ctx.fillStyle = dim ? 'rgba(122,106,85,0.26)' : INK_SOFT
     ctx.textAlign = 'center'
     ctx.fillText(label, x + w / 2, y + 15)
     ctx.textAlign = 'left'
     // 文字とのあいだに少し間隔をあける（詰まって見えないように）
     if (img) {
       ctx.save()
-      if (dim) ctx.globalAlpha = 0.28
+      if (dim) ctx.globalAlpha = 0.18
       putIcon(img, x + (w - CELL_ICON) / 2, y + 23, CELL_ICON)
       ctx.restore()
     }

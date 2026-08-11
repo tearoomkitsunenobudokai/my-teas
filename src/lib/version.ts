@@ -10,7 +10,7 @@
 // 「pushしたのに反映されていないのでは？」という確認に使える。
 // ─────────────────────────────────────────────────────────
 
-export const APP_VERSION = 'v315'
+export const APP_VERSION = 'v316'
 
 // Vercelが自動で提供する環境変数（ローカルでは undefined）
 export const BUILD_COMMIT =
