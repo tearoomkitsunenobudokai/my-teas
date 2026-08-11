@@ -540,12 +540,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const boxPad = 14
   const BODY_FS = 17
   const BODY_LH = 24
-  const AROMA_LH = 22   // 3行入れるため香り分析だけ行送りを詰める
+  const AROMA_FS = 19   // 香り分析は他より少し大きく見せる
+  const AROMA_LH = 25
 
   // 上から: 香り分析 → 水色 → （淹れ方 ＋ 添え物 の2列）
-  const BOX_GAP = 16   // 枠どうしの間隔
+  const BOX_GAP = 14   // 枠どうしの間隔
   const AROMA_TOP = boxTop
-  const AROMA_H = 86   // 香りは最大3つ選べるので3行分を確保する
+  const AROMA_H = 94   // 香りは最大3つ選べるので3行分を確保する
   const COLOR_TOP = AROMA_TOP + AROMA_H + BOX_GAP
   const COLOR_H = 44
   const LOWER_TOP = COLOR_TOP + COLOR_H + BOX_GAP
@@ -564,7 +565,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const CELL_GAP = 3
   const CELL_ICON = 40
   const CELL_PAD = 10   // マスを並べる左右の余白（文字の boxPad とは別）
-  const CELL_TOP = 18   // 枠の上辺から1行目のマスまで
+  const CELL_TOP = 16   // 枠の上辺から1行目のマスまで
 
   // 細い金罫の角丸枠。上辺の左寄りに切れ目を作り、そこに見出しを重ねる。
   // （背景がグラデーション＋模様なので、塗りつぶしで隠さず切れ目で抜く）
@@ -629,12 +630,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   drawBox('香り分析', boxX, AROMA_TOP, boxW, AROMA_H)
   if (data.aroma_notes && data.aroma_notes.length) {
     // 香りは最大3つ。「・」でつないで折り返すのではなく、1つずつ改行して並べる
-    ctx.font = `400 ${BODY_FS}px ${MINCHO}`
+    ctx.font = `400 ${AROMA_FS}px ${MINCHO}`
     const lines = data.aroma_notes.slice(0, 3)
       .map(n => computeLines(ctx, n, boxW - boxPad * 2, 1)[0] ?? '')
       .filter(Boolean)
     ctx.fillStyle = INK
     const firstY = AROMA_TOP + (AROMA_H - (lines.length - 1) * AROMA_LH) / 2 + 8
+    ctx.font = `400 ${AROMA_FS}px ${MINCHO}`
     lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * AROMA_LH))
   }
 
