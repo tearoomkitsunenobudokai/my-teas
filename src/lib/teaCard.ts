@@ -493,7 +493,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const RADAR_LABEL_BOTTOM = radarCy + radarR + RADAR_LABEL_GAP + 11
   // コメントとレーダー・枠囲みエリアを分ける区切り線の位置。
   // 枠囲みの上端がこれより上に来ないよう boxTop で下限を決めている。
-  const DIVIDER_Y = 376   // 200字のコメントが23pxで収まる限界に合わせた位置
+  const DIVIDER_Y = 370   // 200字のコメントが23pxで収まる限界に合わせた位置
   const boxTop = DIVIDER_Y + 16
 
   if (data.comment) {
@@ -502,7 +502,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const commentText = data.comment.slice(0, CARD_MAX_COMMENT)
     const available = DIVIDER_Y - 14 - ty
     // 大きい方から順に試し、行送りを詰めれば収まるならそのサイズを採用する。
-    // 行送りは文字サイズの1.25倍を下限とし、余裕があれば1.55倍まで広げる。
+    // 行送りは文字サイズの1.2倍を下限とし、余裕があれば1.55倍まで広げる。
     let chosen: [number, number] = [13, 19]
     for (let fs = 23; fs >= 13; fs--) {
       ctx.font = `400 ${fs}px ${MINCHO}`
@@ -511,7 +511,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       // 最終行はベースラインより下に descender 分だけあればよい。
       // ここで文字サイズ1つ分を確保すると、1行分近い余白が下に残ってしまう。
       const fit = (available - fs * 0.3) / (lines.length - 1)
-      if (fit >= fs * 1.25) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
+      if (fit >= fs * 1.2) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
     }
     const [fs, lh] = chosen
     ctx.font = `400 ${fs}px ${MINCHO}`
@@ -547,13 +547,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const AROMA_LH = 26
 
   // 上から: 香り分析 → 水色 → （淹れ方 ＋ 添え物 の2列）
-  const BOX_GAP = 14   // 枠どうしの間隔
+  const BOX_GAP = 13   // 枠どうしの間隔
   const AROMA_TOP = boxTop
-  const AROMA_H = 104   // 香りは最大3つ選べるので3行分を確保する
+  const AROMA_H = 100   // 香りは最大3つ選べるので3行分を確保する
   const COLOR_TOP = AROMA_TOP + AROMA_H + BOX_GAP
-  const COLOR_H = 48
+  const COLOR_H = 46
   const LOWER_TOP = COLOR_TOP + COLOR_H + BOX_GAP
-  const LOWER_BOTTOM = 734   // 内罫(740)の手前まで使う
+  const LOWER_BOTTOM = 720   // 右下の隅飾り(y=734の横線)と重ならない位置まで
   const LOWER_H = LOWER_BOTTOM - LOWER_TOP
   // 下段は左に添え物（マスを3つ並べるので広い方）、右に淹れ方
   const COL_GAP = 8
