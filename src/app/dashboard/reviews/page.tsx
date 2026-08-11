@@ -252,7 +252,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       const blob = await generateTeaCard({
         tea_name: teaName, brand_name: brandName, shop_name: shopName,
         user_name: profile?.name ?? null, drank_at: drankAt, color_hex: colorHex, color_name: colorName,
-        comment: cardText, aroma_notes: aromaNotes, brew_method: brewMethod, tea_garden: teaGarden || null,
+        comment: cardText, aroma_notes: aromaNotes, brew_method: brewMethod || '不明', tea_garden: teaGarden || null,
         origin_country: originCountry || null,
         steep_seconds: steepSec ? parseInt(steepSec) : null,
         tea_grams: teaGrams ? parseFloat(teaGrams) : null,
@@ -476,7 +476,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       shop_name: shopName || null, color_hex: colorHex || null,
       aroma_notes: aromaNotes.length ? aromaNotes : null,
       ...scores, comment: comment || null, notes: notes || null, is_public: effectiveIsPublic, drank_at: drankAt,
-      brew_method: brewMethod || null,
+      brew_method: brewMethod || '不明',
       tea_garden: teaGarden || null,
       origin_country: originCountry || null,
       // パレットに無い色に付けた名前（評価カードで「カスタム」表示を避けるため）

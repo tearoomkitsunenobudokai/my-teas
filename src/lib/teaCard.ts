@@ -16,7 +16,7 @@
 // フォント: いろはマル（SIL OFL 1.1 / public/fonts/irohamaru に同梱）
 // ─────────────────────────────────────────────────────────
 
-import { brewIconPath, accompanimentIconPath, accompanimentShortLabel, ACCOMPANIMENT_ORDER } from './icons'
+import { brewIconPath, accompanimentIconPath, accompanimentShortLabel, ACCOMPANIMENT_ORDER, BREW_FILLER_ICON } from './icons'
 import { formatGardenOrigin } from './reviewFormat'
 
 export interface TeaCardData {
@@ -692,6 +692,16 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     if (data.brew_method) {
       // 淹れ方は1つだけなので、マスを枠幅いっぱいの長方形にする
       drawCell(data.brew_method, brewImg, BREW_X + 8, LOWER_TOP + CELL_TOP, BREW_W - 16)
+    }
+    // 茶葉量・水量・時間がすべて未入力なら、空いた場所に飾り画像を置く
+    if (!brewRows.length) {
+      const [filler] = await loadIcons([BREW_FILLER_ICON])
+      if (filler) {
+        const areaTop = LOWER_TOP + CELL_TOP + CELL_H + 8
+        const areaH = LOWER_TOP + LOWER_H - CELL_TOP - areaTop
+        const size = Math.min(BREW_W - 24, areaH)
+        putIcon(filler, BREW_X + (BREW_W - size) / 2, areaTop + (areaH - size) / 2, size)
+      }
     }
     // 左に項目名（小さく）、右に値。値が長い場合は値だけ縮める
     const rowX = BREW_X + 8

@@ -41,6 +41,10 @@ export const ACCOMPANIMENT_ICON_KEYS: Record<string, string> = {
   'アイス（グラス）': 'ice',
 }
 
+/** 淹れ方が「不明」で茶葉量・水量・時間も無いとき、空いた場所に置く飾り画像。
+    /public/icons/brew/no-data.png を置くだけで表示される（無ければ何も出ない）。 */
+export const BREW_FILLER_ICON = '/icons/brew/no-data.png'
+
 /** 添え物の並び順（入力フォーム・評価カードで共通）。
     カードは3列×2行のマスに、この順で必ず6つとも表示する。 */
 export const ACCOMPANIMENT_ORDER = [
