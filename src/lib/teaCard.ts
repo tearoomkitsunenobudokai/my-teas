@@ -415,8 +415,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }
 
   // ── 右上: TASTING CARD → 紅茶名 → 評価者/飲んだ日 → 場所 → 罫 → メモ ──
+  // 右側の枠囲みセクションの左右位置。ヘッダー・コメント・区切り線の
+  // 右端もこれに合わせるので、先に定義しておく。
+  const boxX = 902
+  const boxRight = W - 46
+  const boxW = boxRight - boxX
+
   const rightX = 560
-  const rightW = W - 64 - rightX
+  const rightW = boxRight - rightX
   const indentX = rightX + 10   // Tea taster / at 行のインデント（半角スペース1個分程度）
   const drankDate = data.drank_at ? data.drank_at.slice(0, 10).replace(/-/g, '/') : ''
 
@@ -496,14 +502,14 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const commentText = data.comment.slice(0, CARD_MAX_COMMENT)
     const available = DIVIDER_Y - 16 - ty
     // 大きい方から順に試し、行送りを詰めれば収まるならそのサイズを採用する。
-    // 行送りは文字サイズの1.3倍を下限とし、余裕があれば1.55倍まで広げる。
+    // 行送りは文字サイズの1.25倍を下限とし、余裕があれば1.55倍まで広げる。
     let chosen: [number, number] = [13, 19]
-    for (let fs = 22; fs >= 13; fs--) {
+    for (let fs = 23; fs >= 13; fs--) {
       ctx.font = `400 ${fs}px ${MINCHO}`
       const lines = computeLines(ctx, commentText, rightW, 99)
       if (lines.length <= 1) { chosen = [fs, Math.round(fs * 1.55)]; break }
       const fit = (available - fs) / (lines.length - 1)
-      if (fit >= fs * 1.3) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
+      if (fit >= fs * 1.25) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
     }
     const [fs, lh] = chosen
     ctx.font = `400 ${fs}px ${MINCHO}`
@@ -512,11 +518,6 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const maxLines = Math.max(1, Math.floor((available - fs) / lh) + 1)
     wrapText(ctx, commentText, rightX, ty, rightW, lh, maxLines)
   }
-
-  // 右側の枠囲みセクションの左右位置（区切り線の右端をこれに合わせる）
-  const boxX = 902
-  const boxRight = W - 46
-  const boxW = boxRight - boxX
 
   // コメントとレーダー・枠囲みエリアの区切り線。右端は香り分析の枠と揃える
   ctx.strokeStyle = 'rgba(168,135,63,0.45)'
