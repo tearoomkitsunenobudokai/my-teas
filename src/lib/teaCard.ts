@@ -566,7 +566,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const CELL_W = 57
   const CELL_H = 69
   const CELL_GAP = 3
-  const CELL_ICON = 46
+  const CELL_ICON = 43
   // マスの余白は上下左右すべて均等にする。縦は常に2行ぶんで計算するので、
   // 添え物が1行でも淹れ方のマスと高さが揃う。
   const CELL_ROWS = 2
@@ -624,7 +624,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.textAlign = 'center'
     ctx.fillText(label, x + w / 2, y + 15)
     ctx.textAlign = 'left'
-    if (img) putIcon(img, x + (w - CELL_ICON) / 2, y + 18, CELL_ICON)
+    // 文字とのあいだに少し間隔をあける（詰まって見えないように）
+    if (img) putIcon(img, x + (w - CELL_ICON) / 2, y + 23, CELL_ICON)
   }
 
   // 指定パスの画像をまとめて読み込む。欠けている分は null のまま返す
