@@ -640,7 +640,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       .map(n => computeLines(ctx, n, boxW - boxPad * 2, 1)[0] ?? '')
       .filter(Boolean)
     ctx.fillStyle = INK
-    const firstY = AROMA_TOP + (AROMA_H - (lines.length - 1) * AROMA_LH) / 2 + 8
+    // 常に3行分の枠として扱い、上から順に詰める。1つや2つのときに
+    // 中央寄せにすると、カードごとに1行目の高さが変わって見比べにくいため。
+    const firstY = AROMA_TOP + (AROMA_H - (3 - 1) * AROMA_LH) / 2 + 8
     ctx.font = `400 ${AROMA_FS}px ${MINCHO}`
     lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * AROMA_LH))
   }
