@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import dynamic from 'next/dynamic'
@@ -12,6 +12,7 @@ import { MAX_COLOR_NAME } from '@/lib/colorPalette'
 import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import { brewIconPath, accompanimentIconPath, ACCOMPANIMENT_ORDER } from '@/lib/icons'
+import { buildCsv, parseReviewsCsv, dropDuplicates } from '@/lib/reviewCsv'
 import TeaCup from '@/components/TeaCup'
 import styles from './reviews.module.css'
 
@@ -1006,6 +1007,8 @@ export default function ReviewsPage() {
   const [showModal,  setShowModal]  = useState(false)
   const [editTarget, setEditTarget] = useState<any>(null)
   const [canExport,  setCanExport]  = useState(false)
+  const [importing,  setImporting]  = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   // ホーム画面の「お茶を評価する」ボタン（?new=1）から遷移した場合、
   // 新規登録モーダルを自動的に開く
@@ -1054,48 +1057,53 @@ export default function ReviewsPage() {
   }
 
   function exportCsv() {
-    // CSVの1セルを安全にエスケープ（カンマ・改行・引用符対応）
-    const esc = (v: any) => {
-      const s = v === null || v === undefined ? '' : String(v)
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-    }
-    const headers = [
-      '飲んだ日', '紅茶名', 'ブランド', '認定店', '原産国', '茶園', '色',
-      '香り', '渋み', 'コク', '水色の濃さ',
-      '抽出方法', '淹れ時間(秒)', '茶葉量(g)', '水量(ml)', '茶葉量(g/100ml)※旧', '添え物',
-      'コメント', 'その他の情報', '公開', '登録日時',
-    ]
-    const rows = reviews.map(r => [
-      r.drank_at ?? r.created_at?.slice(0, 10) ?? '',
-      r.tea_name ?? '',
-      r.brand_name ?? '',
-      r.shop_name ?? '',
-      r.origin_country ?? '',
-      r.tea_garden ?? '',
-      r.color_hex ?? '',
-      r.score_aroma ?? '', r.score_astringency ?? '', r.score_richness ?? '', r.score_color_depth ?? '',
-      r.brew_method ?? '',
-      r.steep_seconds ?? '',
-      r.tea_grams ?? '',
-      r.water_ml ?? '',
-      r.tea_grams_per_100ml ?? '',
-      Array.isArray(r.accompaniments) ? r.accompaniments.join('・') : '',
-      r.comment ?? '',
-      r.notes ?? '',
-      r.is_public ? '公開' : '非公開',
-      r.created_at ?? '',
-    ].map(esc).join(','))
-
-    // Excelで文字化けしないよう BOM を付与
-    const csv = '\uFEFF' + [headers.join(','), ...rows].join('\r\n')
+    const csv = buildCsv(reviews)
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    const today = new Date().toISOString().slice(0, 10)
     a.href = url
-    a.download = `teanote_reviews_${today}.csv`
+    a.download = `my-teas_reviews_${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  // CSVの取り込み。取り込める行だけを登録し、飛ばした行は理由をまとめて知らせる
+  async function importCsv(file: File) {
+    if (!userId) return
+    setImporting(true)
+    try {
+      const text = await file.text()
+      const { ok, skipped } = parseReviewsCsv(text, userId)
+      if (!ok.length) {
+        alert(skipped.length
+          ? `取り込める行がありませんでした。\n\n${skipped.slice(0, 5).map(x => `${x.line}行目: ${x.reason}`).join('\n')}`
+          : '取り込める行がありませんでした。')
+        return
+      }
+      const { fresh, dupCount } = dropDuplicates(ok, reviews)
+      if (!fresh.length) {
+        alert(`${dupCount}件はすでに登録済みのため、追加する行がありませんでした。`)
+        return
+      }
+      const lines = [`${fresh.length}件を追加します。`]
+      if (dupCount) lines.push(`${dupCount}件は登録済み（飲んだ日＋紅茶名が同じ）のため飛ばします。`)
+      if (skipped.length) {
+        lines.push(`${skipped.length}件は内容に問題があるため飛ばします。`)
+        lines.push('', ...skipped.slice(0, 5).map(x => `${x.line}行目: ${x.reason}`))
+        if (skipped.length > 5) lines.push(`ほか${skipped.length - 5}件`)
+      }
+      lines.push('', 'よろしいですか？')
+      if (!confirm(lines.join('\n'))) return
+
+      const { error } = await supabase.from('reviews').insert(fresh)
+      if (error) { alert(`取り込みに失敗しました: ${error.message}`); return }
+      alert(`${fresh.length}件を取り込みました。`)
+      await load()
+    } catch (e: any) {
+      alert(`ファイルを読み込めませんでした: ${e?.message ?? e}`)
+    } finally {
+      setImporting(false)
+    }
   }
 
   const list = reviews.filter(r => {
@@ -1117,10 +1125,26 @@ export default function ReviewsPage() {
       <div className={styles.ph}>
         <h1 className={styles.title}>⭐ 自分の評価</h1>
         <div className={styles.phActions}>
-          {canExport && reviews.length > 0 && (
-            <button className={styles.exportBtn} onClick={exportCsv} title="自分の全評価をCSVでダウンロード">
-              ⬇ CSVエクスポート
-            </button>
+          {canExport && (
+            <>
+              {reviews.length > 0 && (
+                <button className={styles.exportBtn} onClick={exportCsv}
+                  title="自分の全評価をCSVでダウンロード">
+                  ⬇ CSVエクスポート
+                </button>
+              )}
+              <button className={styles.exportBtn} disabled={importing}
+                onClick={() => fileRef.current?.click()}
+                title="エクスポートしたCSVから評価を取り込む">
+                {importing ? '取り込み中…' : '⬆ CSVインポート'}
+              </button>
+              <input ref={fileRef} type="file" accept=".csv,text/csv" hidden
+                onChange={e => {
+                  const f = e.target.files?.[0]
+                  e.target.value = ''   // 同じファイルを続けて選べるようにする
+                  if (f) importCsv(f)
+                }} />
+            </>
           )}
           <button className={styles.regBtn} onClick={() => { setEditTarget(null); setShowModal(true) }}>
             + 新しく評価を登録
