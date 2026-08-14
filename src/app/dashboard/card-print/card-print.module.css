@@ -285,3 +285,49 @@
   height: 4rem;
   background: var(--bg);
 }
+
+/* === v319: 用紙サイズの選択 === */
+.paperRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+.paperBtn, .paperBtnOn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  transition: border-color .15s, background .15s;
+}
+.paperBtnOn {
+  border-color: var(--accent, #A8873F);
+  border-width: 2.5px;
+  background: rgba(168, 135, 63, 0.08);
+}
+.paperName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.paperSize {
+  font-size: 11.5px;
+  color: var(--text-hint);
+}
+.paperCount {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .paperName  { font-size: 27.0px; }
+  .paperSize  { font-size: 20.7px; }
+  .paperCount { font-size: 21.6px; }
+  .paperBtn, .paperBtnOn { padding: 16px 10px; }
+}

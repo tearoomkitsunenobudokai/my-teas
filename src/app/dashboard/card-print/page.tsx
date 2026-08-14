@@ -4,10 +4,20 @@ import { useEffect, useState, useCallback } from 'react'
 import CropPreview from './CropPreview'
 import { createClient } from '@/lib/supabase'
 import {
-  composePostcard, downloadPostcard,
-  POSTCARD_W_MM, POSTCARD_H_MM, CARD_W_MM, CARD_H_MM,
+  composeSheet, downloadSheet, PAPERS, paperCapacity,
+  CARD_W_MM, CARD_H_MM,
+  type PaperKind,
 } from '@/lib/cardPrint'
 import styles from './card-print.module.css'
+
+/* 用紙のうち一番多く並べられる枚数。
+   状態は常にこの数だけ持っておき、用紙を切り替えても選んだ画像が消えないようにする。 */
+const MAX_SLOTS = Math.max(paperCapacity('postcard'), paperCapacity('a4'))
+
+const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧']
+
+type Focus = { x: number; y: number; zoom: number }
+const DEFAULT_FOCUS: Focus = { x: 0.5, y: 0.5, zoom: 1 }
 
 export default function CardPrintPage() {
   const supabase = createClient()
@@ -19,19 +29,21 @@ export default function CardPrintPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  // 上段・下段をそれぞれ別のファイルとして扱う（片方だけでも作成できる）
-  const [slot1, setSlot1] = useState<File | null>(null)
-  const [slot2, setSlot2] = useState<File | null>(null)
-  const [preview1, setPreview1] = useState('')
-  const [preview2, setPreview2] = useState('')
-  const [cutGuide, setCutGuide] = useState(true)
-  /* 段ごとの「位置を固定」設定と、切り出し位置（0〜1）。
+  const [paper, setPaper] = useState<PaperKind>('postcard')
+  const capacity = paperCapacity(paper)
+  const spec = PAPERS[paper]
+
+  /* 枠ごとの状態は配列で持つ。
+     A4は8枠あるため、ハガキ時代の slot1/slot2 のような個別の変数では足りない。 */
+  const [files,    setFiles]    = useState<(File | null)[]>(() => Array(MAX_SLOTS).fill(null))
+  const [previews, setPreviews] = useState<string[]>(() => Array(MAX_SLOTS).fill(''))
+  /* 「位置を固定」設定と、切り出し位置（0〜1）。
      評価カードは枠と同じ比率なので位置調整は不要。既定は固定（中央）にしておき、
      写真を入れたいときだけチェックを外して調整できるようにする。 */
-  const [lock1, setLock1] = useState(true)
-  const [lock2, setLock2] = useState(true)
-  const [focus1, setFocus1] = useState({ x: 0.5, y: 0.5, zoom: 1 })
-  const [focus2, setFocus2] = useState({ x: 0.5, y: 0.5, zoom: 1 })
+  const [locks,    setLocks]    = useState<boolean[]>(() => Array(MAX_SLOTS).fill(true))
+  const [focuses,  setFocuses]  = useState<Focus[]>(() => Array(MAX_SLOTS).fill(DEFAULT_FOCUS))
+
+  const [cutGuide, setCutGuide] = useState(true)
   const [working, setWorking] = useState(false)
   const [doneMsg, setDoneMsg] = useState('')
 
@@ -51,36 +63,70 @@ export default function CardPrintPage() {
 
   useEffect(() => { load() }, [load])
 
-  // 指定したスロットの画像を差し替える（同じスロットを選び直しても反映される）
-  function pickSlot(slot: 1 | 2, e: React.ChangeEvent<HTMLInputElement>) {
+  // 画面を離れるときにプレビュー用のURLを開放する
+  useEffect(() => {
+    return () => { previews.forEach(u => { if (u) URL.revokeObjectURL(u) }) }
+    // 開放は画面を閉じるときの1回だけでよいため、依存は空にしている
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /** 用紙を切り替える。枠が減る場合は、はみ出す画像があることを伝える */
+  function changePaper(next: PaperKind) {
+    if (next === paper) return
+    const nextCap = paperCapacity(next)
+    const overflow = files.slice(nextCap).filter(Boolean).length
+    if (overflow > 0) {
+      const ok = confirm(
+        `${PAPERS[next].label}は${nextCap}枚までです。\n` +
+        `${nextCap + 1}枚目以降に選んだ${overflow}枚は、この用紙では使われません。\n` +
+        `（選んだ状態は残るので、${PAPERS[paper].label}に戻せばまた使えます）`,
+      )
+      if (!ok) return
+    }
+    setDoneMsg('')
+    setPaper(next)
+  }
+
+  // 指定した枠の画像を差し替える（同じ枠を選び直しても反映される）
+  function pickSlot(i: number, e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0] ?? null
     setDoneMsg('')
-    if (slot === 1) {
-      if (preview1) URL.revokeObjectURL(preview1)
-      setSlot1(f)
-      setPreview1(f ? URL.createObjectURL(f) : '')
-    } else {
-      if (preview2) URL.revokeObjectURL(preview2)
-      setSlot2(f)
-      setPreview2(f ? URL.createObjectURL(f) : '')
-    }
+    setPreviews(prev => {
+      const next = [...prev]
+      if (next[i]) URL.revokeObjectURL(next[i])
+      next[i] = f ? URL.createObjectURL(f) : ''
+      return next
+    })
+    setFiles(prev => { const next = [...prev]; next[i] = f; return next })
     // 同じファイルを再選択できるよう、input の値をリセットしておく
     e.target.value = ''
   }
 
-  function clearSlot(slot: 1 | 2) {
+  function clearSlot(i: number) {
     setDoneMsg('')
-    if (slot === 1) {
-      if (preview1) URL.revokeObjectURL(preview1)
-      setSlot1(null); setPreview1('')
-    } else {
-      if (preview2) URL.revokeObjectURL(preview2)
-      setSlot2(null); setPreview2('')
-    }
+    setPreviews(prev => {
+      const next = [...prev]
+      if (next[i]) URL.revokeObjectURL(next[i])
+      next[i] = ''
+      return next
+    })
+    setFiles(prev => { const next = [...prev]; next[i] = null; return next })
+    setLocks(prev => { const next = [...prev]; next[i] = true; return next })
+    setFocuses(prev => { const next = [...prev]; next[i] = DEFAULT_FOCUS; return next })
   }
 
+  function setLockAt(i: number, v: boolean) {
+    setLocks(prev => { const next = [...prev]; next[i] = v; return next })
+  }
+  function setFocusAt(i: number, v: Focus) {
+    setFocuses(prev => { const next = [...prev]; next[i] = v; return next })
+  }
+
+  // この用紙で実際に使われる枚数
+  const usedCount = files.slice(0, capacity).filter(Boolean).length
+
   async function run() {
-    if (!slot1 && !slot2) { alert('評価カードの画像を選んでください'); return }
+    if (usedCount === 0) { alert('評価カードの画像を選んでください'); return }
     if (cost > 0 && !confirm(`${cost}ptを消費して印刷用ファイルを作成します。よろしいですか？`)) return
 
     setWorking(true)
@@ -97,12 +143,13 @@ export default function CardPrintPage() {
         if (row && typeof row.remaining === 'number') setPoints(row.remaining)
       }
 
-      const blob = await composePostcard([slot1, slot2], {
+      const blob = await composeSheet(files.slice(0, capacity), {
+        paper,
         cutGuide,
-        // 位置を固定している段は中央のまま（＝評価カードは従来どおり）
-        focus: [lock1 ? null : focus1, lock2 ? null : focus2],
+        // 位置を固定している枠は中央のまま（＝評価カードは従来どおり）
+        focus: focuses.slice(0, capacity).map((f, i) => (locks[i] ? null : f)),
       })
-      downloadPostcard(blob)
+      downloadSheet(blob, paper)
       setDoneMsg('印刷用ファイルをダウンロードしました。')
     } catch (e: any) {
       alert(e?.message ?? '変換に失敗しました')
@@ -116,13 +163,12 @@ export default function CardPrintPage() {
   return (
     <div className={styles.page}>
       <div className={styles.stickyHead}>
-      <h1 className={styles.title}>🖨 印刷用に変換</h1>
-      <p className={styles.lead}>
-        評価カードを2枚まとめて、ハガキサイズ（{POSTCARD_W_MM}×{POSTCARD_H_MM}mm）の
-        画像に変換します。コンビニのカラー印刷で「はがき」を選んで印刷し、
-        線に沿って切り取ると名刺サイズのカードになります。
-      </p>
-
+        <h1 className={styles.title}>🖨 印刷用に変換</h1>
+        <p className={styles.lead}>
+          評価カードをまとめて、{spec.label}サイズ（{spec.wMM}×{spec.hMM}mm）の
+          画像に変換します。コンビニのカラー印刷で「{spec.label === 'ハガキ' ? 'はがき' : 'A4'}」を選んで印刷し、
+          線に沿って切り取ると名刺サイズのカードになります。
+        </p>
       </div>
 
       <div className={styles.card}>
@@ -136,37 +182,64 @@ export default function CardPrintPage() {
           )}
         </div>
 
+        {/* 用紙の選択 */}
+        <label className={styles.label}>用紙のサイズ</label>
+        <div className={styles.paperRow}>
+          {(['postcard', 'a4'] as const).map(k => (
+            <button
+              key={k}
+              type="button"
+              className={paper === k ? styles.paperBtnOn : styles.paperBtn}
+              onClick={() => changePaper(k)}
+            >
+              <span className={styles.paperName}>{PAPERS[k].label}</span>
+              <span className={styles.paperSize}>{PAPERS[k].wMM}×{PAPERS[k].hMM}mm</span>
+              <span className={styles.paperCount}>カード{paperCapacity(k)}枚</span>
+            </button>
+          ))}
+        </div>
+        <p className={styles.hint}>
+          {paper === 'a4'
+            ? 'A4は横2列×縦4段で8枚まとめられます。まとめて作って配りたいときに向いています。'
+            : 'ハガキは縦に2枚並びます。1〜2枚だけ印刷したいときに向いています。'}
+        </p>
+
         <label className={styles.label}>評価カードの画像</label>
         <p className={styles.hint}>
-          上段・下段それぞれに、評価の編集画面で作成した「評価カード画像」を選んでください。
-          片方だけでも作成できます（もう一方は空欄になります）。
+          それぞれの枠に、評価の編集画面で作成した「評価カード画像」を選んでください。
+          空けたままの枠は余白になります（{capacity}枚すべて埋める必要はありません）。
         </p>
 
         <div className={styles.slots}>
-          {([1, 2] as const).map(n => {
-            const file = n === 1 ? slot1 : slot2
-            const preview = n === 1 ? preview1 : preview2
+          {Array.from({ length: capacity }, (_, i) => {
+            const file = files[i]
+            const preview = previews[i]
+            const lock = locks[i]
+            const focus = focuses[i]
+            const label = paper === 'postcard'
+              ? (i === 0 ? '① 上段' : '② 下段')
+              : `${CIRCLED[i]} ${Math.floor(i / 2) + 1}段目の${i % 2 === 0 ? '左' : '右'}`
             return (
-              <div key={n} className={styles.slot}>
-                <p className={styles.slotTitle}>{n === 1 ? '① 上段' : '② 下段'}</p>
+              <div key={i} className={styles.slot}>
+                <p className={styles.slotTitle}>{label}</p>
                 {preview ? (
                   <>
                     {/* 仕上がりと同じ枠。ドラッグとピンチで位置・大きさを合わせられる */}
                     <CropPreview
                       src={preview}
-                      value={n === 1 ? focus1 : focus2}
-                      onChange={v => (n === 1 ? setFocus1 : setFocus2)(v)}
-                      disabled={n === 1 ? lock1 : lock2}/>
+                      value={focus}
+                      onChange={v => setFocusAt(i, v as Focus)}
+                      disabled={lock}/>
                     <p className={styles.slotFileName}>{file?.name}</p>
 
                     {/* 位置の固定と調整 */}
                     <label className={styles.lockRow}>
                       <input type="checkbox"
-                        checked={n === 1 ? lock1 : lock2}
-                        onChange={e => (n === 1 ? setLock1 : setLock2)(e.target.checked)}/>
+                        checked={lock}
+                        onChange={e => setLockAt(i, e.target.checked)}/>
                       <span>位置を固定する（評価カード向け）</span>
                     </label>
-                    {!(n === 1 ? lock1 : lock2) && (
+                    {!lock && (
                       <div className={styles.focusBox}>
                         <p className={styles.focusHint}>
                           枠の中をドラッグで移動、2本指のピンチで拡大・縮小できます。
@@ -175,17 +248,14 @@ export default function CardPrintPage() {
                         <div className={styles.focusRow}>
                           <span className={styles.focusLabel}>大きさ</span>
                           <input type="range" min={100} max={400}
-                            value={Math.round((n === 1 ? focus1 : focus2).zoom * 100)}
-                            onChange={e => {
-                              const z = Number(e.target.value) / 100
-                              ;(n === 1 ? setFocus1 : setFocus2)(f => ({ ...f, zoom: z }))
-                            }}/>
+                            value={Math.round(focus.zoom * 100)}
+                            onChange={e => setFocusAt(i, { ...focus, zoom: Number(e.target.value) / 100 })}/>
                           <span className={styles.focusVal}>
-                            {Math.round((n === 1 ? focus1 : focus2).zoom * 100)}%
+                            {Math.round(focus.zoom * 100)}%
                           </span>
                         </div>
                         <button type="button" className={styles.resetBtn}
-                          onClick={() => (n === 1 ? setFocus1 : setFocus2)({ x: 0.5, y: 0.5, zoom: 1 })}>
+                          onClick={() => setFocusAt(i, DEFAULT_FOCUS)}>
                           位置をリセット
                         </button>
                       </div>
@@ -195,9 +265,9 @@ export default function CardPrintPage() {
                       <label className={styles.slotChangeBtn}>
                         変更
                         <input type="file" accept="image/*" hidden
-                          onChange={e => pickSlot(n, e)}/>
+                          onChange={e => pickSlot(i, e)}/>
                       </label>
-                      <button className={styles.slotClearBtn} onClick={() => clearSlot(n)}>
+                      <button className={styles.slotClearBtn} onClick={() => clearSlot(i)}>
                         削除
                       </button>
                     </div>
@@ -207,7 +277,7 @@ export default function CardPrintPage() {
                     <span className={styles.slotPlusIcon}>＋</span>
                     <span className={styles.slotEmptyText}>画像を選ぶ</span>
                     <input type="file" accept="image/*" hidden
-                      onChange={e => pickSlot(n, e)}/>
+                      onChange={e => pickSlot(i, e)}/>
                   </label>
                 )}
               </div>
@@ -220,8 +290,8 @@ export default function CardPrintPage() {
           <span>切り取り線を入れる</span>
         </label>
 
-        <button className={styles.runBtn} onClick={run} disabled={working || (!slot1 && !slot2)}>
-          {working ? '変換中…' : '印刷用ファイルを作成する'}
+        <button className={styles.runBtn} onClick={run} disabled={working || usedCount === 0}>
+          {working ? '変換中…' : `印刷用ファイルを作成する（${usedCount}枚）`}
         </button>
 
         {doneMsg && <p className={styles.done}>✓ {doneMsg}</p>}
@@ -231,7 +301,7 @@ export default function CardPrintPage() {
         <h2 className={styles.guideTitle}>コンビニで印刷するには</h2>
         <ol className={styles.guideList}>
           <li>作成したファイルを、各社の印刷アプリやネットプリントに登録します。</li>
-          <li>用紙サイズは「<strong>はがき</strong>」、カラーを選びます。</li>
+          <li>用紙サイズは「<strong>{spec.label === 'ハガキ' ? 'はがき' : 'A4'}</strong>」、カラーを選びます。</li>
           <li>「原寸」または「等倍」で印刷すると、切り取り後に名刺サイズ（{CARD_W_MM}×{CARD_H_MM}mm）になります。</li>
           <li>印刷後、切り取り線に沿ってカットしてください。</li>
         </ol>
