@@ -146,6 +146,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [comment,   setComment]   = useState(initial?.comment ?? '')
   const [notes,     setNotes]     = useState(initial?.notes ?? '')
   const [isPublic,  setIsPublic]  = useState(initial?.is_public ?? false)
+  /* 他のユーザーが、この評価のカードを集めることを許可するか。
+     既定は許可。集めたカードには自分の名前が Tea taster として載るため、
+     それを望まない人が自分で止められるようにしている。 */
+  const [allowCardExport, setAllowCardExport] = useState(initial?.allow_card_export ?? true)
   const [drankAt,   setDrankAt]   = useState(initial?.drank_at ?? new Date().toISOString().slice(0,10))
   const [brewMethod,setBrewMethod]= useState(initial?.brew_method ?? '')
   const [teaGarden, setTeaGarden] = useState(initial?.tea_garden ?? '')
@@ -477,6 +481,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       shop_name: shopName || null, color_hex: colorHex || null,
       aroma_notes: aromaNotes.length ? aromaNotes : null,
       ...scores, comment: comment || null, notes: notes || null, is_public: effectiveIsPublic, drank_at: drankAt,
+      allow_card_export: allowCardExport,
       brew_method: brewMethod || '不明',
       tea_garden: teaGarden || null,
       origin_country: originCountry || null,
@@ -940,6 +945,21 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
           <input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)}/>
           コミュニティに公開する
         </label>
+
+        {/* 公開しているときだけ意味のある設定なので、公開時のみ表示する */}
+        {isPublic && (
+          <>
+            <label className={styles.checkLabel}>
+              <input type="checkbox" checked={allowCardExport}
+                onChange={e => setAllowCardExport(e.target.checked)}/>
+              他の人がこの評価のカードを集めるのを許可する
+            </label>
+            <p className={styles.hint}>
+              集められたカードには、あなたの表示名が「Tea taster」として入ります。
+              名前を残したくない場合は、このチェックを外してください。
+            </p>
+          </>
+        )}
         </div>
 
         {/* 写真から水色を抽出するモーダル */}
@@ -1038,7 +1058,7 @@ export default function ReviewsPage() {
     setUserId(user.id)
     const [{ data }, { data: profile }] = await Promise.all([
       supabase.from('reviews')
-        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden,origin_country,tea_grams,water_ml,color_name')
+        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,allow_card_export,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden,origin_country,tea_grams,water_ml,color_name')
         .eq('user_id', user.id).order('drank_at', { ascending: false }),
       supabase.from('profiles').select('is_subscribed,is_admin,is_creator').eq('id', user.id).single(),
     ])

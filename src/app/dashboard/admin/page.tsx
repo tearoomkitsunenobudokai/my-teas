@@ -116,6 +116,10 @@ export default function AdminPage() {
   const [savingCosts, setSavingCosts] = useState(false)
   const [costsSaved, setCostsSaved] = useState(false)
   const [pointPolicy, setPointPolicy] = useState({ initial: '5', loginDays: '5', loginPoints: '2', freeExpiryDays: '60' })
+  /* カード収集の条件。捨てアカウントで無料ポイントを使い回されるのを防ぐための設定。 */
+  const [collectPolicy, setCollectPolicy] = useState({ minReviews: '5', minDays: '7', dailyLimit: '5', paidOnly: false })
+  const [savingCollect, setSavingCollect] = useState(false)
+  const [collectSaved, setCollectSaved] = useState(false)
   const [savingPolicy, setSavingPolicy] = useState(false)
   const [policySaved, setPolicySaved] = useState(false)
   const [packages, setPackages] = useState<any[]>([])
@@ -133,7 +137,8 @@ export default function AdminPage() {
     supabase.from('home_links').select('*').order('sort_order')
       .then(({ data }) => setHomeLinks(data ?? []))
     supabase.from('app_settings').select('key,value')
-      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days', 'maintenance_mode', 'maintenance_message', 'signup_enabled', 'signup_closed_message'])
+      .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days', 'maintenance_mode', 'maintenance_message', 'signup_enabled', 'signup_closed_message',
+                  'card_collect_min_reviews', 'card_collect_min_account_days', 'card_collect_daily_limit', 'card_collect_paid_only'])
       .then(({ data }) => {
         const m: any = {}
         for (const r of data ?? []) m[r.key] = r.value
@@ -142,6 +147,12 @@ export default function AdminPage() {
           loginDays: m['login_bonus_days'] ?? '5',
           loginPoints: m['login_bonus_points'] ?? '2',
           freeExpiryDays: m['points_free_expiry_days'] ?? '60',
+        })
+        setCollectPolicy({
+          minReviews: m['card_collect_min_reviews'] ?? '5',
+          minDays: m['card_collect_min_account_days'] ?? '7',
+          dailyLimit: m['card_collect_daily_limit'] ?? '5',
+          paidOnly: (m['card_collect_paid_only'] ?? 'false').toLowerCase() === 'true',
         })
         setMaintMode((m['maintenance_mode'] ?? 'off') as 'off' | 'readonly' | 'full')
         setMaintMessage(m['maintenance_message'] ?? '')
@@ -193,6 +204,20 @@ export default function AdminPage() {
     setSavingPolicy(false)
     if (error) { alert(error.message); return }
     setPolicySaved(true); setTimeout(() => setPolicySaved(false), 2000)
+  }
+
+  async function saveCollectPolicy() {
+    setSavingCollect(true)
+    const now = new Date().toISOString()
+    const { error } = await supabase.from('app_settings').upsert([
+      { key: 'card_collect_min_reviews', value: collectPolicy.minReviews, updated_at: now },
+      { key: 'card_collect_min_account_days', value: collectPolicy.minDays, updated_at: now },
+      { key: 'card_collect_daily_limit', value: collectPolicy.dailyLimit, updated_at: now },
+      { key: 'card_collect_paid_only', value: collectPolicy.paidOnly ? 'true' : 'false', updated_at: now },
+    ])
+    setSavingCollect(false)
+    if (error) { alert(error.message); return }
+    setCollectSaved(true); setTimeout(() => setCollectSaved(false), 2000)
   }
 
   function addPackageRow() {
@@ -774,9 +799,9 @@ export default function AdminPage() {
 
       {/* ─── ポイント設定（製作者のみ） ─── */}
       {activeTab === 'points' && isCreator && <div className={styles.section}>
-        <h2 className={styles.cardTitle}>💎 AI機能のポイント消費数</h2>
+        <h2 className={styles.cardTitle}>💎 機能ごとのポイント消費数</h2>
         <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
-          各AI機能を使うときに消費するポイント数です。<strong>0 にすると無料</strong>になります。
+          各機能を使うときに消費するポイント数です。<strong>0 にすると無料</strong>になります。
           （管理者・製作者は元々消費しません）
         </p>
         <div className={styles.settingsCard}>
@@ -863,6 +888,75 @@ export default function AdminPage() {
               {savingPolicy ? '保存中…' : '設定を保存'}
             </button>
             {policySaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
+          </div>
+        </div>
+
+        <h2 className={styles.cardTitle} style={{ marginTop: 24 }}>◆ カード収集の条件</h2>
+        <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
+          コミュニティの評価をカードにする機能の利用条件です。
+          複数のアカウントを作って初期ポイントで集めて回る、という使われ方を防ぐために設けています。
+          （管理者・製作者はこれらの条件の対象外です）
+        </p>
+        <div className={styles.settingsCard}>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>必要な自分の評価件数</p>
+              <p className={styles.settingDesc}>自分でこの件数以上の評価を記録していないと使えません。0にすると制限なし</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={0} max={999}
+                value={collectPolicy.minReviews}
+                onChange={e => setCollectPolicy(p => ({ ...p, minReviews: e.target.value }))}/>
+              <span className={styles.settingUnit}>件</span>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>登録からの必要経過日数</p>
+              <p className={styles.settingDesc}>アカウント作成直後は使えないようにします。0にすると制限なし</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={0} max={999}
+                value={collectPolicy.minDays}
+                onChange={e => setCollectPolicy(p => ({ ...p, minDays: e.target.value }))}/>
+              <span className={styles.settingUnit}>日</span>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>1日に集められる上限</p>
+              <p className={styles.settingDesc}>日本時間の0時にリセットされます</p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={1} max={999}
+                value={collectPolicy.dailyLimit}
+                onChange={e => setCollectPolicy(p => ({ ...p, dailyLimit: e.target.value }))}/>
+              <span className={styles.settingUnit}>枚</span>
+            </div>
+          </div>
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>購入したポイントでのみ利用可にする</p>
+              <p className={styles.settingDesc}>
+                有効にすると、初回特典・ログインボーナスなどの無料ポイントでは使えなくなります。
+                <strong>決済を接続するまでは有効にしないでください。</strong>
+                現在は購入手段がないため、ほとんどのユーザーが使えなくなります。
+              </p>
+            </div>
+            <div className={styles.settingControl}>
+              <label style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer' }}>
+                <input type="checkbox"
+                  checked={collectPolicy.paidOnly}
+                  onChange={e => setCollectPolicy(p => ({ ...p, paidOnly: e.target.checked }))}/>
+                <span className={styles.settingUnit}>{collectPolicy.paidOnly ? '課金のみ' : '無料ptも可'}</span>
+              </label>
+            </div>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center', marginTop: 12 }}>
+            <button className={styles.saveBtn} onClick={saveCollectPolicy} disabled={savingCollect}>
+              {savingCollect ? '保存中…' : '設定を保存'}
+            </button>
+            {collectSaved && <span style={{ fontSize:12, color:'var(--green)' }}>✓ 保存しました</span>}
           </div>
         </div>
 

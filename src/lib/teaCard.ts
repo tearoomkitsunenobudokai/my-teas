@@ -41,20 +41,78 @@ export interface TeaCardData {
   score_astringency: number
   score_richness: number
   score_color_depth: number
+  /** カードの種類（省略時は自分の記録） */
+  variant?: TeaCardVariant
+  /** 集めた人の表示名（variant='collection' のときだけ使う） */
+  collected_by?: string | null
 }
 
 // 名刺比率 91:55
 const W = 1274
 const H = 770
 
-// ── 配色（上質な紅茶サロンのトーン） ──
-const INK = '#443528'        // 本文の焦げ茶
-const INK_SOFT = '#7A6A55'   // 補助テキスト
-const INK_DEEP = '#332618'   // 見出し
-const GOLD = '#C9A96E'       // 明るい琥珀
-const GOLD_DEEP = '#A8873F'  // 罫線・飾りの金
-const ACCENT = '#7E332A'     // バッジの深い臙脂
-const CREAM = '#F6F0E4'      // 背景の生成り
+/**
+ * カードの種類。
+ *   normal     … 自分の記録（従来のカード。生成りの地に金）
+ *   collection … 他の人の評価を集めたカード（淡い藍の地に金）
+ *
+ * 集めたカードは、印刷して並べたときに自分のものと一目で区別できるよう、
+ * 地の色と文字色だけを寒色に振っている。金の罫と金のアイコンは共通なので、
+ * アイコン画像を差し替える必要はない。
+ */
+export type TeaCardVariant = 'normal' | 'collection'
+
+interface CardTheme {
+  INK: string; INK_SOFT: string; INK_DEEP: string
+  GOLD: string; GOLD_DEEP: string
+  ACCENT: string; CREAM: string
+  BG_FROM: string; BG_TO: string
+  BRAND: string
+  /** 水色の円のうしろに敷く紙の色（円の縁のなじませに使う） */
+  CIRCLE_BASE: string
+}
+
+const THEMES: Record<TeaCardVariant, CardTheme> = {
+  normal: {
+    INK: '#443528', INK_SOFT: '#7A6A55', INK_DEEP: '#332618',
+    GOLD: '#C9A96E', GOLD_DEEP: '#A8873F',
+    ACCENT: '#7E332A', CREAM: '#F6F0E4',
+    BG_FROM: '#F8F3E8', BG_TO: '#EFE7D4',
+    BRAND: '#A8760F',
+    CIRCLE_BASE: '#F0E9DC',
+  },
+  collection: {
+    INK: '#33304A', INK_SOFT: '#6A6785', INK_DEEP: '#26243A',
+    GOLD: '#C9A96E', GOLD_DEEP: '#A8873F',
+    ACCENT: '#3B3566', CREAM: '#E9EAF3',
+    BG_FROM: '#EFEFF6', BG_TO: '#DFE1EE',
+    BRAND: '#A8760F',
+    CIRCLE_BASE: '#E4E5EF',
+  },
+}
+
+/* 描画中だけ差し替える現在の配色。
+   これまで const で書かれていた色名をそのまま使えるようにするため、
+   let で持ち、generateTeaCard の先頭で適用している。
+   カード生成は1枚ずつ順に行うため、途中で書き換わることはない。 */
+let INK = THEMES.normal.INK           // 本文の焦げ茶（集めた版は紺鼠）
+let INK_SOFT = THEMES.normal.INK_SOFT // 補助テキスト
+let INK_DEEP = THEMES.normal.INK_DEEP // 見出し
+let GOLD = THEMES.normal.GOLD         // 明るい琥珀
+let GOLD_DEEP = THEMES.normal.GOLD_DEEP // 罫線・飾りの金
+let ACCENT = THEMES.normal.ACCENT     // バッジの色
+let CREAM = THEMES.normal.CREAM       // 背景の地色
+let BRAND_COLOR = THEMES.normal.BRAND // ブランド名の金茶
+let THEME: CardTheme = THEMES.normal
+
+function applyTheme(v: TeaCardVariant) {
+  const t = THEMES[v]
+  THEME = t
+  INK = t.INK; INK_SOFT = t.INK_SOFT; INK_DEEP = t.INK_DEEP
+  GOLD = t.GOLD; GOLD_DEEP = t.GOLD_DEEP
+  ACCENT = t.ACCENT; CREAM = t.CREAM
+  BRAND_COLOR = t.BRAND
+}
 
 // カードのフォント: いろはマル（MODI工場 / SIL Open Font License 1.1）
 const SERIF = '"irohamaru", Georgia, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", serif'
@@ -112,6 +170,15 @@ function fitFontSize(
   const w = ctx.measureText(text).width
   if (w <= maxWidth) return baseSize
   return Math.max(minSize, Math.floor(baseSize * maxWidth / w))
+}
+
+/** 幅に収まらない文字列を、末尾を省略して1行に収める */
+function ellipsize(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+  if (maxWidth <= 0) return ''
+  if (ctx.measureText(text).width <= maxWidth) return text
+  let s = text
+  while (s && ctx.measureText(s + '…').width > maxWidth) s = s.slice(0, -1)
+  return s ? s + '…' : ''
 }
 
 function computeLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, maxLines: number): string[] {
@@ -227,7 +294,7 @@ function drawTeaCircle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   // 白磁のカップ（縁の部分として見える）
   const cupGrad = ctx.createRadialGradient(cx - r * 0.15, cy - r * 0.2, r * 0.6, cx, cy, r)
   cupGrad.addColorStop(0, '#FFFFFF')
-  cupGrad.addColorStop(1, '#F0E9DC')
+  cupGrad.addColorStop(1, THEME.CIRCLE_BASE)
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2)
   ctx.fillStyle = cupGrad; ctx.fill()
 
@@ -335,6 +402,9 @@ function tryLoadImage(src: string): Promise<HTMLImageElement | null> {
 }
 
 export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
+  // 種類に応じた配色をこの1枚に適用する（既定は従来どおりの生成り）
+  const variant: TeaCardVariant = data.variant ?? 'normal'
+  applyTheme(variant)
   // フォント読み込みを待ってから描画（未ロードだと代替フォントで焼き付いてしまうため）
   await ensureFonts()
   const canvas = document.createElement('canvas')
@@ -343,9 +413,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // ── 背景（生成りグラデーション + ダマスク + 二重フレーム） ──
   const bg = ctx.createLinearGradient(0, 0, W, H)
-  bg.addColorStop(0, '#F8F3E8')
+  bg.addColorStop(0, THEME.BG_FROM)
   bg.addColorStop(0.5, CREAM)
-  bg.addColorStop(1, '#EFE7D4')
+  bg.addColorStop(1, THEME.BG_TO)
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
   await drawDamask(ctx)
@@ -386,7 +456,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   if (data.brand_name) {
     const bf = fitFontSize(ctx, data.brand_name, 28, 490, s => `italic 700 ${s}px ${SERIF}`)
     ctx.font = `italic 700 ${bf}px ${SERIF}`
-    ctx.fillStyle = '#A8760F'
+    ctx.fillStyle = BRAND_COLOR
     ctx.fillText(data.brand_name, nameX, ny)
   }
   ny += 56
@@ -426,10 +496,25 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const indentX = rightX + 10   // Tea taster / at 行のインデント（半角スペース1個分程度）
   const drankDate = data.drank_at ? data.drank_at.slice(0, 10).replace(/-/g, '/') : ''
 
-  // アイライン（小さな英字見出し）。飲んだ日は同じ行の右端に置く
+  // アイライン（小さな英字見出し）。飲んだ日は同じ行の右端に置く。
+  // 集めたカードは見出しを COLLECTION に変え、そのすぐ右に集めた人の名前を添える。
   ctx.font = `700 20px ${SERIF}`
   ctx.fillStyle = GOLD_DEEP
-  ctx.fillText('T A S T I N G   C A R D', rightX, 64)
+  const headText = variant === 'collection'
+    ? 'C O L L E C T I O N'
+    : 'T A S T I N G   C A R D'
+  ctx.fillText(headText, rightX, 64)
+  if (variant === 'collection' && data.collected_by) {
+    /* 見出しの実寸を測ってから続けて置く。
+       名前が長いと日付に重なるため、余白に収まる分だけを表示する。 */
+    const headW = ctx.measureText(headText).width
+    const byX = rightX + headW + 18
+    // 日付の手前で止める（日付がなければ右端まで使える）
+    const limit = (drankDate ? W - 64 - 110 : W - 64) - byX
+    ctx.font = `italic 400 18px ${SERIF}`
+    ctx.fillStyle = INK_SOFT
+    ctx.fillText(ellipsize(ctx, `collected by ${data.collected_by}`, limit), byX, 64)
+  }
   if (drankDate) {
     ctx.font = `italic 400 20px ${SERIF}`
     ctx.fillStyle = INK_SOFT
