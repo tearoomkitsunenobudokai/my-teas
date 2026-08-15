@@ -57,9 +57,11 @@ export default function AdminPage() {
   const [uploadingAdId, setUploadingAdId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user ?? null
+    /* 並列のクエリを投げる前に getUser() を1回だけ待つ。
+       getSession() はローカルの値を返すだけなので、期限切れのトークンのまま
+       複数のリクエストが同時に更新を試み、先に成功した1本以外が失敗して
+       セッションごと破棄される（＝ログアウトされる）ことがあるため。 */
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/auth'); return }
     const { data: profile } = await supabase.from('profiles').select('is_admin,is_creator').eq('id', user.id).single()
     if (!profile?.is_admin && !profile?.is_creator) { router.push('/dashboard'); return }

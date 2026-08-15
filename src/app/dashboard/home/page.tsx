@@ -44,9 +44,11 @@ export default function HomePage() {
 
   useEffect(() => {
     (async () => {
-      // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
-      const { data: { session } } = await supabase.auth.getSession()
-      const user = session?.user ?? null
+      /* 並列のクエリを投げる前に getUser() を1回だけ待つ。
+         getSession() はローカルの値を返すだけなので、期限切れのトークンのまま
+         複数のリクエストが同時に更新を試み、先に成功した1本以外が失敗して
+         セッションごと破棄される（＝ログアウトされる）ことがあるため。 */
+      const { data: { user } } = await supabase.auth.getUser()
       const now = new Date().toISOString()
       const [{ data: profile }, { data: ann }, { data: links }] = await Promise.all([
         user ? supabase.from('profiles').select('name').eq('id', user.id).single() : Promise.resolve({ data: null }),

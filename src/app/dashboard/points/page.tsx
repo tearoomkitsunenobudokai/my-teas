@@ -61,12 +61,20 @@ export default function PointsPage() {
   const [comingSoon, setComingSoon] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    // getSession()はローカルのセッションを即時返す（getUser()のようなサーバー往復なし）
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user ?? null
-    if (!user) { setLoading(false); return }
-    // 表示前に、自分の期限切れ無料ポイントを整理しておく（残高表示のズレを防ぐ）
-    await supabase.rpc('sweep_expired_free_points', { p_user_id: user.id })
+    /* この画面はRPC1本＋クエリ6本を一度に投げるため、他の画面より通信が多い。
+       アクセストークンの期限が切れていると、それらが同時にトークンの更新を試み、
+       先に成功した1本以外が無効なトークンで更新しようとして失敗し、
+       セッションごと破棄されてログイン画面へ飛ばされることがある。
+
+       そこで、通信を始める前に getUser() を1回だけ待つ。
+       getUser() はサーバーに問い合わせて必要なら更新まで済ませるので、
+       このあとの並列リクエストは有効なトークンで実行され、更新が重ならない。 */
+    const { data: { user }, error: userErr } = await supabase.auth.getUser()
+    if (userErr || !user) { setLoading(false); return }
+    /* 表示前に、自分の期限切れ無料ポイントを整理しておく（残高表示のズレを防ぐ）。
+       ここで失敗しても残高は表示できるので、画面は続行する。 */
+    const { error: sweepErr } = await supabase.rpc('sweep_expired_free_points', { p_user_id: user.id })
+    if (sweepErr) console.error('期限切れポイントの整理に失敗しました', sweepErr)
     const [{ data: profile }, { data: entries }, { data: pkgs }, { data: claims }, { data: costs }, { data: lots }] = await Promise.all([
       supabase.from('profiles').select('is_admin,is_creator,points,points_free,points_paid').eq('id', user.id).single(),
       supabase.from('points_ledger').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),

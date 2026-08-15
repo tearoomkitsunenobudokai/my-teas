@@ -49,7 +49,11 @@ export default function CardPrintPage() {
   const [myName, setMyName] = useState('')
   const [collected, setCollected] = useState<any[]>([])
   const [collectAvailable, setCollectAvailable] = useState(false)
+  const [myReviews, setMyReviews] = useState<any[]>([])
   const [pickerOpen, setPickerOpen] = useState(false)
+  // 選ぶ元（自分の評価 / 集めたカード）と、絞り込みの文字
+  const [pickSrc, setPickSrc] = useState<'mine' | 'collected'>('mine')
+  const [pickQuery, setPickQuery] = useState('')
   const [picked, setPicked] = useState<Set<string>>(new Set())
   const [building, setBuilding] = useState(0)   // 生成中の枚数（0なら生成していない）
 
@@ -58,8 +62,11 @@ export default function CardPrintPage() {
   const [doneMsg, setDoneMsg] = useState('')
 
   const load = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const user = session?.user ?? null
+    /* 並列のクエリを投げる前に getUser() を1回だけ待つ。
+       getSession() はローカルの値を返すだけなので、期限切れのトークンのまま
+       複数のリクエストが同時に更新を試み、先に成功した1本以外が失敗して
+       セッションごと破棄される（＝ログアウトされる）ことがあるため。 */
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setLoading(false); return }
     const [{ data: c }, { data: profile }] = await Promise.all([
       supabase.rpc('get_feature_cost', { p_feature: 'card_print' }),
@@ -69,13 +76,19 @@ export default function CardPrintPage() {
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     setPoints(profile?.points ?? 0)
 
-    // 集めたカード（マイグレーション未実行の環境では取得に失敗するので、その場合は隠す）
-    const [{ data: cards, error: cardsErr }, { data: me }] = await Promise.all([
+    /* カードにできるもとの一覧。
+       自分の評価と、集めたカードの両方から選べるようにする。
+       集めたカードは、マイグレーション未実行の環境では取得に失敗するので隠す。 */
+    const MINE_COLS = 'id,tea_name,brand_name,shop_name,tea_garden,origin_country,color_hex,color_name,aroma_notes,comment,drank_at,brew_method,steep_seconds,tea_grams_per_100ml,tea_grams,water_ml,accompaniments,score_aroma,score_astringency,score_richness,score_color_depth'
+    const [{ data: cards, error: cardsErr }, { data: me }, { data: mine }] = await Promise.all([
       supabase.from('my_collected_cards').select('*').order('collected_at', { ascending: false }),
       supabase.from('profiles').select('name').eq('id', user.id).single(),
+      supabase.from('reviews').select(MINE_COLS)
+        .eq('user_id', user.id).order('drank_at', { ascending: false }).limit(200),
     ])
     setCollectAvailable(!cardsErr)
     setCollected(cards ?? [])
+    setMyReviews(mine ?? [])
     setMyName(me?.name ?? '')
     setLoading(false)
   }, [supabase])
@@ -146,9 +159,37 @@ export default function CardPrintPage() {
   // まだ画像が入っていない枠の番号
   const emptySlots = Array.from({ length: capacity }, (_, i) => i).filter(i => !files[i])
 
+  /* 選ぶ元の一覧。自分の評価と集めたカードで持っている項目名が違うので、
+     ここで共通の形（id / 表示用の見出し / カードに渡す内容）に揃えておく。 */
+  type PickSource = { key: string; title: string; sub: string; hex: string; variant: 'normal' | 'collection'; row: any }
+
+  const pickList: PickSource[] = (pickSrc === 'mine'
+    ? myReviews.map(r => ({
+        key: `mine:${r.id}`,
+        title: r.tea_name ?? '不明',
+        sub: [r.brand_name, r.drank_at?.slice(0, 10)].filter(Boolean).join(' / '),
+        hex: r.color_hex ?? '#C8A96E',
+        variant: 'normal' as const,
+        row: r,
+      }))
+    : collected.map(c => ({
+        key: `col:${c.collection_id}`,
+        title: c.tea_name ?? '不明',
+        sub: [c.brand_name, c.author_name ?? '匿名'].filter(Boolean).join(' / '),
+        hex: c.color_hex ?? '#C8A96E',
+        variant: 'collection' as const,
+        row: c,
+      }))
+  ).filter(p => {
+    const q = pickQuery.trim().toLowerCase()
+    if (!q) return true
+    return `${p.title} ${p.sub}`.toLowerCase().includes(q)
+  })
+
   /** 選び直しのため、絵柄を選ぶ画面を開く */
   function openPicker() {
     setPicked(new Set())
+    setPickQuery('')
     setPickerOpen(true)
   }
 
@@ -166,25 +207,39 @@ export default function CardPrintPage() {
     })
   }
 
-  /** 選んだ集めたカードを、その場で画像にして空いている枠へ入れる */
+  /** 選んだものを、その場で画像にして空いている枠へ入れる */
   async function applyPicked() {
-    const targets = collected.filter(c => picked.has(c.collection_id))
+    // 元の一覧（絞り込み前）から探す。絞り込みを変えても選択は消えないようにするため
+    const all: PickSource[] = [
+      ...myReviews.map(r => ({
+        key: `mine:${r.id}`, title: r.tea_name ?? '不明', sub: '', hex: '',
+        variant: 'normal' as const, row: r,
+      })),
+      ...collected.map(c => ({
+        key: `col:${c.collection_id}`, title: c.tea_name ?? '不明', sub: '', hex: '',
+        variant: 'collection' as const, row: c,
+      })),
+    ]
+    const targets = all.filter(p => picked.has(p.key))
     if (targets.length === 0) { setPickerOpen(false); return }
 
     setBuilding(targets.length)
     try {
       const madeFiles: File[] = []
-      for (const c of targets) {
-        // カード画像は保存していないため、評価の内容からそのつど作る
+      for (const t of targets) {
+        const c = t.row
+        /* カード画像は保存していないため、評価の内容からそのつど作る。
+           自分の評価は通常の配色、集めたカードは COLLECTION 版になる。 */
         const blob = await generateTeaCard({
-          variant: 'collection',
-          collected_by: myName || 'ゲスト',
+          variant: t.variant,
+          collected_by: t.variant === 'collection' ? (myName || 'ゲスト') : null,
           tea_name: c.tea_name,
           brand_name: c.brand_name,
           tea_garden: c.tea_garden,
           origin_country: c.origin_country,
           shop_name: c.shop_name,
-          user_name: c.author_name ?? '匿名',
+          // 自分の評価は自分が飲んだ人、集めたカードは投稿した人
+          user_name: t.variant === 'collection' ? (c.author_name ?? '匿名') : (myName || null),
           drank_at: c.drank_at,
           color_hex: c.color_hex,
           color_name: c.color_name,
@@ -220,7 +275,7 @@ export default function CardPrintPage() {
         })
         return next
       })
-      // 集めたカードは評価カードと同じ比率なので、位置の調整は不要
+      // 評価カードは枠と同じ比率なので、位置の調整は不要
       setLocks(prev => {
         const next = [...prev]
         madeFiles.forEach((_, i) => { const slot = emptySlots[i]; if (slot !== undefined) next[slot] = true })
@@ -323,10 +378,10 @@ export default function CardPrintPage() {
 
         {/* 集めたカードから一括で入れる導線。A4の8枠を1枚ずつ選ぶのは手間なので、
             画像を用意しなくてもここからまとめて入れられるようにしている。 */}
-        {collectAvailable && collected.length > 0 && (
+        {(myReviews.length > 0 || (collectAvailable && collected.length > 0)) && (
           <div className={styles.pickRow}>
             <button className={styles.pickBtn} onClick={openPicker} disabled={emptySlots.length === 0}>
-              ◆ 集めたカードから選ぶ（{collected.length}枚）
+              🍵 記録からカードを選ぶ
             </button>
             <span className={styles.pickHint}>
               {emptySlots.length === 0
@@ -427,30 +482,55 @@ export default function CardPrintPage() {
       {pickerOpen && (
         <div className={styles.modalBack} onClick={() => building === 0 && setPickerOpen(false)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <p className={styles.modalTitle}>集めたカードから選ぶ</p>
+            <p className={styles.modalTitle}>カードを選ぶ</p>
             <p className={styles.modalLead}>
               空いている{emptySlots.length}個の枠に、選んだ順で入ります。
               画像は選んだあとに作るので、少し時間がかかります。
             </p>
 
+            {/* 選ぶ元の切り替え。集めたカードが無い環境では自分の評価だけを出す */}
+            {collectAvailable && collected.length > 0 && (
+              <div className={styles.srcRow}>
+                <button
+                  className={`${styles.srcBtn} ${pickSrc === 'mine' ? styles.srcBtnOn : ''}`}
+                  onClick={() => setPickSrc('mine')} disabled={building > 0}>
+                  自分の評価（{myReviews.length}）
+                </button>
+                <button
+                  className={`${styles.srcBtn} ${pickSrc === 'collected' ? styles.srcBtnOn : ''}`}
+                  onClick={() => setPickSrc('collected')} disabled={building > 0}>
+                  ◆ 集めたカード（{collected.length}）
+                </button>
+              </div>
+            )}
+
+            {/* 記録が増えると探しにくいので、紅茶名やブランド名で絞り込めるようにする */}
+            <input
+              className={styles.pickSearch}
+              type="search"
+              placeholder="紅茶名・ブランド名で絞り込む"
+              value={pickQuery}
+              onChange={e => setPickQuery(e.target.value)}
+              disabled={building > 0}/>
+
             <div className={styles.pickList}>
-              {collected.map(c => {
-                const on = picked.has(c.collection_id)
+              {pickList.length === 0 ? (
+                <p className={styles.pickEmpty}>
+                  {pickQuery ? '一致する記録がありません' : 'カードにできる記録がありません'}
+                </p>
+              ) : pickList.map(p => {
+                const on = picked.has(p.key)
                 return (
                   <button
-                    key={c.collection_id}
+                    key={p.key}
                     className={`${styles.pickItem} ${on ? styles.pickItemOn : ''}`}
-                    onClick={() => togglePick(c.collection_id)}
+                    onClick={() => togglePick(p.key)}
                     disabled={building > 0}>
                     <span className={styles.pickCheck}>{on ? '✓' : ''}</span>
-                    <span
-                      className={styles.pickSwatch}
-                      style={{ background: c.color_hex ?? '#C8A96E' }}/>
+                    <span className={styles.pickSwatch} style={{ background: p.hex }}/>
                     <span className={styles.pickInfo}>
-                      <span className={styles.pickName}>{c.tea_name ?? '不明'}</span>
-                      <span className={styles.pickSub}>
-                        {c.brand_name ? `${c.brand_name} / ` : ''}{c.author_name ?? '匿名'}
-                      </span>
+                      <span className={styles.pickName}>{p.title}</span>
+                      <span className={styles.pickSub}>{p.sub}</span>
                     </span>
                   </button>
                 )

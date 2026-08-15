@@ -453,3 +453,45 @@
   .pickSwatch   { width: 40px; height: 40px; }
   .modalCancel, .modalOk { font-size: 25.2px; padding: 16px; }
 }
+
+/* === v338: 選ぶ元の切り替えと絞り込み === */
+.srcRow { display: flex; gap: 8px; margin-bottom: 10px; }
+.srcBtn {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  transition: background .15s, color .15s, border-color .15s;
+}
+.srcBtnOn { color: #FFFFFF; background: #2A3350; border-color: #2A3350; }
+.srcBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+.pickSearch {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 9px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+}
+.pickSearch:focus { outline: none; border-color: #C9A96E; }
+
+.pickEmpty {
+  margin: 20px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-hint);
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .srcBtn     { font-size: 23.4px; padding: 14px 16px; }
+  .pickSearch { font-size: 25.2px; padding: 14px 16px; }
+  .pickEmpty  { font-size: 23.4px; }
+}
