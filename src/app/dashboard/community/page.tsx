@@ -342,7 +342,12 @@ export default function CommunityPage() {
     const already = collected.has(review.id)
 
     if (!already && (collectState?.cost ?? 0) > 0) {
-      if (!confirm(`${collectState!.cost}ptを消費して、このカードを集めます。よろしいですか？`)) return
+      if (!confirm(
+        `${collectState!.cost}ptを消費して、このカードを集めます。\n\n` +
+        `※ カードは元の評価から毎回作り直すため、投稿者が評価を更新すると内容も変わります。\n` +
+        `※ 元の評価が削除されると、一覧からも消えます。\n\n` +
+        `よろしいですか？`
+      )) return
     }
 
     setCollecting(true)
@@ -482,9 +487,23 @@ export default function CommunityPage() {
           </p>
         ) : (
           <>
-            <p className={styles.collectedLead}>
-              カード画像は保存せず、そのつど作り直しています。何度でも無料で作成できます。
-            </p>
+            <div className={styles.collectedNotice}>
+              <p className={styles.collectedNoticeTitle}>ご注意ください</p>
+              <ul className={styles.collectedNoticeList}>
+                <li>
+                  カード画像は保存せず、元の評価から<strong>そのつど作り直しています</strong>。
+                  何度でも無料で作成できます。
+                </li>
+                <li>
+                  そのため、<strong>投稿した人が評価を更新すると、カードの内容も新しい内容に変わります</strong>。
+                  作成した時点の内容を残しておきたい場合は、画像をダウンロードして保存してください。
+                </li>
+                <li>
+                  <strong>元の評価が削除されると、この一覧からも消えます。</strong>
+                  公開を取りやめた場合も同様です。ダウンロード済みの画像はお手元に残ります。
+                </li>
+              </ul>
+            </div>
             <div className={styles.tileGrid}>
               {collectedCards.map(c => (
                 <div key={c.collection_id} className={styles.collectedCard}>
