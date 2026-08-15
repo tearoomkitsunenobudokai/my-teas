@@ -453,15 +453,19 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const leftShift = 20
   const nameX = 64 - leftShift
   let ny = cupCy + cupR + 40
+  /* レーダーが左に寄ったぶん、左側の文字が伸びられる幅は狭くなった。
+     レーダーの左ラベル（渋み）の手前で必ず止まるよう、上限をここで決める。
+     LEFT_TEXT_MAX を1か所で管理し、ブランド名・紅茶名・茶園名すべてに使う。 */
+  const LEFT_TEXT_MAX = 470
   if (data.brand_name) {
-    const bf = fitFontSize(ctx, data.brand_name, 28, 490, s => `italic 700 ${s}px ${SERIF}`)
+    const bf = fitFontSize(ctx, data.brand_name, 28, LEFT_TEXT_MAX, s => `italic 700 ${s}px ${SERIF}`)
     ctx.font = `italic 700 ${bf}px ${SERIF}`
     ctx.fillStyle = BRAND_COLOR
     ctx.fillText(data.brand_name, nameX, ny)
   }
   ny += 56
   const teaNameText = data.tea_name || '（お茶の名前）'
-  const nf = fitFontSize(ctx, teaNameText, 52, 490, s => `700 ${s}px ${MINCHO}`)
+  const nf = fitFontSize(ctx, teaNameText, 52, LEFT_TEXT_MAX, s => `700 ${s}px ${MINCHO}`)
   ctx.font = `700 ${nf}px ${MINCHO}`
   ctx.fillStyle = INK_DEEP
   ctx.fillText(teaNameText, nameX, ny)
@@ -470,7 +474,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const gardenText = formatGardenOrigin(data.tea_garden, data.origin_country)
   if (gardenText) {
     // 飾り罫（金線）を挟んで茶園名。罫の長さは文字幅に合わせて可変にする
-    const gf = fitFontSize(ctx, gardenText, 19, 480, s => `400 ${s}px ${MINCHO}`, 13)
+    const gf = fitFontSize(ctx, gardenText, 19, LEFT_TEXT_MAX, s => `400 ${s}px ${MINCHO}`, 13)
     ctx.font = `400 ${gf}px ${MINCHO}`
     const gw = ctx.measureText(gardenText).width
 
@@ -487,7 +491,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // ── 右上: TASTING CARD → 紅茶名 → 評価者/飲んだ日 → 場所 → 罫 → メモ ──
   // 右側の枠囲みセクションの左右位置。ヘッダー・コメント・区切り線の
   // 右端もこれに合わせるので、先に定義しておく。
-  const boxX = 902
+  const boxX = 856
   const boxRight = W - 46
   const boxW = boxRight - boxX
 
@@ -570,9 +574,11 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // コメントが上限（200字）まで書かれたときに本文と近づきすぎないよう、
   // 中心を少し下げている。右側のセクション（香り分析など）もこの座標を
   // 基準に配置されるため、一緒に下へ移動する。
-  const radarCx = 745
-  const radarCy = H - 195
-  const radarR = 120
+  /* 枠囲みを2列×2段に組み替えて左へ広げたため、レーダーもその分だけ
+     左・上に寄せ、半径を少し詰めている。（旧: 745 / H-195 / 120） */
+  const radarCx = 700
+  const radarCy = 556
+  const radarR = 115
   // レーダーの一番下のラベル（水色）の下端。右側の枠囲みセクションは
   // 内容量で高さが変わるので、上からではなくこの線に下端を合わせて積む。
   const RADAR_LABEL_BOTTOM = radarCy + radarR + RADAR_LABEL_GAP + 11
@@ -631,27 +637,42 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const AROMA_FS = 20   // 香り分析は他より少し大きく見せる
   const AROMA_LH = 26
 
-  // 上から: 香り分析 → 水色 → （淹れ方 ＋ 添え物 の2列）
-  const BOX_GAP = 13   // 枠どうしの間隔
+  /* 枠の配置は2列×2段。
+       上段: 香り分析（広い） ＋ 水色（狭い）
+       下段: 添え物（広い）   ＋ 淹れ方（狭い）
+     以前は4つを縦に積んでいたが、添え物と淹れ方のアイコンを大きくするため、
+     上段も横に並べて高さを空けている。
+     左右の端は boxX と boxRight で決まり、内部の幅はそこから引き算で出すので、
+     boxX を動かせば全体がそのまま追随する。 */
+  const COL_GAP = 14        // 左右に並ぶ枠どうしの間隔
+  const BOX_GAP = 16        // 上段と下段の間隔
+
+  // 上段
   const AROMA_TOP = boxTop
-  const AROMA_H = 100   // 香りは最大3つ選べるので3行分を確保する
-  const COLOR_TOP = AROMA_TOP + AROMA_H + BOX_GAP
-  const COLOR_H = 46
-  const LOWER_TOP = COLOR_TOP + COLOR_H + BOX_GAP
-  const LOWER_BOTTOM = 720   // 右下の隅飾り(y=734の横線)と重ならない位置まで
+  const TOP_H = 104         // 香りは最大3つ選べるので3行ぶんを確保する
+  const COLOR_W = 162       // 「#RRGGBBAA」＋色見本が入る幅
+  const AROMA_W = boxW - COL_GAP - COLOR_W
+  const AROMA_X = boxX
+  const COLOR_X = AROMA_X + AROMA_W + COL_GAP
+  const COLOR_TOP = AROMA_TOP
+  const COLOR_H = TOP_H
+
+  // 下段
+  const LOWER_TOP = AROMA_TOP + TOP_H + BOX_GAP
+  const LOWER_BOTTOM = 716   // 右下の隅飾り(y=734の横線)と重ならない位置まで
   const LOWER_H = LOWER_BOTTOM - LOWER_TOP
-  // 下段は左に添え物（マスを3つ並べるので広い方）、右に淹れ方
-  const COL_GAP = 8
   const BREW_W = 108
   const ACC_X = boxX
   const ACC_W = boxW - COL_GAP - BREW_W
   const BREW_X = ACC_X + ACC_W + COL_GAP
 
-  // マス（文字＋図）の寸法。淹れ方・添え物で共通
-  const CELL_W = 57
-  const CELL_H = 69
+  /* マス（文字＋図）の寸法。淹れ方・添え物で共通。
+     アイコンを大きく見せたいので、マスの高さと図の寸法を広げている。
+     （旧: マス 57×69 / 図 43） */
+  const CELL_W = 70
+  const CELL_H = 88
   const CELL_GAP = 3
-  const CELL_ICON = 43
+  const CELL_ICON = 58
   // マスの余白は上下左右すべて均等にする。縦は常に2行ぶんで計算するので、
   // 添え物が1行でも淹れ方のマスと高さが揃う。
   const CELL_ROWS = 2
@@ -691,6 +712,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }
 
   // 1マス分（上に文字・下に図）。図が未用意でも枠と文字は必ず描く
+  // マス内の文字のベースライン。マスが高くなったぶん少し下げている
+  const LABEL_BASE = 18
   const drawCell = (label: string, img: HTMLImageElement | null, x: number, y: number, w = CELL_W, dim = false) => {
     const r = 6
     ctx.strokeStyle = dim ? 'rgba(168,135,63,0.16)' : 'rgba(168,135,63,0.45)'
@@ -703,17 +726,22 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.arcTo(x, y, x + r, y, r)
     ctx.closePath()
     ctx.stroke()
-    const lf = fitFontSize(ctx, label, 12, w - 8, s => `400 ${s}px ${MINCHO}`, 8)
+    const lf = fitFontSize(ctx, label, 13, w - 10, s => `400 ${s}px ${MINCHO}`, 8)
     ctx.font = `400 ${lf}px ${MINCHO}`
     ctx.fillStyle = dim ? 'rgba(122,106,85,0.26)' : INK_SOFT
     ctx.textAlign = 'center'
-    ctx.fillText(label, x + w / 2, y + 15)
+    ctx.fillText(label, x + w / 2, y + LABEL_BASE)
     ctx.textAlign = 'left'
-    // 文字とのあいだに少し間隔をあける（詰まって見えないように）
+    /* 図はマスの残りの高さの中央に置く。マスの寸法を変えても、
+       文字との間隔や下の余白が自動で釣り合うようにしている。 */
     if (img) {
+      const areaTop = y + LABEL_BASE + 6
+      const areaH = y + CELL_H - 6 - areaTop
+      // 図はマスの幅からもはみ出さないようにする（淹れ方の横長マスにも対応）
+      const size = Math.min(CELL_ICON, areaH, w - 14)
       ctx.save()
       if (dim) ctx.globalAlpha = 0.18
-      putIcon(img, x + (w - CELL_ICON) / 2, y + 23, CELL_ICON)
+      putIcon(img, x + (w - size) / 2, areaTop + (areaH - size) / 2, size)
       ctx.restore()
     }
   }
@@ -723,41 +751,52 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     Promise.all(paths.map(p => (p ? tryLoadImage(p) : Promise.resolve(null))))
 
   // ── 香り分析 ──
-  drawBox('香り分析', boxX, AROMA_TOP, boxW, AROMA_H)
+  drawBox('香り分析', AROMA_X, AROMA_TOP, AROMA_W, TOP_H)
   if (data.aroma_notes && data.aroma_notes.length) {
     // 香りは最大3つ。「・」でつないで折り返すのではなく、1つずつ改行して並べる
     ctx.font = `400 ${AROMA_FS}px ${MINCHO}`
     const lines = data.aroma_notes.slice(0, 3)
-      .map(n => computeLines(ctx, n, boxW - boxPad * 2, 1)[0] ?? '')
+      .map(n => computeLines(ctx, n, AROMA_W - boxPad * 2, 1)[0] ?? '')
       .filter(Boolean)
     ctx.fillStyle = INK
     // 常に3行分の枠として扱い、上から順に詰める。1つや2つのときに
     // 中央寄せにすると、カードごとに1行目の高さが変わって見比べにくいため。
-    const firstY = AROMA_TOP + (AROMA_H - (3 - 1) * AROMA_LH) / 2 + 8
+    const firstY = AROMA_TOP + (TOP_H - (3 - 1) * AROMA_LH) / 2 + 8
     ctx.font = `400 ${AROMA_FS}px ${MINCHO}`
-    lines.forEach((l, i) => ctx.fillText(l, boxX + boxPad, firstY + i * AROMA_LH))
+    lines.forEach((l, i) => ctx.fillText(l, AROMA_X + boxPad, firstY + i * AROMA_LH))
   }
 
   // ── 水色（パレット登録色なら色名、未登録なら「カスタム」＋色見本） ──
-  drawBox('水色', boxX, COLOR_TOP, boxW, COLOR_H)
+  drawBox('水色', COLOR_X, COLOR_TOP, COLOR_W, COLOR_H)
   if (data.color_hex) {
     const hexNorm = normalizeHex(data.color_hex)
-    const label = `${data.color_name || 'カスタム'}　${hexNorm}`
-    // 香り分析と同じ大きさに揃える（長い色名のときだけ自動で縮む）
-    const lf = fitFontSize(ctx, label, AROMA_FS, boxW - boxPad * 2 - 28, s => `400 ${s}px ${MINCHO}`, 12)
-    ctx.font = `400 ${lf}px ${MINCHO}`
+    const innerW = COLOR_W - boxPad * 2
+    /* 枠が縦長になったので、色名と色コードを2行に分けて置く。
+       1行に並べると、透明度つきの9桁（#RRGGBBAA）で必ずはみ出すため。 */
+    const nameText = data.color_name || 'カスタム'
+    const nf2 = fitFontSize(ctx, nameText, AROMA_FS, innerW, s => `400 ${s}px ${MINCHO}`, 12)
+    ctx.font = `400 ${nf2}px ${MINCHO}`
     ctx.fillStyle = INK
-    const baseY = COLOR_TOP + COLOR_H / 2 + 10
-    ctx.fillText(label, boxX + boxPad, baseY)
-    const swX = boxX + boxPad + ctx.measureText(label).width + 10
-    if (swX + 18 <= boxRight - boxPad) {
+    const nameY = COLOR_TOP + TOP_H / 2 - 4
+    ctx.fillText(nameText, COLOR_X + boxPad, nameY)
+
+    // 2行目: 色コード＋色見本。見本のぶんを引いた幅に収める
+    const SW = 20
+    const hf = fitFontSize(ctx, hexNorm, 18, innerW - SW - 10, s => `400 ${s}px ${SERIF}`, 11)
+    ctx.font = `400 ${hf}px ${SERIF}`
+    ctx.fillStyle = INK
+    const hexY = nameY + 30
+    ctx.fillText(hexNorm, COLOR_X + boxPad, hexY)
+
+    const swX = COLOR_X + boxPad + ctx.measureText(hexNorm).width + 10
+    if (swX + SW <= COLOR_X + COLOR_W - boxPad) {
       const [sr, sg, sb, sa] = parseHex(hexNorm)
       const sbase = mix([sr, sg, sb], [248, 242, 230], 1 - sa)
       ctx.fillStyle = rgbStr(sbase)
-      ctx.fillRect(swX, baseY - 14, 18, 18)
+      ctx.fillRect(swX, hexY - 15, SW, SW)
       ctx.strokeStyle = GOLD_DEEP
       ctx.lineWidth = 1
-      ctx.strokeRect(swX, baseY - 14, 18, 18)
+      ctx.strokeRect(swX, hexY - 15, SW, SW)
     }
   }
 
@@ -782,7 +821,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     if (!brewRows.length) {
       const [filler] = await loadIcons([BREW_FILLER_ICON])
       if (filler) {
-        const areaTop = LOWER_TOP + CELL_TOP + CELL_H + 8
+        const areaTop = LOWER_TOP + CELL_TOP + CELL_H + 12
         const areaH = LOWER_TOP + LOWER_H - CELL_TOP - areaTop
         const size = Math.min(BREW_W - 24, areaH)
         putIcon(filler, BREW_X + (BREW_W - size) / 2, areaTop + (areaH - size) / 2, size)
@@ -792,7 +831,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const rowX = BREW_X + 8
     const rowRight = BREW_X + BREW_W - 8
     const rowW = rowRight - rowX
-    let dy = LOWER_TOP + CELL_TOP + CELL_H + 18
+    let dy = LOWER_TOP + CELL_TOP + CELL_H + 26
     for (const row of brewRows) {
       // 項目名と値は同じ文字サイズ。両方入る最大サイズを選ぶ
       let rf = 16
