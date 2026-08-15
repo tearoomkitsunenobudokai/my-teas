@@ -160,7 +160,7 @@ export default function CommunityPage() {
        未実行の環境では存在しない。存在しない列を指定するとクエリ全体が失敗し、
        コミュニティが一件も表示されなくなるため、失敗したときは
        その列を外してもう一度取得する。（機能が使えないだけで、閲覧は続けられる） */
-    const BASE_COLS = 'id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_color_depth, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, tea_grams, water_ml, origin_country, accompaniments'
+    const BASE_COLS = 'id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_color_depth, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, tea_grams, water_ml, origin_country, accompaniments, color_name'
 
     const fetchReviews = (cols: string) => supabase
       .from('reviews')
@@ -266,6 +266,7 @@ export default function CommunityPage() {
         user_name: c.author_name ?? '匿名',
         drank_at: c.drank_at,
         color_hex: c.color_hex,
+        color_name: c.color_name,
         comment: c.comment,
         aroma_notes: c.aroma_notes,
         brew_method: c.brew_method,
@@ -371,6 +372,7 @@ export default function CommunityPage() {
         user_name: review.profiles?.name ?? '匿名',
         drank_at: review.drank_at,
         color_hex: review.color_hex,
+        color_name: review.color_name,
         comment: review.comment,
         aroma_notes: review.aroma_notes,
         brew_method: review.brew_method,
