@@ -585,6 +585,21 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // コメントとレーダー・枠囲みエリアを分ける区切り線の位置。
   // 枠囲みの上端がこれより上に来ないよう boxTop で下限を決めている。
   const DIVIDER_Y = 364   // 200字のコメントが23pxで収まる限界に合わせた位置
+  /* ノート風の薄い罫。複数行の項目（コメント・香り分析・淹れ方）の
+     行間に引いて読みやすくする。文字のベースラインの少し下に置く。
+     枠線より薄くして、罫が主張しすぎないようにしている。 */
+  const drawRules = (x1: number, x2: number, firstBaseline: number, lineH: number, count: number) => {
+    if (count <= 0) return
+    ctx.save()
+    ctx.strokeStyle = 'rgba(168,135,63,0.22)'
+    ctx.lineWidth = 1
+    for (let i = 0; i < count; i++) {
+      const y = Math.round(firstBaseline + i * lineH + lineH * 0.28) + 0.5
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke()
+    }
+    ctx.restore()
+  }
+
   const boxTop = DIVIDER_Y + 16
 
   if (data.comment) {
@@ -609,6 +624,11 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.fillStyle = INK
     // 上の判定と同じ数え方にしないと、収まるはずの行が「…」で切られてしまう
     const maxLines = Math.max(1, Math.floor((available - fs * 0.3) / lh) + 1)
+    // 実際に描く行数だけ罫を引きたいので、先に行数を数えてから罫→文字の順に描く
+    const drawnLines = Math.min(maxLines, computeLines(ctx, commentText, rightW, 99).length)
+    drawRules(rightX, boxRight, ty, lh, drawnLines)
+    ctx.font = `400 ${fs}px ${MINCHO}`
+    ctx.fillStyle = INK
     wrapText(ctx, commentText, rightX, ty, rightW, lh, maxLines)
   }
 
@@ -631,6 +651,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
   const boxPad = 14
+  // 上段（香り分析・水色）は枠が小さいので、左右の余白を詰めて文字幅を稼ぐ
+  const topPad = 10
   const BODY_FS = 17
   const BODY_LH = 24
   const LEGEND_FS = 19   // 枠の見出し（香り分析・水色・添え物・淹れ方）
@@ -650,7 +672,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // 上段
   const AROMA_TOP = boxTop
   const TOP_H = 104         // 香りは最大3つ選べるので3行ぶんを確保する
-  const COLOR_W = 162       // 「#RRGGBBAA」＋色見本が入る幅
+  const COLOR_W = 182       // 「#RRGGBBAA」＋色見本と、10文字の色名が入る幅
   const AROMA_W = boxW - COL_GAP - COLOR_W
   const AROMA_X = boxX
   const COLOR_X = AROMA_X + AROMA_W + COL_GAP
@@ -752,44 +774,55 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // ── 香り分析 ──
   drawBox('香り分析', AROMA_X, AROMA_TOP, AROMA_W, TOP_H)
+  // 常に3行分の枠として扱い、上から順に詰める。1つや2つのときに
+  // 中央寄せにすると、カードごとに1行目の高さが変わって見比べにくいため。
+  const TOP_FIRST_Y = AROMA_TOP + (TOP_H - (3 - 1) * AROMA_LH) / 2 + 8
   if (data.aroma_notes && data.aroma_notes.length) {
-    // 香りは最大3つ。「・」でつないで折り返すのではなく、1つずつ改行して並べる
-    ctx.font = `400 ${AROMA_FS}px ${MINCHO}`
-    const lines = data.aroma_notes.slice(0, 3)
-      .map(n => computeLines(ctx, n, AROMA_W - boxPad * 2, 1)[0] ?? '')
-      .filter(Boolean)
+    const lines = data.aroma_notes.slice(0, 3).filter(Boolean)
+    const innerW = AROMA_W - topPad * 2
+    /* 香りは自由入力で10文字まで入る。枠を詰めたぶん、切り捨てるのではなく
+       3つとも入る大きさまで一緒に縮める（1行だけ小さいと不揃いに見えるため）。 */
+    let af = AROMA_FS
+    for (let sz = AROMA_FS; sz >= 12; sz--) {
+      ctx.font = `400 ${sz}px ${MINCHO}`
+      if (lines.every(l => ctx.measureText(l).width <= innerW)) { af = sz; break }
+      af = sz
+    }
+    // 行間にノート風の薄い罫を引く
+    drawRules(AROMA_X + topPad, AROMA_X + AROMA_W - topPad, TOP_FIRST_Y, AROMA_LH, lines.length)
+    ctx.font = `400 ${af}px ${MINCHO}`
     ctx.fillStyle = INK
-    // 常に3行分の枠として扱い、上から順に詰める。1つや2つのときに
-    // 中央寄せにすると、カードごとに1行目の高さが変わって見比べにくいため。
-    const firstY = AROMA_TOP + (TOP_H - (3 - 1) * AROMA_LH) / 2 + 8
-    ctx.font = `400 ${AROMA_FS}px ${MINCHO}`
-    lines.forEach((l, i) => ctx.fillText(l, AROMA_X + boxPad, firstY + i * AROMA_LH))
+    lines.forEach((l, i) => ctx.fillText(l, AROMA_X + topPad, TOP_FIRST_Y + i * AROMA_LH))
   }
 
   // ── 水色（パレット登録色なら色名、未登録なら「カスタム」＋色見本） ──
   drawBox('水色', COLOR_X, COLOR_TOP, COLOR_W, COLOR_H)
   if (data.color_hex) {
     const hexNorm = normalizeHex(data.color_hex)
-    const innerW = COLOR_W - boxPad * 2
+    const innerW = COLOR_W - topPad * 2
     /* 枠が縦長になったので、色名と色コードを2行に分けて置く。
-       1行に並べると、透明度つきの9桁（#RRGGBBAA）で必ずはみ出すため。 */
+       1行に並べると、透明度つきの9桁（#RRGGBBAA）で必ずはみ出すため。
+       行の高さは香り分析と共通（AROMA_LH）にし、1行目の位置も揃えている。 */
     const nameText = data.color_name || 'カスタム'
+    const nameY = TOP_FIRST_Y
+    const hexY = nameY + AROMA_LH
+    // 2行ぶんの罫を、香り分析と同じ間隔で引く
+    drawRules(COLOR_X + topPad, COLOR_X + COLOR_W - topPad, nameY, AROMA_LH, 2)
+
     const nf2 = fitFontSize(ctx, nameText, AROMA_FS, innerW, s => `400 ${s}px ${MINCHO}`, 12)
     ctx.font = `400 ${nf2}px ${MINCHO}`
     ctx.fillStyle = INK
-    const nameY = COLOR_TOP + TOP_H / 2 - 4
-    ctx.fillText(nameText, COLOR_X + boxPad, nameY)
+    ctx.fillText(nameText, COLOR_X + topPad, nameY)
 
     // 2行目: 色コード＋色見本。見本のぶんを引いた幅に収める
     const SW = 20
     const hf = fitFontSize(ctx, hexNorm, 18, innerW - SW - 10, s => `400 ${s}px ${SERIF}`, 11)
     ctx.font = `400 ${hf}px ${SERIF}`
     ctx.fillStyle = INK
-    const hexY = nameY + 30
-    ctx.fillText(hexNorm, COLOR_X + boxPad, hexY)
+    ctx.fillText(hexNorm, COLOR_X + topPad, hexY)
 
-    const swX = COLOR_X + boxPad + ctx.measureText(hexNorm).width + 10
-    if (swX + SW <= COLOR_X + COLOR_W - boxPad) {
+    const swX = COLOR_X + topPad + ctx.measureText(hexNorm).width + 10
+    if (swX + SW <= COLOR_X + COLOR_W - topPad) {
       const [sr, sg, sb, sa] = parseHex(hexNorm)
       const sbase = mix([sr, sg, sb], [248, 242, 230], 1 - sa)
       ctx.fillStyle = rgbStr(sbase)
@@ -831,7 +864,10 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const rowX = BREW_X + 8
     const rowRight = BREW_X + BREW_W - 8
     const rowW = rowRight - rowX
-    let dy = LOWER_TOP + CELL_TOP + CELL_H + 26
+    const ROW_LH = 26
+    let dy = LOWER_TOP + CELL_TOP + CELL_H + ROW_LH
+    // 茶葉量・水量・時間の行間にも同じ罫を引く
+    drawRules(rowX, rowRight, dy, ROW_LH, brewRows.length)
     for (const row of brewRows) {
       // 項目名と値は同じ文字サイズ。両方入る最大サイズを選ぶ
       let rf = 16
@@ -847,7 +883,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       ctx.textAlign = 'right'
       ctx.fillText(row.value, rowRight, dy)
       ctx.textAlign = 'left'
-      dy += 26
+      dy += ROW_LH
     }
   }
 
