@@ -70,6 +70,17 @@ interface CardTheme {
   BRAND: string
   /** 水色の円のうしろに敷く紙の色（円の縁のなじませに使う） */
   CIRCLE_BASE: string
+  /** My-Teas バッジの文字色 */
+  BADGE_TEXT: string
+  /** 行間のノート風の罫 */
+  RULE: string
+  /** 選んでいないマスの図の濃さ、および文字色 */
+  DIM_ALPHA: number
+  DIM_TEXT: string
+  /** 透明度つきの色を重ねるときの下地（紙の色）。色見本の計算に使う */
+  PAPER_RGB: [number, number, number]
+  /** 地が濃いとき、QRコードの下に明るい板を敷く（読み取りのため） */
+  QR_PLATE: boolean
 }
 
 const THEMES: Record<TeaCardVariant, CardTheme> = {
@@ -80,14 +91,33 @@ const THEMES: Record<TeaCardVariant, CardTheme> = {
     BG_FROM: '#F8F3E8', BG_TO: '#EFE7D4',
     BRAND: '#A8760F',
     CIRCLE_BASE: '#F0E9DC',
+    BADGE_TEXT: '#F5EDE0',
+    RULE: 'rgba(168,135,63,0.22)',
+    DIM_ALPHA: 0.18,
+    DIM_TEXT: 'rgba(122,106,85,0.26)',
+    PAPER_RGB: [248, 242, 230],
+    QR_PLATE: false,
   },
+  /* 集めたカードは濃紺の地に金。
+     自分の記録と並べたときに一目で分かるよう、明暗ごと反転させている。
+     文字・罫・図の濃さは、暗い地の上で読めるようにそれぞれ調整が必要。 */
   collection: {
-    INK: '#33304A', INK_SOFT: '#6A6785', INK_DEEP: '#26243A',
-    GOLD: '#C9A96E', GOLD_DEEP: '#A8873F',
-    ACCENT: '#3B3566', CREAM: '#E9EAF3',
-    BG_FROM: '#EFEFF6', BG_TO: '#DFE1EE',
-    BRAND: '#A8760F',
-    CIRCLE_BASE: '#E4E5EF',
+    INK: '#E8E2D4', INK_SOFT: '#A8A392', INK_DEEP: '#F4EFE2',
+    GOLD: '#D9BC85', GOLD_DEEP: '#C9A96E',
+    ACCENT: '#C9A96E', CREAM: '#1D2438',
+    BG_FROM: '#232B45', BG_TO: '#151A2B',
+    BRAND: '#D9BC85',
+    CIRCLE_BASE: '#232B45',
+    // バッジは金地なので、文字は地の紺にする
+    BADGE_TEXT: '#1D2438',
+    // 暗い地では薄い罫が沈むので、少し強める
+    RULE: 'rgba(217,188,133,0.30)',
+    /* 選んでいないマスは、明るい図をそのまま薄くしても暗い地から浮いてしまう。
+       選んだものとの差がはっきり出るところまで落とす。 */
+    DIM_ALPHA: 0.10,
+    DIM_TEXT: 'rgba(168,163,146,0.30)',
+    PAPER_RGB: [29, 36, 56],
+    QR_PLATE: true,
   },
 }
 
@@ -312,7 +342,7 @@ async function drawDamask(ctx: CanvasRenderingContext2D) {
 // ── 水色の円（金の二重リング付き・枠内に収める構図） ──
 function drawTeaCircle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, hex: string) {
   const [rr, gg, bb, a] = parseHex(hex)
-  const base = mix([rr, gg, bb], [248, 242, 230], 1 - a)
+  const base = mix([rr, gg, bb], THEME.PAPER_RGB, 1 - a)
   const deep = mix(base, [30, 12, 4], 0.35)
   const edge = mix(base, [255, 238, 205], 0.5)
 
@@ -472,7 +502,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.lineWidth = 1
   ctx.strokeRect(60, 52, 150, 32)
   ctx.font = `700 20px ${SERIF}`
-  ctx.fillStyle = '#F5EDE0'
+  ctx.fillStyle = THEME.BADGE_TEXT
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
   ctx.fillText('My-Teas', 56 + 79, 48 + 21)
 
@@ -631,7 +661,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const nextTop = lineH - fontSize * 0.88    // 次の行の文字の上端
     const offset = below < nextTop ? below : Math.max(2, (below + nextTop) / 2)
     ctx.save()
-    ctx.strokeStyle = 'rgba(168,135,63,0.22)'
+    ctx.strokeStyle = THEME.RULE
     ctx.lineWidth = 1
     for (let i = 0; i < count; i++) {
       const y = Math.round(firstBaseline + i * lineH + offset) + 0.5
@@ -807,7 +837,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.stroke()
     const lf = fitFontSize(ctx, label, 13, w - 10, s => `400 ${s}px ${MINCHO}`, 8)
     ctx.font = `400 ${lf}px ${MINCHO}`
-    ctx.fillStyle = dim ? 'rgba(122,106,85,0.26)' : INK_SOFT
+    ctx.fillStyle = dim ? THEME.DIM_TEXT : INK_SOFT
     ctx.textAlign = 'center'
     ctx.fillText(label, x + w / 2, y + LABEL_BASE)
     ctx.textAlign = 'left'
@@ -819,7 +849,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       // 図はマスの幅からもはみ出さないようにする（淹れ方の横長マスにも対応）
       const size = Math.min(CELL_ICON, areaH, w - 14)
       ctx.save()
-      if (dim) ctx.globalAlpha = 0.18
+      if (dim) ctx.globalAlpha = THEME.DIM_ALPHA
       putIcon(img, x + (w - size) / 2, areaTop + (areaH - size) / 2, size)
       ctx.restore()
     }
@@ -890,7 +920,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const swX = CC_X + ccPad + ctx.measureText(hexNorm).width + 10
     if (swX + SW <= CC_X + CC_W - ccPad) {
       const [sr, sg, sb, sa] = parseHex(hexNorm)
-      const sbase = mix([sr, sg, sb], [248, 242, 230], 1 - sa)
+      const sbase = mix([sr, sg, sb], THEME.PAPER_RGB, 1 - sa)
       ctx.fillStyle = rgbStr(sbase)
       const swY = CC_TOP + (CC_H - SW) / 2
       ctx.fillRect(swX, swY, SW, SW)
@@ -1010,6 +1040,16 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // （画像が無い場合は何も描画しないので、カード生成は失敗しない）
   const qr = await tryLoadImage('/card/qr.png')
   if (qr) {
+    /* QRコードは背景が透明で、模様の部分だけが濃い色。
+       濃紺の地にそのまま置くと模様が沈んで読み取れなくなるため、
+       下に明るい板を敷いてから重ねる。 */
+    if (THEME.QR_PLATE) {
+      const pad = 6
+      ctx.save()
+      ctx.fillStyle = '#F4EFE2'
+      ctx.fillRect(qrX - pad, H - 132 + 6 - pad, qrSize + pad * 2, qrSize + pad * 2)
+      ctx.restore()
+    }
     ctx.drawImage(qr, qrX, H - 132 + 6, qrSize, qrSize)
   }
 
