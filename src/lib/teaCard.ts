@@ -259,6 +259,12 @@ function drawFrame(ctx: CanvasRenderingContext2D) {
   }
 }
 
+/* レーダーチャートの位置。背景の模様を「レーダーの内側には敷かない」ために、
+   模様を描く側からも参照する必要があるので、ここで定数にしている。 */
+const RADAR_CX = 700
+const RADAR_CY = 556
+const RADAR_R = 115
+
 // ── 装飾: ダマスク柄風の淡い植物模様（背景） ──
 // 背景の飾り模様。public/card/pattern.png（ロゴ由来の模様）を薄く敷く。
 // 画像が無い場合は何も描かず、カード生成は継続する。
@@ -266,6 +272,15 @@ async function drawDamask(ctx: CanvasRenderingContext2D) {
   const pat = await tryLoadImage('/card/pattern.png')
   if (!pat) return
   const ratio = pat.height / pat.width
+  /* レーダーチャートの内側には模様を出さない。
+     カップは不透明なので上から重ねれば隠れるが、レーダーは塗りが半透明なため
+     下に敷いた模様が透けて見え、目盛りが読みにくくなる。
+     「カード全体の四角」から「レーダーの円」を抜いた形に切り抜いてから描く。 */
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(0, 0, W, H)
+  ctx.arc(RADAR_CX, RADAR_CY, RADAR_R + 6, 0, Math.PI * 2)
+  ctx.clip('evenodd')
   const place = (cx: number, cy: number, size: number, alpha: number) => {
     ctx.save()
     ctx.globalAlpha = alpha
@@ -278,6 +293,7 @@ async function drawDamask(ctx: CanvasRenderingContext2D) {
   place(W * 0.62, H * 0.84, 130, 0.30)   // レーダーの右下（コクと水色の間）
   place(W * 0.93, H * 0.28, 105, 0.28)   // 右上隅
   place(W * 0.38, H * 0.52, 180, 0.14)   // 中央左（薄め・カップとレーダーの間）
+  ctx.restore()
 }
 
 // ── 水色の円（金の二重リング付き・枠内に収める構図） ──
@@ -577,9 +593,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   // 基準に配置されるため、一緒に下へ移動する。
   /* 枠囲みを2列×2段に組み替えて左へ広げたため、レーダーもその分だけ
      左・上に寄せ、半径を少し詰めている。（旧: 745 / H-195 / 120） */
-  const radarCx = 700
-  const radarCy = 556
-  const radarR = 115
+  const radarCx = RADAR_CX
+  const radarCy = RADAR_CY
+  const radarR = RADAR_R
   // レーダーの一番下のラベル（水色）の下端。右側の枠囲みセクションは
   // 内容量で高さが変わるので、上からではなくこの線に下端を合わせて積む。
   const RADAR_LABEL_BOTTOM = radarCy + radarR + RADAR_LABEL_GAP + 11
@@ -631,7 +647,20 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       const fit = (available - fs * 0.3) / (lines.length - 1)
       if (fit >= fs * 1.42) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
     }
-    const [fs, lh] = chosen
+    /* 罫の下に残る余白を、淹れ方の最終行と外枠の間隔（約13px）に揃える。
+       最終行の罫がその位置に来るよう、行送りを広げて全体を配分し直す。
+       広げすぎると行が離れて見えるので、文字サイズの1.95倍を上限にしている。 */
+    const RULE_TAIL = 13
+    const [fs, baseLh] = chosen
+    ctx.font = `400 ${fs}px ${MINCHO}`
+    const lineCount = computeLines(ctx, commentText, rightW, 99).length
+    let lh = baseLh
+    if (lineCount >= 2) {
+      const ruleOffset = fs * 0.22 + 3          // 罫はベースラインからこの分だけ下
+      const lastBaseline = DIVIDER_Y - RULE_TAIL - ruleOffset
+      const spread = (lastBaseline - ty) / (lineCount - 1)
+      lh = Math.round(Math.min(Math.max(spread, fs * 1.42), fs * 1.95))
+    }
     ctx.font = `400 ${fs}px ${MINCHO}`
     ctx.fillStyle = INK
     // 上の判定と同じ数え方にしないと、収まるはずの行が「…」で切られてしまう
@@ -669,7 +698,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const BODY_LH = 24
   const LEGEND_FS = 19   // 枠の見出し（香り分析・水色・添え物・淹れ方）
   const AROMA_FS = 20   // 香り分析は他より少し大きく見せる
-  const AROMA_LH = 26
+  const AROMA_LH = 29   // 行間の罫がコメントと同じ比率の位置に来る高さ
 
   /* 枠の配置は2列×2段。
        上段: 香り分析（広い） ＋ 水色（狭い）
