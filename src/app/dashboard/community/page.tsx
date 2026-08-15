@@ -142,13 +142,18 @@ export default function CommunityPage() {
   // カード収集
   const [myName, setMyName] = useState<string>('')
   const [collected, setCollected] = useState<Set<string>>(new Set())
-  const [collectState, setCollectState] = useState<{ok: boolean; message: string; cost: number} | null>(null)
+  const [collectState, setCollectState] = useState<
+    { ok: boolean; message: string; cost: number; unavailable?: boolean } | null
+  >(null)
   const [collecting, setCollecting] = useState(false)
   // 表示の切り替え（みんなの評価 / 集めたカード）
   const [tab, setTab] = useState<'all' | 'collected'>('all')
   const [collectedCards, setCollectedCards] = useState<any[]>([])
   const [cardsLoading, setCardsLoading] = useState(false)
   const [remaking, setRemaking] = useState<string | null>(null)
+  /* カード収集の仕組み(089)がまだ入っていない環境かどうか。
+     true のときは、収集に関する表示をすべて隠して従来どおりの画面にする。 */
+  const [collectUnavailable, setCollectUnavailable] = useState(false)
 
   const load = useCallback(async () => {
     /* 取得する列。allow_card_export は v320 のマイグレーション(089)で追加された列で、
@@ -196,10 +201,12 @@ export default function CommunityPage() {
       setWants(new Set((myWants ?? []).map((w: any) => w.review_id)))
 
       // 収集済みのカードと、カードに刷り込む自分の表示名
-      const [{ data: myCards }, { data: me }] = await Promise.all([
+      const [{ data: myCards, error: cardsErr }, { data: me }] = await Promise.all([
         supabase.from('review_card_collections').select('review_id').eq('user_id', user.id),
         supabase.from('profiles').select('name').eq('id', user.id).single(),
       ])
+      // テーブルが無い＝マイグレーション未実行。収集まわりの表示を一切出さない
+      setCollectUnavailable(!!cardsErr)
       setCollected(new Set((myCards ?? []).map((c: any) => c.review_id)))
       setMyName(me?.name ?? '')
     }
@@ -302,11 +309,25 @@ export default function CommunityPage() {
     setCollectState(null)
     if (!userId) return
     const { data, error } = await supabase.rpc('can_collect_card', { p_review_id: reviewId })
-    if (error) { setCollectState({ ok: false, message: error.message, cost: 0 }); return }
+    if (error) {
+      /* マイグレーション(089)が未実行だと関数そのものが無く、
+         PostgREST の生のエラー文がそのまま画面に出てしまう。
+         利用者には意味が分からないので、機能が未提供である旨だけを伝える。 */
+      const notReady = error.code === 'PGRST202'
+        || /Could not find the function/i.test(error.message ?? '')
+      setCollectState({
+        ok: false,
+        cost: 0,
+        message: notReady ? '' : error.message,
+        unavailable: notReady,
+      })
+      return
+    }
     setCollectState({
       ok: data?.ok === true,
       message: data?.message ?? '',
       cost: data?.cost ?? 0,
+      unavailable: false,
     })
   }, [supabase, userId])
 
@@ -408,11 +429,13 @@ export default function CommunityPage() {
             onClick={() => setTab('all')}>
             みんなの評価
           </button>
-          <button
-            className={`${styles.tabBtn} ${tab === 'collected' ? styles.tabBtnOn : ''}`}
-            onClick={() => setTab('collected')}>
-            ◆ 集めたカード{collected.size > 0 ? `（${collected.size}）` : ''}
-          </button>
+          {!collectUnavailable && (
+            <button
+              className={`${styles.tabBtn} ${tab === 'collected' ? styles.tabBtnOn : ''}`}
+              onClick={() => setTab('collected')}>
+              ◆ 集めたカード{collected.size > 0 ? `（${collected.size}）` : ''}
+            </button>
+          )}
         </div>
       )}
 
@@ -544,7 +567,7 @@ export default function CommunityPage() {
                 </button>
               )}
               {/* 自分の評価にはこのボタンを出さない（通常のカード作成から無料で作れるため） */}
-              {userId && selected.user_id !== userId && (
+              {userId && selected.user_id !== userId && !collectState?.unavailable && (
                 <button
                   className={`${styles.collectBtn} ${collected.has(selected.id) ? styles.collectBtnOwned : ''}`}
                   onClick={() => collectCard(selected)}
