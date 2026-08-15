@@ -588,13 +588,23 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   /* ノート風の薄い罫。複数行の項目（コメント・香り分析・淹れ方）の
      行間に引いて読みやすくする。文字のベースラインの少し下に置く。
      枠線より薄くして、罫が主張しすぎないようにしている。 */
-  const drawRules = (x1: number, x2: number, firstBaseline: number, lineH: number, count: number) => {
+  const drawRules = (
+    x1: number, x2: number, firstBaseline: number, lineH: number, count: number, fontSize: number,
+  ) => {
     if (count <= 0) return
+    /* 罫は「その行の文字の下」に引く。
+       ベースラインから下に出るのは descender（およそ文字サイズの22%）なので、
+       そのすぐ下を狙う。ただし次の行の文字の上端
+       （＝次のベースライン - 文字サイズの88%）を越えないよう上限を掛ける。
+       行送りが詰まっているときは、両者の中間に逃がす。 */
+    const below = fontSize * 0.22 + 3          // descender の下
+    const nextTop = lineH - fontSize * 0.88    // 次の行の文字の上端
+    const offset = below < nextTop ? below : Math.max(2, (below + nextTop) / 2)
     ctx.save()
     ctx.strokeStyle = 'rgba(168,135,63,0.22)'
     ctx.lineWidth = 1
     for (let i = 0; i < count; i++) {
-      const y = Math.round(firstBaseline + i * lineH + lineH * 0.28) + 0.5
+      const y = Math.round(firstBaseline + i * lineH + offset) + 0.5
       ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke()
     }
     ctx.restore()
@@ -607,8 +617,9 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     // 長さに応じて文字サイズを自動選択して必ず収める
     const commentText = data.comment.slice(0, CARD_MAX_COMMENT)
     const available = DIVIDER_Y - 8 - ty
-    // 大きい方から順に試し、行送りを詰めれば収まるならそのサイズを採用する。
-    // 行送りは文字サイズの1.2倍を下限とし、余裕があれば1.55倍まで広げる。
+    /* 大きい方から順に試し、行送りを詰めれば収まるならそのサイズを採用する。
+       行間に罫を引くので、行送りの下限は文字サイズの1.42倍まで引き上げている。
+       これより詰めると、罫と次の行の文字が触れてしまう。 */
     let chosen: [number, number] = [13, 19]
     for (let fs = 23; fs >= 13; fs--) {
       ctx.font = `400 ${fs}px ${MINCHO}`
@@ -617,7 +628,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       // 最終行はベースラインより下に descender 分だけあればよい。
       // ここで文字サイズ1つ分を確保すると、1行分近い余白が下に残ってしまう。
       const fit = (available - fs * 0.3) / (lines.length - 1)
-      if (fit >= fs * 1.2) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
+      if (fit >= fs * 1.42) { chosen = [fs, Math.floor(Math.min(fs * 1.55, fit))]; break }
     }
     const [fs, lh] = chosen
     ctx.font = `400 ${fs}px ${MINCHO}`
@@ -626,7 +637,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const maxLines = Math.max(1, Math.floor((available - fs * 0.3) / lh) + 1)
     // 実際に描く行数だけ罫を引きたいので、先に行数を数えてから罫→文字の順に描く
     const drawnLines = Math.min(maxLines, computeLines(ctx, commentText, rightW, 99).length)
-    drawRules(rightX, boxRight, ty, lh, drawnLines)
+    drawRules(rightX, boxRight, ty, lh, drawnLines, fs)
     ctx.font = `400 ${fs}px ${MINCHO}`
     ctx.fillStyle = INK
     wrapText(ctx, commentText, rightX, ty, rightW, lh, maxLines)
@@ -702,9 +713,12 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
 
   // 細い金罫の角丸枠。上辺の左寄りに切れ目を作り、そこに見出しを重ねる。
   // （背景がグラデーション＋模様なので、塗りつぶしで隠さず切れ目で抜く）
-  const drawBox = (title: string, x: number, top: number, w: number, height: number) => {
+  const drawBox = (
+    title: string, x: number, top: number, w: number, height: number,
+    legendFs: number = LEGEND_FS,
+  ) => {
     const r = 10
-    ctx.font = `700 ${LEGEND_FS}px ${MINCHO}`
+    ctx.font = `700 ${legendFs}px ${MINCHO}`
     const tw = ctx.measureText(title).width
     const gapStart = x + 12
     const gapEnd = gapStart + tw + 10
@@ -723,7 +737,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     ctx.lineTo(gapStart, top)
     ctx.stroke()
     ctx.fillStyle = GOLD_DEEP
-    ctx.fillText(title, gapStart + 5, top + LEGEND_FS / 2 - 2)
+    ctx.fillText(title, gapStart + 5, top + legendFs / 2 - 2)
   }
 
   // 確保した正方形の中に画像を収める（縦横比は保ったまま中央寄せ）
@@ -782,54 +796,63 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const innerW = AROMA_W - topPad * 2
     /* 香りは自由入力で10文字まで入る。枠を詰めたぶん、切り捨てるのではなく
        3つとも入る大きさまで一緒に縮める（1行だけ小さいと不揃いに見えるため）。 */
+    // 箇条書きとして「・」を先頭に付ける（幅の判定も付けた状態で行う）
+    const bullets = lines.map(l => `・${l}`)
     let af = AROMA_FS
     for (let sz = AROMA_FS; sz >= 12; sz--) {
       ctx.font = `400 ${sz}px ${MINCHO}`
-      if (lines.every(l => ctx.measureText(l).width <= innerW)) { af = sz; break }
+      if (bullets.every(l => ctx.measureText(l).width <= innerW)) { af = sz; break }
       af = sz
     }
     // 行間にノート風の薄い罫を引く
-    drawRules(AROMA_X + topPad, AROMA_X + AROMA_W - topPad, TOP_FIRST_Y, AROMA_LH, lines.length)
+    drawRules(AROMA_X + topPad, AROMA_X + AROMA_W - topPad, TOP_FIRST_Y, AROMA_LH, bullets.length, af)
     ctx.font = `400 ${af}px ${MINCHO}`
     ctx.fillStyle = INK
-    lines.forEach((l, i) => ctx.fillText(l, AROMA_X + topPad, TOP_FIRST_Y + i * AROMA_LH))
+    bullets.forEach((l, i) => ctx.fillText(l, AROMA_X + topPad, TOP_FIRST_Y + i * AROMA_LH))
   }
 
-  // ── 水色（パレット登録色なら色名、未登録なら「カスタム」＋色見本） ──
+  // ── 水色（パレット登録色なら色名、未登録なら「カスタム」＋色コードの小枠） ──
   drawBox('水色', COLOR_X, COLOR_TOP, COLOR_W, COLOR_H)
   if (data.color_hex) {
     const hexNorm = normalizeHex(data.color_hex)
     const innerW = COLOR_W - topPad * 2
-    /* 枠が縦長になったので、色名と色コードを2行に分けて置く。
-       1行に並べると、透明度つきの9桁（#RRGGBBAA）で必ずはみ出すため。
-       行の高さは香り分析と共通（AROMA_LH）にし、1行目の位置も揃えている。 */
+
+    // 1行目: 色名。位置と大きさは香り分析の1行目に揃える
     const nameText = data.color_name || 'カスタム'
     const nameY = TOP_FIRST_Y
-    const hexY = nameY + AROMA_LH
-    // 2行ぶんの罫を、香り分析と同じ間隔で引く
-    drawRules(COLOR_X + topPad, COLOR_X + COLOR_W - topPad, nameY, AROMA_LH, 2)
-
     const nf2 = fitFontSize(ctx, nameText, AROMA_FS, innerW, s => `400 ${s}px ${MINCHO}`, 12)
     ctx.font = `400 ${nf2}px ${MINCHO}`
     ctx.fillStyle = INK
     ctx.fillText(nameText, COLOR_X + topPad, nameY)
 
-    // 2行目: 色コード＋色見本。見本のぶんを引いた幅に収める
+    /* 2行目以降: 色コードは「Color Code」の見出しを付けた小枠に入れる。
+       色名が1行なので余る高さを、枠にすることで持たせている。
+       小枠は水色の枠の内側に、下の余白を残して収める。 */
+    const CC_X = COLOR_X + 8
+    const CC_W = COLOR_W - 16
+    const CC_TOP = nameY + 18
+    const CC_H = COLOR_TOP + COLOR_H - 12 - CC_TOP
+    drawBox('Color Code', CC_X, CC_TOP, CC_W, CC_H, 14)
+
     const SW = 20
-    const hf = fitFontSize(ctx, hexNorm, 18, innerW - SW - 10, s => `400 ${s}px ${SERIF}`, 11)
+    const ccPad = 10
+    const hf = fitFontSize(ctx, hexNorm, 18, CC_W - ccPad * 2 - SW - 10, s => `400 ${s}px ${SERIF}`, 11)
     ctx.font = `400 ${hf}px ${SERIF}`
     ctx.fillStyle = INK
-    ctx.fillText(hexNorm, COLOR_X + topPad, hexY)
+    // 小枠の中で上下中央に置く
+    const hexY = CC_TOP + CC_H / 2 + hf / 2 - 1
+    ctx.fillText(hexNorm, CC_X + ccPad, hexY)
 
-    const swX = COLOR_X + topPad + ctx.measureText(hexNorm).width + 10
-    if (swX + SW <= COLOR_X + COLOR_W - topPad) {
+    const swX = CC_X + ccPad + ctx.measureText(hexNorm).width + 10
+    if (swX + SW <= CC_X + CC_W - ccPad) {
       const [sr, sg, sb, sa] = parseHex(hexNorm)
       const sbase = mix([sr, sg, sb], [248, 242, 230], 1 - sa)
       ctx.fillStyle = rgbStr(sbase)
-      ctx.fillRect(swX, hexY - 15, SW, SW)
+      const swY = CC_TOP + (CC_H - SW) / 2
+      ctx.fillRect(swX, swY, SW, SW)
       ctx.strokeStyle = GOLD_DEEP
       ctx.lineWidth = 1
-      ctx.strokeRect(swX, hexY - 15, SW, SW)
+      ctx.strokeRect(swX, swY, SW, SW)
     }
   }
 
@@ -867,7 +890,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const ROW_LH = 26
     let dy = LOWER_TOP + CELL_TOP + CELL_H + ROW_LH
     // 茶葉量・水量・時間の行間にも同じ罫を引く
-    drawRules(rowX, rowRight, dy, ROW_LH, brewRows.length)
+    drawRules(rowX, rowRight, dy, ROW_LH, brewRows.length, 16)
     for (const row of brewRows) {
       // 項目名と値は同じ文字サイズ。両方入る最大サイズを選ぶ
       let rf = 16
