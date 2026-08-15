@@ -272,9 +272,10 @@ async function drawDamask(ctx: CanvasRenderingContext2D) {
     ctx.drawImage(pat, cx - size / 2, cy - (size * ratio) / 2, size, size * ratio)
     ctx.restore()
   }
-  // レーダーチャート（中心 745,525 付近）を避けて配置する。
-  // 右上隅と香り分析の枠あたりを主役に、中央左は薄めに。
-  place(W * 0.92, H * 0.61, 130, 0.30)   // 右側（香り分析の枠あたり）
+  /* 枠囲みの上に模様が重なると文字が読みにくいので、枠を避けて置く。
+     主役はレーダーの右下、「コク」と「水色」のラベルにはさまれた空きに置き、
+     残りは右上隅と中央左に薄く添える。 */
+  place(W * 0.62, H * 0.84, 130, 0.30)   // レーダーの右下（コクと水色の間）
   place(W * 0.93, H * 0.28, 105, 0.28)   // 右上隅
   place(W * 0.38, H * 0.52, 180, 0.14)   // 中央左（薄め・カップとレーダーの間）
 }
@@ -818,7 +819,8 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const innerW = COLOR_W - topPad * 2
 
     // 1行目: 色名。位置と大きさは香り分析の1行目に揃える
-    const nameText = data.color_name || 'カスタム'
+    // 香り分析と揃えて箇条書きにする
+    const nameText = `・${data.color_name || 'カスタム'}`
     const nameY = TOP_FIRST_Y
     const nf2 = fitFontSize(ctx, nameText, AROMA_FS, innerW, s => `400 ${s}px ${MINCHO}`, 12)
     ctx.font = `400 ${nf2}px ${MINCHO}`
@@ -887,8 +889,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     const rowX = BREW_X + 8
     const rowRight = BREW_X + BREW_W - 8
     const rowW = rowRight - rowX
-    const ROW_LH = 26
-    let dy = LOWER_TOP + CELL_TOP + CELL_H + ROW_LH
+    /* 行は、マスの下から「添え物の2段目のマスの下端」までを均等に割り付ける。
+       最終行の位置が隣の添え物の枠と揃うので、下端がきれいに並ぶ。
+       行数が1〜3のどれでも、同じ範囲を等分するだけで収まる。 */
+    const rowsTop = LOWER_TOP + CELL_TOP + CELL_H            // 淹れ方のマスの下端
+    const rowsBottom = LOWER_TOP + CELL_TOP * 2 + CELL_H * 2 // 添え物の2段目の下端
+    const ROW_LH = (rowsBottom - rowsTop) / Math.max(1, brewRows.length)
+    let dy = rowsTop + ROW_LH
     // 茶葉量・水量・時間の行間にも同じ罫を引く
     drawRules(rowX, rowRight, dy, ROW_LH, brewRows.length, 16)
     for (const row of brewRows) {
