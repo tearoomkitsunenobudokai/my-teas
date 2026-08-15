@@ -481,7 +481,6 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       shop_name: shopName || null, color_hex: colorHex || null,
       aroma_notes: aromaNotes.length ? aromaNotes : null,
       ...scores, comment: comment || null, notes: notes || null, is_public: effectiveIsPublic, drank_at: drankAt,
-      allow_card_export: allowCardExport,
       brew_method: brewMethod || '不明',
       tea_garden: teaGarden || null,
       origin_country: originCountry || null,
@@ -492,9 +491,20 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       water_ml: waterMl ? parseFloat(waterMl) : null,
       accompaniments: accs.length ? accs : null,
     }
-    const { data: saved, error } = isEdit
-      ? await supabase.from('reviews').update(p).eq('id', initial.id).select('id').single()
-      : await supabase.from('reviews').insert(p).select('id').single()
+    /* カード収集の許可は v320 の列。マイグレーション未実行の環境では
+       この列を含めると保存そのものが失敗してしまうため、
+       まず含めて試し、列が無い場合だけ外して保存し直す。
+       （保存が通ることを、新機能の設定より優先する） */
+    const save = (payload: any) => isEdit
+      ? supabase.from('reviews').update(payload).eq('id', initial.id).select('id').single()
+      : supabase.from('reviews').insert(payload).select('id').single()
+
+    let { data: saved, error } = await save({ ...p, allow_card_export: allowCardExport })
+    if (error) {
+      const retry = await save(p)
+      saved = retry.data
+      error = retry.error
+    }
     setSaving(false)
     if (error) { alert(error.message); return }
     // 公開操作が成立したら、月次カウント用のログを記録する
@@ -1056,13 +1066,28 @@ export default function ReviewsPage() {
     const user = session?.user ?? null
     if (!user) return
     setUserId(user.id)
-    const [{ data }, { data: profile }] = await Promise.all([
-      supabase.from('reviews')
-        .select('id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,allow_card_export,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden,origin_country,tea_grams,water_ml,color_name')
-        .eq('user_id', user.id).order('drank_at', { ascending: false }),
+    /* allow_card_export は v320 のマイグレーション(089)で追加された列。
+       未実行の環境では存在せず、指定するとクエリ全体が失敗して評価が
+       一件も表示されなくなるため、失敗したらその列を外して取り直す。 */
+    const BASE_COLS = 'id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden,origin_country,tea_grams,water_ml,color_name'
+
+    const fetchMine = (cols: string) => supabase.from('reviews')
+      .select(cols)
+      .eq('user_id', user.id).order('drank_at', { ascending: false })
+
+    const [first, { data: profile }] = await Promise.all([
+      fetchMine(`${BASE_COLS},allow_card_export`),
       supabase.from('profiles').select('is_subscribed,is_admin,is_creator').eq('id', user.id).single(),
     ])
-    setReviews(data ?? [])
+
+    let data = first.data
+    if (first.error) {
+      const retry = await fetchMine(BASE_COLS)
+      data = retry.data
+      if (retry.error) console.error('評価の取得に失敗しました', retry.error)
+    }
+
+    setReviews((data ?? []) as any[])
     // 課金ユーザー・管理者・製作者はエクスポート可能
     setCanExport(!!(profile?.is_subscribed || profile?.is_admin || profile?.is_creator))
     setLoading(false)

@@ -151,13 +151,27 @@ export default function CommunityPage() {
   const [remaking, setRemaking] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    const { data } = await supabase
+    /* 取得する列。allow_card_export は v320 のマイグレーション(089)で追加された列で、
+       未実行の環境では存在しない。存在しない列を指定するとクエリ全体が失敗し、
+       コミュニティが一件も表示されなくなるため、失敗したときは
+       その列を外してもう一度取得する。（機能が使えないだけで、閲覧は続けられる） */
+    const BASE_COLS = 'id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_color_depth, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, tea_grams, water_ml, origin_country, accompaniments'
+
+    const fetchReviews = (cols: string) => supabase
       .from('reviews')
-      .select('id, tea_name, brand_name, shop_name, tea_garden, color_hex, aroma_notes, user_id, score_aroma, score_astringency, score_richness, score_color_depth, comment, is_public, drank_at, created_at, brew_method, steep_seconds, tea_grams_per_100ml, tea_grams, water_ml, origin_country, accompaniments, allow_card_export')
+      .select(cols)
       .eq('is_public', true)
       .order('created_at', { ascending: false })
 
-    const reviewRows = data ?? []
+    let { data, error } = await fetchReviews(`${BASE_COLS}, allow_card_export`)
+    if (error) {
+      // 列が無い環境向けの再取得。この場合は全件を「収集を許可」として扱う
+      const retry = await fetchReviews(BASE_COLS)
+      data = retry.data
+      if (retry.error) console.error('コミュニティの取得に失敗しました', retry.error)
+    }
+
+    const reviewRows = (data ?? []) as any[]
     // 投稿者のプロフィールは公開ビュー(public_profiles)から必要な列だけ取得してマージする
     // （profilesテーブルを直接JOINしないことで points/account_status 等の露出を防ぐ）
     const userIds = Array.from(new Set(reviewRows.map((r: any) => r.user_id).filter(Boolean)))
