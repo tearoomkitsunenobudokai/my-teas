@@ -264,6 +264,8 @@ function drawFrame(ctx: CanvasRenderingContext2D) {
 const RADAR_CX = 700
 const RADAR_CY = 556
 const RADAR_R = 115
+/** レーダーの軸の数（香り・コク・水色・渋みの4つ）。抜き型の形を作るのに使う */
+const RADAR_AXES = 4
 
 // ── 装飾: ダマスク柄風の淡い植物模様（背景） ──
 // 背景の飾り模様。public/card/pattern.png（ロゴ由来の模様）を薄く敷く。
@@ -275,11 +277,22 @@ async function drawDamask(ctx: CanvasRenderingContext2D) {
   /* レーダーチャートの内側には模様を出さない。
      カップは不透明なので上から重ねれば隠れるが、レーダーは塗りが半透明なため
      下に敷いた模様が透けて見え、目盛りが読みにくくなる。
-     「カード全体の四角」から「レーダーの円」を抜いた形に切り抜いてから描く。 */
+     「カード全体の四角」から「レーダーの外周」を抜いた形に切り抜いてから描く。
+
+     抜く形は円ではなく、レーダーと同じ菱形にしている。
+     円で抜くと、菱形の辺と円のあいだ（頂点と頂点の中間）が大きく空いてしまい、
+     模様がチャートのかなり手前で途切れて見えるため。 */
   ctx.save()
   ctx.beginPath()
   ctx.rect(0, 0, W, H)
-  ctx.arc(RADAR_CX, RADAR_CY, RADAR_R + 6, 0, Math.PI * 2)
+  const holeR = RADAR_R + 2   // 外周の線の直前まで模様を描く
+  for (let i = 0; i < RADAR_AXES; i++) {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / RADAR_AXES
+    const px = RADAR_CX + holeR * Math.cos(a)
+    const py = RADAR_CY + holeR * Math.sin(a)
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
+  }
+  ctx.closePath()
   ctx.clip('evenodd')
   const place = (cx: number, cy: number, size: number, alpha: number) => {
     ctx.save()
