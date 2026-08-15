@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import CropPreview from './CropPreview'
 import { createClient } from '@/lib/supabase'
+import { generateTeaCard } from '@/lib/teaCard'
 import {
   composeSheet, downloadSheet, PAPERS, paperCapacity,
   CARD_W_MM, CARD_H_MM,
@@ -43,6 +44,15 @@ export default function CardPrintPage() {
   const [locks,    setLocks]    = useState<boolean[]>(() => Array(MAX_SLOTS).fill(true))
   const [focuses,  setFocuses]  = useState<Focus[]>(() => Array(MAX_SLOTS).fill(DEFAULT_FOCUS))
 
+  /* 集めたカードから直接入れるための状態。
+     カード画像は保存していないので、選ばれたぶんだけその場で作って枠に入れる。 */
+  const [myName, setMyName] = useState('')
+  const [collected, setCollected] = useState<any[]>([])
+  const [collectAvailable, setCollectAvailable] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [picked, setPicked] = useState<Set<string>>(new Set())
+  const [building, setBuilding] = useState(0)   // 生成中の枚数（0なら生成していない）
+
   const [cutGuide, setCutGuide] = useState(true)
   const [working, setWorking] = useState(false)
   const [doneMsg, setDoneMsg] = useState('')
@@ -58,6 +68,15 @@ export default function CardPrintPage() {
     if (typeof c === 'number') setCost(c)
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     setPoints(profile?.points ?? 0)
+
+    // 集めたカード（マイグレーション未実行の環境では取得に失敗するので、その場合は隠す）
+    const [{ data: cards, error: cardsErr }, { data: me }] = await Promise.all([
+      supabase.from('my_collected_cards').select('*').order('collected_at', { ascending: false }),
+      supabase.from('profiles').select('name').eq('id', user.id).single(),
+    ])
+    setCollectAvailable(!cardsErr)
+    setCollected(cards ?? [])
+    setMyName(me?.name ?? '')
     setLoading(false)
   }, [supabase])
 
@@ -124,6 +143,98 @@ export default function CardPrintPage() {
 
   // この用紙で実際に使われる枚数
   const usedCount = files.slice(0, capacity).filter(Boolean).length
+  // まだ画像が入っていない枠の番号
+  const emptySlots = Array.from({ length: capacity }, (_, i) => i).filter(i => !files[i])
+
+  /** 選び直しのため、絵柄を選ぶ画面を開く */
+  function openPicker() {
+    setPicked(new Set())
+    setPickerOpen(true)
+  }
+
+  function togglePick(id: string) {
+    setPicked(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) { next.delete(id); return next }
+      // 空いている枠の数を超えては選べないようにする
+      if (next.size >= emptySlots.length) {
+        alert(`空いている枠は${emptySlots.length}個です。先に不要な枠を削除してください。`)
+        return next
+      }
+      next.add(id)
+      return next
+    })
+  }
+
+  /** 選んだ集めたカードを、その場で画像にして空いている枠へ入れる */
+  async function applyPicked() {
+    const targets = collected.filter(c => picked.has(c.collection_id))
+    if (targets.length === 0) { setPickerOpen(false); return }
+
+    setBuilding(targets.length)
+    try {
+      const madeFiles: File[] = []
+      for (const c of targets) {
+        // カード画像は保存していないため、評価の内容からそのつど作る
+        const blob = await generateTeaCard({
+          variant: 'collection',
+          collected_by: myName || 'ゲスト',
+          tea_name: c.tea_name,
+          brand_name: c.brand_name,
+          tea_garden: c.tea_garden,
+          origin_country: c.origin_country,
+          shop_name: c.shop_name,
+          user_name: c.author_name ?? '匿名',
+          drank_at: c.drank_at,
+          color_hex: c.color_hex,
+          color_name: c.color_name,
+          comment: c.comment,
+          aroma_notes: c.aroma_notes,
+          brew_method: c.brew_method,
+          steep_seconds: c.steep_seconds,
+          tea_grams_per_100ml: c.tea_grams_per_100ml,
+          tea_grams: c.tea_grams,
+          water_ml: c.water_ml,
+          accompaniments: c.accompaniments,
+          score_aroma: c.score_aroma ?? 3,
+          score_astringency: c.score_astringency ?? 3,
+          score_richness: c.score_richness ?? 3,
+          score_color_depth: c.score_color_depth ?? 3,
+        })
+        madeFiles.push(new File([blob], `${c.tea_name ?? 'card'}.png`, { type: 'image/png' }))
+      }
+
+      // 空いている枠へ、選んだ順に入れる
+      setFiles(prev => {
+        const next = [...prev]
+        madeFiles.forEach((f, i) => { const slot = emptySlots[i]; if (slot !== undefined) next[slot] = f })
+        return next
+      })
+      setPreviews(prev => {
+        const next = [...prev]
+        madeFiles.forEach((f, i) => {
+          const slot = emptySlots[i]
+          if (slot === undefined) return
+          if (next[slot]) URL.revokeObjectURL(next[slot])
+          next[slot] = URL.createObjectURL(f)
+        })
+        return next
+      })
+      // 集めたカードは評価カードと同じ比率なので、位置の調整は不要
+      setLocks(prev => {
+        const next = [...prev]
+        madeFiles.forEach((_, i) => { const slot = emptySlots[i]; if (slot !== undefined) next[slot] = true })
+        return next
+      })
+
+      setDoneMsg('')
+      setPickerOpen(false)
+    } catch (e: any) {
+      alert(e?.message ?? 'カードの作成に失敗しました')
+    } finally {
+      setBuilding(0)
+    }
+  }
 
   async function run() {
     if (usedCount === 0) { alert('評価カードの画像を選んでください'); return }
@@ -209,6 +320,21 @@ export default function CardPrintPage() {
           それぞれの枠に、評価の編集画面で作成した「評価カード画像」を選んでください。
           空けたままの枠は余白になります（{capacity}枚すべて埋める必要はありません）。
         </p>
+
+        {/* 集めたカードから一括で入れる導線。A4の8枠を1枚ずつ選ぶのは手間なので、
+            画像を用意しなくてもここからまとめて入れられるようにしている。 */}
+        {collectAvailable && collected.length > 0 && (
+          <div className={styles.pickRow}>
+            <button className={styles.pickBtn} onClick={openPicker} disabled={emptySlots.length === 0}>
+              ◆ 集めたカードから選ぶ（{collected.length}枚）
+            </button>
+            <span className={styles.pickHint}>
+              {emptySlots.length === 0
+                ? 'すべての枠が埋まっています'
+                : `空いている枠: ${emptySlots.length}個`}
+            </span>
+          </div>
+        )}
 
         <div className={styles.slots}>
           {Array.from({ length: capacity }, (_, i) => {
@@ -296,6 +422,54 @@ export default function CardPrintPage() {
 
         {doneMsg && <p className={styles.done}>✓ {doneMsg}</p>}
       </div>
+
+      {/* 集めたカードを選ぶ画面 */}
+      {pickerOpen && (
+        <div className={styles.modalBack} onClick={() => building === 0 && setPickerOpen(false)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <p className={styles.modalTitle}>集めたカードから選ぶ</p>
+            <p className={styles.modalLead}>
+              空いている{emptySlots.length}個の枠に、選んだ順で入ります。
+              画像は選んだあとに作るので、少し時間がかかります。
+            </p>
+
+            <div className={styles.pickList}>
+              {collected.map(c => {
+                const on = picked.has(c.collection_id)
+                return (
+                  <button
+                    key={c.collection_id}
+                    className={`${styles.pickItem} ${on ? styles.pickItemOn : ''}`}
+                    onClick={() => togglePick(c.collection_id)}
+                    disabled={building > 0}>
+                    <span className={styles.pickCheck}>{on ? '✓' : ''}</span>
+                    <span
+                      className={styles.pickSwatch}
+                      style={{ background: c.color_hex ?? '#C8A96E' }}/>
+                    <span className={styles.pickInfo}>
+                      <span className={styles.pickName}>{c.tea_name ?? '不明'}</span>
+                      <span className={styles.pickSub}>
+                        {c.brand_name ? `${c.brand_name} / ` : ''}{c.author_name ?? '匿名'}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button className={styles.modalCancel}
+                onClick={() => setPickerOpen(false)} disabled={building > 0}>
+                キャンセル
+              </button>
+              <button className={styles.modalOk}
+                onClick={applyPicked} disabled={building > 0 || picked.size === 0}>
+                {building > 0 ? `作成中… (${building}枚)` : `${picked.size}枚を入れる`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className={styles.guide}>
         <h2 className={styles.guideTitle}>コンビニで印刷するには</h2>

@@ -331,3 +331,125 @@
   .paperCount { font-size: 21.6px; }
   .paperBtn, .paperBtnOn { padding: 16px 10px; }
 }
+
+/* === v337: 集めたカードから選ぶ === */
+.pickRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 4px 0 14px;
+}
+.pickBtn {
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #FFFFFF;
+  background: #2A3350;
+  border: 1.5px solid #C9A96E;
+  transition: opacity .15s;
+}
+.pickBtn:hover:not(:disabled) { opacity: .85; }
+.pickBtn:disabled { opacity: .4; cursor: not-allowed; }
+.pickHint { font-size: 12.5px; color: var(--text-hint); }
+
+.modalBack {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+.modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+}
+.modalTitle { margin: 0 0 6px; font-size: 17px; font-weight: 700; color: var(--text); }
+.modalLead { margin: 0 0 14px; font-size: 12.5px; line-height: 1.6; color: var(--text-hint); }
+
+.pickList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pickItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  transition: border-color .15s, background .15s;
+}
+.pickItem:disabled { opacity: .5; cursor: not-allowed; }
+.pickItemOn { border-color: #C9A96E; background: rgba(201, 169, 110, 0.12); }
+.pickCheck {
+  flex: none;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2A3350;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+}
+.pickItemOn .pickCheck { background: #C9A96E; border-color: #C9A96E; }
+.pickSwatch {
+  flex: none;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid #A8873F;
+}
+.pickInfo { display: flex; flex-direction: column; min-width: 0; }
+.pickName {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pickSub {
+  font-size: 12px; color: var(--text-hint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.modalActions { display: flex; gap: 10px; margin-top: 16px; }
+.modalCancel, .modalOk {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.modalCancel { color: var(--text-muted); background: var(--bg); border: 0.5px solid var(--border); }
+.modalOk { color: #FFFFFF; background: #2A3350; border: 1.5px solid #C9A96E; }
+.modalOk:disabled, .modalCancel:disabled { opacity: .45; cursor: not-allowed; }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .pickBtn      { font-size: 25.2px; padding: 14px 24px; }
+  .pickHint     { font-size: 21.6px; }
+  .modalTitle   { font-size: 30.6px; }
+  .modalLead    { font-size: 22.5px; }
+  .pickName     { font-size: 25.2px; }
+  .pickSub      { font-size: 21.6px; }
+  .pickCheck    { width: 34px; height: 34px; font-size: 20px; }
+  .pickSwatch   { width: 40px; height: 40px; }
+  .modalCancel, .modalOk { font-size: 25.2px; padding: 16px; }
+}
