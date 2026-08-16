@@ -180,18 +180,18 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .title { font-size: 23.4px; }
-  .countBadge { font-size: 19.8px; }
-  .selectedTag { font-size: 21.6px; }
-  .removeBtn { font-size: 23.4px; }
-  .groupBtn { font-size: 21.6px; }
-  .groupArrow { font-size: 18.0px; }
-  .presetTag { font-size: 19.8px; }
-  .checkMark { font-size: 18.0px; }
-  .customInput { font-size: 21.6px; }
-  .addBtn { font-size: 21.6px; }
-  .descLabel { font-size: 19.8px; }
-  .descInput { font-size: 21.6px; }
-  .descText { font-size: 23.4px; }
-  .descEmpty { font-size: 21.6px; }
+  .title { font-size: 13px; }
+  .countBadge { font-size: 11px; }
+  .selectedTag { font-size: 12px; }
+  .removeBtn { font-size: 13px; }
+  .groupBtn { font-size: 12px; }
+  .groupArrow { font-size: 10px; }
+  .presetTag { font-size: 11px; }
+  .checkMark { font-size: 10px; }
+  .customInput { font-size: 12px; }
+  .addBtn { font-size: 12px; }
+  .descLabel { font-size: 11px; }
+  .descInput { font-size: 12px; }
+  .descText { font-size: 13px; }
+  .descEmpty { font-size: 12px; }
 }

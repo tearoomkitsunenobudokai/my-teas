@@ -73,10 +73,10 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .icon { font-size: 34px; }
-  .title { font-size: 34px; }
-  .message { font-size: 25.2px; }
-  .note { font-size: 23.4px; }
-  .sub { font-size: 21.6px; }
-  .btn { font-size: 27.0px; }
+  .icon { font-size: 19px; }
+  .title { font-size: 19px; }
+  .message { font-size: 14px; }
+  .note { font-size: 13px; }
+  .sub { font-size: 12px; }
+  .btn { font-size: 15px; }
 }

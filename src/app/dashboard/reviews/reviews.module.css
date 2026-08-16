@@ -230,7 +230,7 @@
     padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
     gap: 12px;
   }
-  .mTitle { font-size: 18px; }
+  .mTitle { font-size: 10px; }
   .mClose { font-size: 24px; padding: 8px; }
 
   .label { font-size: 14px; margin-top: 8px; }
@@ -405,7 +405,7 @@
 .otherAromaErr { font-size: 12px; color: #dc2626; margin-top: 6px; font-weight: 600; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .otherAddBtn { padding: 12px 18px; font-size: 14px; }
+  .otherAddBtn { padding: 12px 10px; font-size: 14px; }
   .otherAromaHint { font-size: 12px; }
 }
 
@@ -445,11 +445,11 @@
     border-radius: 24px;
     border-width: 1.5px;
   }
-  .groupItems { gap: 9px; padding: 12px 10px; }
+  .groupItems { gap: 5px; padding: 12px 10px; }
 
   /* ── 香りの系統ボタン：押しやすい高さに ── */
   .groupBtn {
-    min-height: 54px;
+    min-height: 30px;
     align-items: center;
     padding: 0 16px;
     font-size: 15.5px;
@@ -462,7 +462,7 @@
     min-height: 46px;
     display: inline-flex;
     align-items: center;
-    padding: 0 18px;
+    padding: 0 10px;
     font-size: 15px;
     border-radius: 24px;
     border-width: 1.5px;
@@ -510,7 +510,7 @@
     font-size: 14px;
     padding: 0 6px 0 14px;
   }
-  .aromaSelected button { min-width: 34px; min-height: 34px; font-size: 18px; }
+  .aromaSelected button { min-width: 34px; min-height: 34px; font-size: 10px; }
 
   /* ── ステップ表示・下部ボタン ── */
   .wizBar { padding: 14px 16px; }
@@ -559,7 +559,7 @@
   /* ── 香りの系統ボタン ── */
   .groupBtn {
     min-height: 66px;
-    padding: 0 18px;
+    padding: 0 10px;
     font-size: 24px;
   }
 
@@ -589,7 +589,7 @@
 
   /* ── 「その他」自由入力 ── */
   .otherAddBtn { min-height: 66px; padding: 0 26px; font-size: 21px; }
-  .otherAromaHint { font-size: 18px; }
+  .otherAromaHint { font-size: 10px; }
   .otherAromaErr { font-size: 19px; }
 
   /* ── 選択済みの香りタグ ── */
@@ -609,10 +609,10 @@
    香りタグが枠からはみ出す・文字が不自然に折り返す問題を解消する。
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileLeft { width: 108px; }
+  .tileLeft { width: 60px; }
   .aromaTag {
     font-size: 13px;
-    padding: 3px 9px;
+    padding: 3px 5px;
     white-space: normal;
     overflow-wrap: anywhere;
     max-width: 100%;
@@ -685,7 +685,7 @@
   .tileName { font-size: 20px; line-height: 1.35; }
   .tileSub, .tilePlaceholder { font-size: 14px; }
   .tileDate { font-size: 13px; }
-  .editBtn, .delBtn { font-size: 15px; padding: 9px 16px; }
+  .editBtn, .delBtn { font-size: 15px; padding: 5px 16px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -694,7 +694,7 @@
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   /* ページ見出し（コミュニティと同じサイズに） */
-  .title { font-size: 34px; }
+  .title { font-size: 19px; }
   /* 表組みの見出し・ラベル */
   .th, .attrLabel { font-size: 22px; }
   .attrRow { grid-template-columns: 110px minmax(0, 1fr); }
@@ -705,10 +705,10 @@
   /* カラーコード */
   .hexCode { font-size: 20px; }
   /* タイル周辺 */
-  .tileName { font-size: 34px; line-height: 1.3; }
+  .tileName { font-size: 19px; line-height: 1.3; }
   .tileSub, .tileShop, .tileBrand, .tilePlaceholder { font-size: 21px; }
   .tileDate { font-size: 19px; }
-  .editBtn, .delBtn { font-size: 21px; padding: 11px 18px; }
+  .editBtn, .delBtn { font-size: 21px; padding: 11px 10px; }
   /* ツールバー（飲んだ日・公開/非公開・並び順・件数）もコミュニティと同等に */
   .fl { font-size: 21px; }
   .di, .sortSel { font-size: 21px; padding: 8px 12px; }
@@ -772,7 +772,7 @@
 }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .stepHint { font-size: 18px; padding: 10px 13px; }
+  .stepHint { font-size: 10px; padding: 10px 13px; }
   .maniaTag { font-size: 15px; padding: 3px 11px; }
 }
 
@@ -815,7 +815,7 @@
 .secHeadIcon { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .secHead { padding: 15px 16px; margin: 18px 0 10px; }
+  .secHead { padding: 15px 16px; margin: 10px 0 10px; }
   .secHeadLabel { font-size: 21px; }
   .secHeadIcon { font-size: 16px; }
 }
@@ -920,7 +920,7 @@
 .tileIcon {
   display: flex; align-items: center; justify-content: center;
   width: 100%; height: 100%;
-  font-size: 52px;
+  font-size: 29px;
   line-height: 1;
   position: relative;   /* 三原色の円より前面に置く */
   z-index: 1;
@@ -963,5 +963,5 @@
 .customNameBox { width: 100%; margin-top: 12px; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileIcon { font-size: 64px; }
+  .tileIcon { font-size: 36px; }
 }

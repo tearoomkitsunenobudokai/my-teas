@@ -172,23 +172,23 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .logo { font-size: 34px; }
-  .logoIcon { font-size: 34px; }
-  .tagline { font-size: 23.4px; }
-  .tab { font-size: 23.4px; }
-  .error { font-size: 21.6px; }
-  .label { font-size: 21.6px; }
-  .input { font-size: 25.2px; }
-  .btnPrimary { font-size: 25.2px; }
-  .linkBtn { font-size: 23.4px; }
-  .noticeWarn { font-size: 23.4px; }
-  .noticeInfo { font-size: 23.4px; }
-  .noticeWarn strong, .noticeInfo strong { font-size: 23.4px; }
-  .noticeWarn p, .noticeInfo p { font-size: 22.5px; }
-  .noticesTitle { font-size: 21.6px; }
-  .noticeDate { font-size: 19.8px; }
-  .noticeItemTitle { font-size: 23.4px; }
-  .noticeItemBody { font-size: 21.6px; }
+  .logo { font-size: 19px; }
+  .logoIcon { font-size: 19px; }
+  .tagline { font-size: 13px; }
+  .tab { font-size: 13px; }
+  .error { font-size: 12px; }
+  .label { font-size: 12px; }
+  .input { font-size: 14px; }
+  .btnPrimary { font-size: 14px; }
+  .linkBtn { font-size: 13px; }
+  .noticeWarn { font-size: 13px; }
+  .noticeInfo { font-size: 13px; }
+  .noticeWarn strong, .noticeInfo strong { font-size: 13px; }
+  .noticeWarn p, .noticeInfo p { font-size: 12.5px; }
+  .noticesTitle { font-size: 12px; }
+  .noticeDate { font-size: 11px; }
+  .noticeItemTitle { font-size: 13px; }
+  .noticeItemBody { font-size: 12px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -223,7 +223,7 @@
   .linkBtn { min-height: 48px; font-size: 16px; }
 
   /* お知らせ欄を読みやすく */
-  .notices { margin-top: 26px; padding-top: 18px; }
+  .notices { margin-top: 26px; padding-top: 10px; }
   .noticesTitle { font-size: 17px; }
   .noticeItemTitle { font-size: 16px; line-height: 1.6; }
   .noticeItemBody { font-size: 15px; line-height: 1.8; }

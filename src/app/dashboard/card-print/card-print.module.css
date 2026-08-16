@@ -221,27 +221,27 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .title { font-size: 34px; }
-  .lead { font-size: 23.4px; }
-  .loading { font-size: 23.4px; }
-  .costLabel { font-size: 21.6px; }
-  .costValue { font-size: 27.0px; }
-  .balance { font-size: 21.6px; }
-  .label { font-size: 23.4px; }
-  .file { font-size: 23.4px; }
-  .hint { font-size: 20.7px; }
-  .previewTitle { font-size: 21.6px; }
-  .checkRow { font-size: 23.4px; }
-  .runBtn { font-size: 27.0px; }
-  .done { font-size: 23.4px; }
-  .guideTitle { font-size: 27.0px; }
-  .guideList { font-size: 23.4px; }
-  .guideNote { font-size: 20.7px; }
-  .slotTitle { font-size: 25.2px; }
-  .slotFileName { font-size: 19.8px; }
-  .slotChangeBtn, .slotClearBtn { font-size: 25.2px; }
-  .slotPlusIcon { font-size: 34px; }
-  .slotEmptyText { font-size: 23.4px; }
+  .title { font-size: 19px; }
+  .lead { font-size: 13px; }
+  .loading { font-size: 13px; }
+  .costLabel { font-size: 12px; }
+  .costValue { font-size: 15px; }
+  .balance { font-size: 12px; }
+  .label { font-size: 13px; }
+  .file { font-size: 13px; }
+  .hint { font-size: 11.5px; }
+  .previewTitle { font-size: 12px; }
+  .checkRow { font-size: 13px; }
+  .runBtn { font-size: 15px; }
+  .done { font-size: 13px; }
+  .guideTitle { font-size: 15px; }
+  .guideList { font-size: 13px; }
+  .guideNote { font-size: 11.5px; }
+  .slotTitle { font-size: 14px; }
+  .slotFileName { font-size: 11px; }
+  .slotChangeBtn, .slotClearBtn { font-size: 14px; }
+  .slotPlusIcon { font-size: 19px; }
+  .slotEmptyText { font-size: 13px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -262,7 +262,7 @@
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .focusVal { font-size: 16px; min-width: 58px; }
-  .resetBtn { font-size: 16px; padding: 9px 18px; }
+  .resetBtn { font-size: 16px; padding: 5px 10px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -326,9 +326,9 @@
 }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .paperName  { font-size: 27.0px; }
-  .paperSize  { font-size: 20.7px; }
-  .paperCount { font-size: 21.6px; }
+  .paperName  { font-size: 15px; }
+  .paperSize  { font-size: 11.5px; }
+  .paperCount { font-size: 12px; }
   .paperBtn, .paperBtnOn { padding: 16px 10px; }
 }
 
@@ -443,15 +443,15 @@
 .modalOk:disabled, .modalCancel:disabled { opacity: .45; cursor: not-allowed; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .pickBtn      { font-size: 25.2px; padding: 14px 24px; }
-  .pickHint     { font-size: 21.6px; }
-  .modalTitle   { font-size: 30.6px; }
-  .modalLead    { font-size: 22.5px; }
-  .pickName     { font-size: 25.2px; }
-  .pickSub      { font-size: 21.6px; }
+  .pickBtn      { font-size: 14px; padding: 14px 24px; }
+  .pickHint     { font-size: 12px; }
+  .modalTitle   { font-size: 17px; }
+  .modalLead    { font-size: 12.5px; }
+  .pickName     { font-size: 14px; }
+  .pickSub      { font-size: 12px; }
   .pickCheck    { width: 34px; height: 34px; font-size: 20px; }
   .pickSwatch   { width: 40px; height: 40px; }
-  .modalCancel, .modalOk { font-size: 25.2px; padding: 16px; }
+  .modalCancel, .modalOk { font-size: 14px; padding: 16px; }
 }
 
 /* === v338: 選ぶ元の切り替えと絞り込み === */
@@ -491,7 +491,7 @@
 }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .srcBtn     { font-size: 23.4px; padding: 14px 16px; }
-  .pickSearch { font-size: 25.2px; padding: 14px 16px; }
-  .pickEmpty  { font-size: 23.4px; }
+  .srcBtn     { font-size: 13px; padding: 14px 16px; }
+  .pickSearch { font-size: 14px; padding: 14px 16px; }
+  .pickEmpty  { font-size: 13px; }
 }

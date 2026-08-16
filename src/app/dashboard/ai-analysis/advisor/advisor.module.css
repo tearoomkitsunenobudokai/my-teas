@@ -162,28 +162,28 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .back { font-size: 21.6px; }
-  .hint { font-size: 23.4px; }
-  .mockTag { font-size: 19.8px; }
-  .adminTag { font-size: 19.8px; }
-  .statNum { font-size: 28.8px; }
-  .statLabel { font-size: 19.8px; }
-  .runBtn { font-size: 25.2px; }
-  .pointsHint { font-size: 21.6px; }
-  .thinking { font-size: 23.4px; }
-  .resultLabel { font-size: 19.8px; }
-  .resultText { font-size: 25.2px; }
-  .tierStep { font-size: 19.8px; }
-  .tierStepEmoji { font-size: 34px; }
-  .tierStepName { font-size: 21.6px; }
-  .tierStepRange { font-size: 18.0px; }
-  .historyBtn { font-size: 19.8px; }
-  .avatarEmoji { font-size: 34px; width: 115px; height: 115px; }
-  .avatarTag { font-size: 18.0px; }
-  .bubbleName { font-size: 19.8px; }
-  .bubbleTime { font-size: 18.0px; }
-  .bubbleText { font-size: 25.2px; }
-  .bubbleTyping { font-size: 23.4px; }
-  .speechRowCompact .avatarEmoji { font-size: 34px; width: 83px; height: 83px; }
-  .historyPanelTitle { font-size: 21.6px; }
+  .back { font-size: 12px; }
+  .hint { font-size: 13px; }
+  .mockTag { font-size: 11px; }
+  .adminTag { font-size: 11px; }
+  .statNum { font-size: 16px; }
+  .statLabel { font-size: 11px; }
+  .runBtn { font-size: 14px; }
+  .pointsHint { font-size: 12px; }
+  .thinking { font-size: 13px; }
+  .resultLabel { font-size: 11px; }
+  .resultText { font-size: 14px; }
+  .tierStep { font-size: 11px; }
+  .tierStepEmoji { font-size: 19px; }
+  .tierStepName { font-size: 12px; }
+  .tierStepRange { font-size: 10px; }
+  .historyBtn { font-size: 11px; }
+  .avatarEmoji { font-size: 19px; width: 115px; height: 115px; }
+  .avatarTag { font-size: 10px; }
+  .bubbleName { font-size: 11px; }
+  .bubbleTime { font-size: 10px; }
+  .bubbleText { font-size: 14px; }
+  .bubbleTyping { font-size: 13px; }
+  .speechRowCompact .avatarEmoji { font-size: 19px; width: 83px; height: 83px; }
+  .historyPanelTitle { font-size: 12px; }
 }

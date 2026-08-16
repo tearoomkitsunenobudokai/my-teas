@@ -73,11 +73,11 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .back { font-size: 23.4px; }
-  .title { font-size: 34px; }
-  .updated { font-size: 21.6px; }
-  .lead { font-size: 25.2px; }
-  .section h2 { font-size: 28.8px; }
-  .section p { font-size: 25.2px; }
-  .section ul { font-size: 25.2px; }
+  .back { font-size: 13px; }
+  .title { font-size: 19px; }
+  .updated { font-size: 12px; }
+  .lead { font-size: 14px; }
+  .section h2 { font-size: 16px; }
+  .section p { font-size: 14px; }
+  .section ul { font-size: 14px; }
 }

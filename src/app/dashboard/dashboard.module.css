@@ -104,35 +104,35 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .title { font-size: 34px; }
-  .loading { font-size: 23.4px; }
-  .statNum { font-size: 34px; }
-  .statLabel { font-size: 21.6px; }
-  .cardTitle { font-size: 25.2px; }
-  .moreLink { font-size: 21.6px; }
-  .noData { font-size: 21.6px; }
-  .rank { font-size: 23.4px; }
-  .shopIcon { font-size: 34px; }
-  .rankName { font-size: 21.6px; }
-  .rankCount { font-size: 19.8px; }
-  .aromaName { font-size: 21.6px; }
-  .aromaCount { font-size: 19.8px; }
-  .scoreLabel { font-size: 21.6px; }
-  .scoreEdge { font-size: 18.0px; }
-  .scorebarVal { font-size: 19.8px; }
-  .scoreTrend { font-size: 21.6px; }
-  .recentName { font-size: 23.4px; }
-  .recentShop { font-size: 19.8px; }
-  .recentAromaTag { font-size: 16.2px; }
-  .recentDate { font-size: 19.8px; }
-  .startBtn { font-size: 23.4px; }
-  .statPt { font-size: 25.2px; }
-  .stampClose { font-size: 32.4px; }
-  .stampTitle { font-size: 34px; }
-  .stampDesc { font-size: 25.2px; }
-  .stampBox { font-size: 34px; width: 108px; height: 108px; }
-  .stampBoxGoal { font-size: 23.4px; }
-  .stampProgress { font-size: 25.2px; }
+  .title { font-size: 19px; }
+  .loading { font-size: 13px; }
+  .statNum { font-size: 19px; }
+  .statLabel { font-size: 12px; }
+  .cardTitle { font-size: 14px; }
+  .moreLink { font-size: 12px; }
+  .noData { font-size: 12px; }
+  .rank { font-size: 13px; }
+  .shopIcon { font-size: 19px; }
+  .rankName { font-size: 12px; }
+  .rankCount { font-size: 11px; }
+  .aromaName { font-size: 12px; }
+  .aromaCount { font-size: 11px; }
+  .scoreLabel { font-size: 12px; }
+  .scoreEdge { font-size: 10px; }
+  .scorebarVal { font-size: 11px; }
+  .scoreTrend { font-size: 12px; }
+  .recentName { font-size: 13px; }
+  .recentShop { font-size: 11px; }
+  .recentAromaTag { font-size: 9px; }
+  .recentDate { font-size: 11px; }
+  .startBtn { font-size: 13px; }
+  .statPt { font-size: 14px; }
+  .stampClose { font-size: 18px; }
+  .stampTitle { font-size: 19px; }
+  .stampDesc { font-size: 14px; }
+  .stampBox { font-size: 19px; width: 60px; height: 60px; }
+  .stampBoxGoal { font-size: 13px; }
+  .stampProgress { font-size: 14px; }
 }
 
 /* ═══════════════════════════════════════════════

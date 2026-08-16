@@ -50,8 +50,8 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .section { font-size: 18.0px; }
-  .item { font-size: 23.4px; }
-  .toggleBtn { font-size: 21.6px; width: 40px; height: 40px; }
-  .collapsed .item { font-size: 28.8px; }
+  .section { font-size: 10px; }
+  .item { font-size: 13px; }
+  .toggleBtn { font-size: 12px; width: 40px; height: 40px; }
+  .collapsed .item { font-size: 16px; }
 }

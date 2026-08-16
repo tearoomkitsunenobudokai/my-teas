@@ -148,33 +148,33 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .title { font-size: 34px; }
-  .subtitle { font-size: 23.4px; }
-  .addBtn { font-size: 23.4px; }
-  .select { font-size: 23.4px; }
-  .ownerBtn { font-size: 21.6px; }
-  .count { font-size: 21.6px; }
-  .formTitle { font-size: 27.0px; }
-  .formPreviewLabel { font-size: 23.4px; }
-  .label { font-size: 21.6px; }
-  .input { font-size: 23.4px; }
-  .checkLabel { font-size: 23.4px; }
-  .cancelBtn { font-size: 23.4px; }
-  .saveBtn { font-size: 23.4px; }
-  .catTitle { font-size: 25.2px; }
-  .catCount { font-size: 21.6px; }
-  .colorName { font-size: 27.0px; }
-  .colorNameEn { font-size: 19.8px; }
-  .colorCode { font-size: 19.8px; }
-  .officialTag { font-size: 18.0px; }
-  .userTag { font-size: 18.0px; }
-  .colorDesc { font-size: 21.6px; }
-  .editBtn { font-size: 19.8px; }
-  .deleteBtn { font-size: 19.8px; }
-  .hint { font-size: 23.4px; }
-  .viewToggleBtn { font-size: 21.6px; }
-  .ownerTab { font-size: 23.4px; }
-  .myColorCount { font-size: 19.8px; }
+  .title { font-size: 19px; }
+  .subtitle { font-size: 13px; }
+  .addBtn { font-size: 13px; }
+  .select { font-size: 13px; }
+  .ownerBtn { font-size: 12px; }
+  .count { font-size: 12px; }
+  .formTitle { font-size: 15px; }
+  .formPreviewLabel { font-size: 13px; }
+  .label { font-size: 12px; }
+  .input { font-size: 13px; }
+  .checkLabel { font-size: 13px; }
+  .cancelBtn { font-size: 13px; }
+  .saveBtn { font-size: 13px; }
+  .catTitle { font-size: 14px; }
+  .catCount { font-size: 12px; }
+  .colorName { font-size: 15px; }
+  .colorNameEn { font-size: 11px; }
+  .colorCode { font-size: 11px; }
+  .officialTag { font-size: 10px; }
+  .userTag { font-size: 10px; }
+  .colorDesc { font-size: 12px; }
+  .editBtn { font-size: 11px; }
+  .deleteBtn { font-size: 11px; }
+  .hint { font-size: 13px; }
+  .viewToggleBtn { font-size: 12px; }
+  .ownerTab { font-size: 13px; }
+  .myColorCount { font-size: 11px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -209,8 +209,8 @@
 .photoBtn:hover { background: #d3efe5; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .hexField { width: 150px; font-size: 18px; padding: 12px 14px; }
-  .photoBtn { font-size: 18px; padding: 12px 16px; }
+  .hexField { width: 150px; font-size: 10px; padding: 12px 14px; }
+  .photoBtn { font-size: 10px; padding: 12px 16px; }
 }
 
 /* ═══════════════════════════════════════════════

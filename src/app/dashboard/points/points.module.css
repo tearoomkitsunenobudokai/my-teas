@@ -80,25 +80,25 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .back { font-size: 21.6px; }
-  .title { font-size: 34px; }
-  .lead { font-size: 23.4px; }
-  .hint { font-size: 21.6px; }
-  .balanceLabel { font-size: 21.6px; }
-  .balanceNum { font-size: 34px; }
-  .balanceUnit { font-size: 28.8px; }
-  .balanceNote { font-size: 19.8px; }
-  .comingSoonBanner { font-size: 21.6px; }
-  .sectionTitle { font-size: 25.2px; }
-  .packageLimitedNote { font-size: 18.0px; }
-  .packageBadge { font-size: 18.0px; }
-  .packagePt { font-size: 34px; }
-  .packageYen { font-size: 21.6px; }
-  .packageBtn { font-size: 21.6px; }
-  .ledgerType { font-size: 23.4px; }
-  .ledgerDate { font-size: 19.8px; }
-  .ledgerAmount { font-size: 25.2px; }
-  .balanceBreakdown { font-size: 23.4px; }
-  .expiryNote { font-size: 22.5px; }
-  .expiryHint { font-size: 20.7px; }
+  .back { font-size: 12px; }
+  .title { font-size: 19px; }
+  .lead { font-size: 13px; }
+  .hint { font-size: 12px; }
+  .balanceLabel { font-size: 12px; }
+  .balanceNum { font-size: 19px; }
+  .balanceUnit { font-size: 16px; }
+  .balanceNote { font-size: 11px; }
+  .comingSoonBanner { font-size: 12px; }
+  .sectionTitle { font-size: 14px; }
+  .packageLimitedNote { font-size: 10px; }
+  .packageBadge { font-size: 10px; }
+  .packagePt { font-size: 19px; }
+  .packageYen { font-size: 12px; }
+  .packageBtn { font-size: 12px; }
+  .ledgerType { font-size: 13px; }
+  .ledgerDate { font-size: 11px; }
+  .ledgerAmount { font-size: 14px; }
+  .balanceBreakdown { font-size: 13px; }
+  .expiryNote { font-size: 12.5px; }
+  .expiryHint { font-size: 11.5px; }
 }

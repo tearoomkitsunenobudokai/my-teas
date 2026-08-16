@@ -86,11 +86,11 @@
   .closeBtn { font-size: 30px; }
   .guide { font-size: 17px; }
   .guideSm { font-size: 16px; }
-  .bigBtn, .bigBtnAlt, .applyBtn { font-size: 20px; padding: 18px; }
+  .bigBtn, .bigBtnAlt, .applyBtn { font-size: 20px; padding: 10px; }
   .sizeLabel { font-size: 16px; }
   .resultHex { font-size: 20px; }
   .resultSwatch { width: 44px; height: 44px; }
-  .retakeBtn { font-size: 16px; padding: 9px 16px; }
+  .retakeBtn { font-size: 16px; padding: 5px 16px; }
 }
 
 /* 濃さの調整 */
@@ -144,10 +144,10 @@
 .stepBtn:disabled, .stepBtnLg:disabled { opacity: 0.35; cursor: default; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .stepVal { font-size: 18px; }
+  .stepVal { font-size: 10px; }
   .stepBtn, .stepBtnLg { min-width: 46px; height: 46px; border-radius: 10px; }
   .stepBtn { font-size: 22px; }
-  .stepBtnLg { font-size: 18px; }
+  .stepBtnLg { font-size: 10px; }
   .stepCtrl { gap: 8px; }
 }
 
@@ -301,7 +301,7 @@
 }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .registerCheck { font-size: 18px; }
+  .registerCheck { font-size: 10px; }
   .registerCheck input { width: 24px; height: 24px; }
   .registerHint { font-size: 15px; }
   .registerErr { font-size: 16px; }
