@@ -98,7 +98,7 @@
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .card, .guide { padding: 1.25rem 1rem; }
-  .preview { width: 140px; }
+  .preview { width: 77.8px; }
   .balance { margin-left: 0; }
 }
 
@@ -261,7 +261,7 @@
 .resetBtn:hover { border-color: var(--green); color: var(--green); }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .focusVal { font-size: 16px; min-width: 58px; }
+  .focusVal { font-size: 16px; min-width: 32.2px; }
   .resetBtn { font-size: 16px; padding: 5px 10px; }
 }
 
@@ -449,8 +449,8 @@
   .modalLead    { font-size: 12.5px; }
   .pickName     { font-size: 14px; }
   .pickSub      { font-size: 12px; }
-  .pickCheck    { width: 34px; height: 34px; font-size: 20px; }
-  .pickSwatch   { width: 40px; height: 40px; }
+  .pickCheck    { width: 18.9px; height: 18.9px; font-size: 20px; }
+  .pickSwatch   { width: 22.2px; height: 22.2px; }
   .modalCancel, .modalOk { font-size: 14px; padding: 16px; }
 }
 

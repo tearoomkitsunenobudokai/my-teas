@@ -178,12 +178,12 @@
   .tierStepName { font-size: 12px; }
   .tierStepRange { font-size: 10px; }
   .historyBtn { font-size: 11px; }
-  .avatarEmoji { font-size: 19px; width: 115px; height: 115px; }
+  .avatarEmoji { font-size: 19px; width: 63.9px; height: 63.9px; }
   .avatarTag { font-size: 10px; }
   .bubbleName { font-size: 11px; }
   .bubbleTime { font-size: 10px; }
   .bubbleText { font-size: 14px; }
   .bubbleTyping { font-size: 13px; }
-  .speechRowCompact .avatarEmoji { font-size: 19px; width: 83px; height: 83px; }
+  .speechRowCompact .avatarEmoji { font-size: 19px; width: 46.1px; height: 46.1px; }
   .historyPanelTitle { font-size: 12px; }
 }

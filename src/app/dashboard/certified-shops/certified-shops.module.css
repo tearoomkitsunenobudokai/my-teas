@@ -229,9 +229,9 @@
      スマホのブラウザでは 100vh がアドレスバー分を含んでしまい、リスト下部が
      画面外に隠れてスクロールで到達できなくなる。実際の表示領域に追従する
      100dvh を使い、未対応ブラウザ向けに 100vh をフォールバックとして残す。 */
-  .pageWrap { flex-direction: column; height: calc(100vh - 56px); margin: -1rem; }
+  .pageWrap { flex-direction: column; height: calc(100vh - 31.1px); margin: -1rem; }
   @supports (height: 100dvh) {
-    .pageWrap { height: calc(100dvh - 56px); }
+    .pageWrap { height: calc(100dvh - 31.1px); }
   }
   .leftPane { width: 100%; }
   /* 最後の行が下端に貼り付いて押しづらくならないよう、余白を確保 */
@@ -356,7 +356,7 @@
   .visitCountBadge { font-size: 11px; }
   .visitBtn { font-size: 14px; }
   .visitedBadge { font-size: 9px; }
-  .mapCloseBtn { font-size: 14px; width: 47px; height: 47px; }
+  .mapCloseBtn { font-size: 14px; width: 26.1px; height: 26.1px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -371,7 +371,7 @@
   /* 高さの固定と入れ子スクロールを解除し、ページ全体で1つのスクロールにする */
   .pageWrap { height: auto; overflow: visible; }
   .leftPane { overflow: visible; border-right: none; }
-  .shopList { overflow: visible; flex: none; padding-bottom: 32px; }
+  .shopList { overflow: visible; flex: none; padding-bottom: 17.8px; }
 
   /* タイトル〜検索・絞り込みまでをまとめて上部に固定する。
      以前は検索欄だけを固定していたため、スクロールすると

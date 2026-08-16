@@ -52,6 +52,6 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .section { font-size: 10px; }
   .item { font-size: 13px; }
-  .toggleBtn { font-size: 12px; width: 40px; height: 40px; }
+  .toggleBtn { font-size: 12px; width: 22.2px; height: 22.2px; }
   .collapsed .item { font-size: 16px; }
 }
