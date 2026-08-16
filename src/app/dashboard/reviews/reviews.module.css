@@ -230,12 +230,12 @@
     padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom));
     gap: 12px;
   }
-  .mTitle { font-size: 10px; }
-  .mClose { font-size: 24px; padding: 8px; }
+  .mTitle { font-size: 11.5px; }
+  .mClose { font-size: 27.5px; padding: 8px; }
 
-  .label { font-size: 14px; margin-top: 8px; }
+  .label { font-size: 16px; margin-top: 8px; }
   .input, .textarea, .inputDate, .inputSm {
-    font-size: 16px;            /* 16px未満だとiOSがフォーカス時に拡大してしまう */
+    font-size: 18.5px;            /* 16px未満だとiOSがフォーカス時に拡大してしまう */
     padding: 12px;
     border-radius: 10px;
   }
@@ -252,7 +252,7 @@
 
   /* チップ(香り分析・抽出方法・添え物): タップしやすく */
   .chips { gap: 8px; }
-  .chip { padding: 10px 16px; font-size: 14px; }
+  .chip { padding: 10px 16px; font-size: 16px; }
 
   /* フッターを画面下に固定 */
   .mFoot {
@@ -266,13 +266,13 @@
   .cancelBtn, .saveBtn {
     flex: 1;
     padding: 14px;
-    font-size: 16px;
+    font-size: 18.5px;
     border-radius: 12px;
   }
 
   /* 一覧側: 編集/削除ボタンもタップしやすく */
-  .editBtn, .delBtn { padding: 8px 16px; font-size: 14px; }
-  .summaryBtn, .cardBtn { padding: 12px; font-size: 14px; }
+  .editBtn, .delBtn { padding: 8px 16px; font-size: 16px; }
+  .summaryBtn, .cardBtn { padding: 12px; font-size: 16px; }
 }
 
 /* ─── ステップ入力（ウィザード） ─── */
@@ -289,8 +289,8 @@
 .wizListBtn:hover { background: var(--bg-muted); color: var(--text); }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .wizStep { font-size: 14px; }
-  .wizListBtn { padding: 8px 12px; font-size: 13px; }
+  .wizStep { font-size: 16px; }
+  .wizListBtn { padding: 8px 12px; font-size: 15px; }
 }
 
 .notesHint {
@@ -364,7 +364,7 @@
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .swatchGrid { gap: 8px; }
-  .scoreBtn { max-height: 28.9px; font-size: 17px; }
+  .scoreBtn { max-height: 28.9px; font-size: 19.5px; }
 }
 
 /* ─── スマホでの可読性向上（案A） ───
@@ -372,18 +372,18 @@
    PCでの見た目は変えず、情報密度も大きく損なわないよう最小限の調整に留める。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   /* 入力フォーム内 */
-  .sub { font-size: 12px; }                 /* 項目横の補足（10px → 12px） */
-  .colorName { font-size: 12.5px; }         /* 選択中の色名（11px → 12.5px） */
-  .swatchName { font-size: 12px; }          /* 色名ラベル（10px → 12px） */
-  .scoreItemEdge { font-size: 12px; }       /* 「弱い↔強い」の目安（10.5px → 12px） */
-  .scoreItemName { font-size: 15px; }       /* 評価項目名（14px → 15px） */
+  .sub { font-size: 14px; }                 /* 項目横の補足（10px → 12px） */
+  .colorName { font-size: 14.5px; }         /* 選択中の色名（11px → 12.5px） */
+  .swatchName { font-size: 14px; }          /* 色名ラベル（10px → 12px） */
+  .scoreItemEdge { font-size: 14px; }       /* 「弱い↔強い」の目安（10.5px → 12px） */
+  .scoreItemName { font-size: 17px; }       /* 評価項目名（14px → 15px） */
 
   /* 評価一覧のタイル */
-  .tileBrand { font-size: 12.5px; padding: 3px 10px; }
-  .tileSub { font-size: 12.5px; }
-  .tileDate { font-size: 12px; }
-  .tilePlaceholder { font-size: 12.5px; }
-  .aromaTag { font-size: 11px; padding: 2px 7px; }
+  .tileBrand { font-size: 14.5px; padding: 3px 10px; }
+  .tileSub { font-size: 14.5px; }
+  .tileDate { font-size: 14px; }
+  .tilePlaceholder { font-size: 14.5px; }
+  .aromaTag { font-size: 12.5px; padding: 2px 7px; }
 }
 
 /* ─── 香り分析「その他」の自由入力 ─── */
@@ -405,8 +405,8 @@
 .otherAromaErr { font-size: 12px; color: #dc2626; margin-top: 6px; font-weight: 600; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .otherAddBtn { padding: 12px 10px; font-size: 14px; }
-  .otherAromaHint { font-size: 12px; }
+  .otherAddBtn { padding: 12px 10px; font-size: 16px; }
+  .otherAromaHint { font-size: 14px; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -420,7 +420,7 @@
   .input, .textarea, .inputDate {
     min-height: 28.9px;
     padding: 14px 14px;
-    font-size: 16px;
+    font-size: 18.5px;
     border-radius: 12px;
     border-width: 1.5px;
   }
@@ -429,7 +429,7 @@
 
   /* ── 項目ラベル：見出しとして認識しやすく ── */
   .label {
-    font-size: 15.5px;
+    font-size: 18px;
     font-weight: 700;
     margin-top: 16px;
     margin-bottom: 8px;
@@ -441,7 +441,7 @@
     display: inline-flex;
     align-items: center;
     padding: 0 16px;
-    font-size: 15px;
+    font-size: 17px;
     border-radius: 24px;
     border-width: 1.5px;
   }
@@ -452,7 +452,7 @@
     min-height: 30px;
     align-items: center;
     padding: 0 16px;
-    font-size: 15.5px;
+    font-size: 18px;
     font-weight: 600;
     color: var(--text);
   }
@@ -463,7 +463,7 @@
     display: inline-flex;
     align-items: center;
     padding: 0 10px;
-    font-size: 15px;
+    font-size: 17px;
     border-radius: 24px;
     border-width: 1.5px;
   }
@@ -472,19 +472,19 @@
   /* ── スコア：横幅いっぱいに広げ、押し間違いを防ぐ ── */
   .scoreList { width: 100%; }
   .scoreItem { margin-bottom: 20px; }
-  .scoreItemName { font-size: 16px; }
+  .scoreItemName { font-size: 18.5px; }
   .scoreItemBtns { gap: 8px; width: 100%; }
   .scoreBtn {
     min-height: 31.1px;
     max-height: none;
-    font-size: 19px;
+    font-size: 22px;
     border-radius: 14px;
     border-width: 1.5px;
   }
 
   /* ── 水色スウォッチ：3列にして1つずつを大きく ── */
   .swatchGrid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .swatchName { font-size: 12.5px; }
+  .swatchName { font-size: 14.5px; }
 
   /* ── 公開設定のチェックボックス：タップ領域を確保 ── */
   .checkLabel {
@@ -492,31 +492,31 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    font-size: 15.5px;
+    font-size: 18px;
   }
   .checkLabel input[type="checkbox"] { width: 24px; height: 24px; }
 
   /* ── 「その他」自由入力 ── */
-  .otherAddBtn { min-height: 28.9px; padding: 0 22px; font-size: 15px; border-radius: 12px; }
+  .otherAddBtn { min-height: 28.9px; padding: 0 22px; font-size: 17px; border-radius: 12px; }
 
   /* ── 詳細の開閉ボタン ── */
-  .detailToggle { min-height: 27.8px; font-size: 15px; }
+  .detailToggle { min-height: 27.8px; font-size: 17px; }
 
   /* ── 選択済みの香りタグ（削除ボタン付き）── */
   .aromaSelected {
     min-height: 42px;
     display: inline-flex;
     align-items: center;
-    font-size: 14px;
+    font-size: 16px;
     padding: 0 6px 0 14px;
   }
-  .aromaSelected button { min-width: 18.9px; min-height: 18.9px; font-size: 10px; }
+  .aromaSelected button { min-width: 18.9px; min-height: 18.9px; font-size: 11.5px; }
 
   /* ── ステップ表示・下部ボタン ── */
   .wizBar { padding: 14px 16px; }
-  .wizStep { font-size: 15px; }
-  .wizListBtn { min-height: 44px; padding: 0 14px; font-size: 13px; }
-  .cancelBtn, .saveBtn { min-height: 31.1px; font-size: 16.5px; font-weight: 700; }
+  .wizStep { font-size: 17px; }
+  .wizListBtn { min-height: 44px; padding: 0 14px; font-size: 15px; }
+  .cancelBtn, .saveBtn { min-height: 31.1px; font-size: 19px; font-weight: 700; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -530,17 +530,17 @@
 
   /* ── 項目ラベル（読む文字：大きく） ── */
   .label {
-    font-size: 26px;
+    font-size: 30px;
     font-weight: 700;
     margin-top: 22px;
     margin-bottom: 12px;
     line-height: 1.4;
   }
-  .sub { font-size: 20px; font-weight: 500; }
+  .sub { font-size: 23px; font-weight: 500; }
 
   /* ── 入力欄（1行の文字数を確保するため1.4倍程度に） ── */
   .input, .textarea, .inputDate {
-    font-size: 19px;
+    font-size: 22px;
     min-height: 66px;
     padding: 16px 16px;
     border-radius: 14px;
@@ -552,7 +552,7 @@
   .aromaChip {
     min-height: 31.1px;
     padding: 0 20px;
-    font-size: 21px;
+    font-size: 24px;
   }
   .groupItems { gap: 10px; padding: 14px 10px; }
 
@@ -560,48 +560,48 @@
   .groupBtn {
     min-height: 66px;
     padding: 0 10px;
-    font-size: 24px;
+    font-size: 27.5px;
   }
 
   /* ── チップ（抽出方法・添え物） ── */
   .chip {
     min-height: 31.1px;
     padding: 0 20px;
-    font-size: 21px;
+    font-size: 24px;
   }
   .chips { gap: 10px; }
 
   /* ── スコア ── */
   .scoreItem { margin-bottom: 26px; }
-  .scoreItemName { font-size: 25px; margin-bottom: 4px; }
-  .scoreItemEdge { font-size: 19px; margin-bottom: 8px; }
+  .scoreItemName { font-size: 28.5px; margin-bottom: 4px; }
+  .scoreItemEdge { font-size: 22px; margin-bottom: 8px; }
   .scoreItemBtns { gap: 8px; }
-  .scoreBtn { min-height: 66px; font-size: 28px; border-radius: 16px; }
+  .scoreBtn { min-height: 66px; font-size: 32px; border-radius: 16px; }
 
   /* ── 水色 ── */
-  .swatchName { font-size: 19px; line-height: 1.35; }
-  .colorName { font-size: 21px; font-weight: 600; }
-  .customColorLabel { font-size: 19px; }
+  .swatchName { font-size: 22px; line-height: 1.35; }
+  .colorName { font-size: 24px; font-weight: 600; }
+  .customColorLabel { font-size: 22px; }
 
   /* ── 公開設定 ── */
-  .checkLabel { min-height: 64px; font-size: 24px; }
+  .checkLabel { min-height: 64px; font-size: 27.5px; }
   .checkLabel input[type="checkbox"] { width: 30px; height: 30px; }
 
   /* ── 「その他」自由入力 ── */
-  .otherAddBtn { min-height: 66px; padding: 0 26px; font-size: 21px; }
-  .otherAromaHint { font-size: 10px; }
-  .otherAromaErr { font-size: 19px; }
+  .otherAddBtn { min-height: 66px; padding: 0 26px; font-size: 24px; }
+  .otherAromaHint { font-size: 11.5px; }
+  .otherAromaErr { font-size: 22px; }
 
   /* ── 選択済みの香りタグ ── */
-  .aromaSelected { min-height: 28.9px; font-size: 20px; padding: 0 8px 0 16px; }
-  .aromaSelected button { min-width: 22.2px; min-height: 22.2px; font-size: 24px; }
+  .aromaSelected { min-height: 28.9px; font-size: 23px; padding: 0 8px 0 16px; }
+  .aromaSelected button { min-width: 22.2px; min-height: 22.2px; font-size: 27.5px; }
 
   /* ── ステップ表示・詳細・下部ボタン ── */
-  .mTitle { font-size: 24px; }
-  .wizStep { font-size: 22px; }
-  .wizListBtn { min-height: 27.8px; padding: 0 16px; font-size: 17px; }
-  .detailToggle { min-height: 60px; font-size: 21px; }
-  .cancelBtn, .saveBtn { min-height: 66px; font-size: 23px; font-weight: 700; }
+  .mTitle { font-size: 27.5px; }
+  .wizStep { font-size: 25.5px; }
+  .wizListBtn { min-height: 27.8px; padding: 0 16px; font-size: 19.5px; }
+  .detailToggle { min-height: 60px; font-size: 24px; }
+  .cancelBtn, .saveBtn { min-height: 66px; font-size: 26.5px; font-weight: 700; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -611,7 +611,7 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .tileLeft { width: 60px; }
   .aromaTag {
-    font-size: 13px;
+    font-size: 15px;
     padding: 3px 5px;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -620,8 +620,8 @@
     text-align: center;
   }
   .aromaTags { gap: 4px; width: 100%; }
-  .tileSub, .tileBrand { font-size: 13px; }
-  .tileDate { font-size: 12.5px; }
+  .tileSub, .tileBrand { font-size: 15px; }
+  .tileDate { font-size: 14.5px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -643,7 +643,7 @@
 .tileDate { padding-top: 2px; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileName { font-size: 20px; line-height: 1.35; }
+  .tileName { font-size: 23px; line-height: 1.35; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -674,18 +674,18 @@
    タップ・可読性を優先し、タイル内の文字を大きくする。
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .th, .attrLabel { font-size: 15px; }
-  .hexCode { font-size: 14px; letter-spacing: 0.03em; }
-  .tagAroma, .tagAccomp { font-size: 15px; padding: 5px 12px; }
-  .colEmpty { font-size: 15px; }
+  .th, .attrLabel { font-size: 17px; }
+  .hexCode { font-size: 16px; letter-spacing: 0.03em; }
+  .tagAroma, .tagAccomp { font-size: 17px; padding: 5px 12px; }
+  .colEmpty { font-size: 17px; }
   .attrValue { padding: 10px 12px; gap: 8px; }
   .attrRow { grid-template-columns: 86px minmax(0, 1fr); }
   .cupBox svg { max-width: 100%; }
   /* タイル周辺の文字も拡大 */
-  .tileName { font-size: 20px; line-height: 1.35; }
-  .tileSub, .tilePlaceholder { font-size: 14px; }
-  .tileDate { font-size: 13px; }
-  .editBtn, .delBtn { font-size: 15px; padding: 5px 16px; }
+  .tileName { font-size: 23px; line-height: 1.35; }
+  .tileSub, .tilePlaceholder { font-size: 16px; }
+  .tileDate { font-size: 15px; }
+  .editBtn, .delBtn { font-size: 17px; padding: 5px 16px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -694,27 +694,27 @@
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   /* ページ見出し（コミュニティと同じサイズに） */
-  .title { font-size: 19px; }
+  .title { font-size: 22px; }
   /* 表組みの見出し・ラベル */
-  .th, .attrLabel { font-size: 22px; }
+  .th, .attrLabel { font-size: 25.5px; }
   .attrRow { grid-template-columns: 110px minmax(0, 1fr); }
   /* 香り・添え物のチップ */
-  .tagAroma, .tagAccomp { font-size: 22px; padding: 7px 16px; border-radius: 24px; }
-  .colEmpty { font-size: 22px; }
+  .tagAroma, .tagAccomp { font-size: 25.5px; padding: 7px 16px; border-radius: 24px; }
+  .colEmpty { font-size: 25.5px; }
   .attrValue { padding: 12px 14px; gap: 10px; }
   /* カラーコード */
-  .hexCode { font-size: 20px; }
+  .hexCode { font-size: 23px; }
   /* タイル周辺 */
-  .tileName { font-size: 19px; line-height: 1.3; }
-  .tileSub, .tileShop, .tileBrand, .tilePlaceholder { font-size: 21px; }
-  .tileDate { font-size: 19px; }
-  .editBtn, .delBtn { font-size: 21px; padding: 11px 10px; }
+  .tileName { font-size: 22px; line-height: 1.3; }
+  .tileSub, .tileShop, .tileBrand, .tilePlaceholder { font-size: 24px; }
+  .tileDate { font-size: 22px; }
+  .editBtn, .delBtn { font-size: 24px; padding: 11px 10px; }
   /* ツールバー（飲んだ日・公開/非公開・並び順・件数）もコミュニティと同等に */
-  .fl { font-size: 21px; }
-  .di, .sortSel { font-size: 21px; padding: 8px 12px; }
-  .pfb, .pfbOn { font-size: 20px; padding: 8px 16px; }
-  .clr { font-size: 20px; padding: 7px 12px; }
-  .regBtn { font-size: 22px; padding: 12px 20px; }
+  .fl { font-size: 24px; }
+  .di, .sortSel { font-size: 24px; padding: 8px 12px; }
+  .pfb, .pfbOn { font-size: 23px; padding: 8px 16px; }
+  .clr { font-size: 23px; padding: 7px 12px; }
+  .regBtn { font-size: 25.5px; padding: 12px 20px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -772,8 +772,8 @@
 }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .stepHint { font-size: 10px; padding: 10px 13px; }
-  .maniaTag { font-size: 15px; padding: 3px 11px; }
+  .stepHint { font-size: 11.5px; padding: 10px 13px; }
+  .maniaTag { font-size: 17px; padding: 3px 11px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -816,8 +816,8 @@
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .secHead { padding: 15px 16px; margin: 10px 0 10px; }
-  .secHeadLabel { font-size: 21px; }
-  .secHeadIcon { font-size: 16px; }
+  .secHeadLabel { font-size: 24px; }
+  .secHeadIcon { font-size: 18.5px; }
 }
 
 /* 一覧表示の一括開閉バー */
@@ -835,8 +835,8 @@
 .secBarBtn:hover { border-color: var(--green); color: var(--green); }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .secBarHint { font-size: 17px; }
-  .secBarBtn { font-size: 17px; padding: 8px 16px; }
+  .secBarHint { font-size: 19.5px; }
+  .secBarBtn { font-size: 19.5px; padding: 8px 16px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -909,7 +909,7 @@
 .photoPickBtn:hover { background: #d3efe5; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .photoPickBtn { font-size: 19px; padding: 15px 16px; }
+  .photoPickBtn { font-size: 22px; padding: 15px 16px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -963,5 +963,5 @@
 .customNameBox { width: 100%; margin-top: 12px; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileIcon { font-size: 36px; }
+  .tileIcon { font-size: 41.5px; }
 }

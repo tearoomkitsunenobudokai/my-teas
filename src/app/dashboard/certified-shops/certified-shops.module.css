@@ -290,7 +290,7 @@
     border: none;
     background: var(--bg-muted);
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     flex-shrink: 0;
   }
@@ -303,60 +303,60 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .title { font-size: 15px; }
-  .subtitle { font-size: 11px; }
-  .btnPrimary { font-size: 11px; }
-  .btnSecondary { font-size: 11px; }
-  .btnDanger { font-size: 11px; }
-  .bmCount { font-size: 10px; }
-  .bookmarkTitle { font-size: 12px; }
-  .bookmarkCount { font-size: 11px; }
-  .bookmarkEmpty { font-size: 11px; }
-  .bookmarkItemName { font-size: 12px; }
-  .bookmarkItemAddr { font-size: 10px; }
-  .bookmarkRemoveBtn { font-size: 12px; }
-  .yearTab { font-size: 11px; }
-  .search { font-size: 12px; }
-  .select { font-size: 11px; }
-  .count { font-size: 11px; }
-  .areaTitle { font-size: 10px; }
-  .areaCount { font-size: 10px; }
-  .shopRowName { font-size: 12px; }
-  .shopRowAddr { font-size: 10px; }
-  .catBadge { font-size: 10px; }
-  .newBadge { font-size: 9px; }
-  .awardBadge { font-size: 11px; }
-  .bmBtn { font-size: 15px; }
-  .shopLinkBtn { font-size: 12px; }
-  .deleteBtn { font-size: 10px; }
-  .selectedPanelName { font-size: 13px; }
-  .clearBtn { font-size: 13px; }
-  .selectedPanelAddr { font-size: 11px; }
-  .selectedPanelNote { font-size: 11px; }
-  .selectedPanelLink { font-size: 11px; }
-  .selectedPanelHint { font-size: 10px; }
-  .mapTitle { font-size: 12px; }
-  .mapHint { font-size: 11px; }
-  .mapOverlayBadge span:first-child { font-size: 13px; }
-  .mapOverlayHint { font-size: 10px; }
-  .mapPlaceholderTitle { font-size: 15px; }
-  .mapPlaceholderSteps { font-size: 13px; }
-  .mapPlaceholderSub { font-size: 12px; }
-  .mapIdNote { font-size: 12px; }
-  .mapIdSteps { font-size: 12px; }
-  .modalTitle { font-size: 15px; }
-  .label { font-size: 12px; }
-  .input { font-size: 13px; }
-  .checkLabel { font-size: 13px; }
-  .cancelBtn { font-size: 13px; }
-  .saveBtn { font-size: 13px; }
-  .mapPlaceholderSubTitle { font-size: 13px; }
-  .exportTextarea { font-size: 11px; }
-  .mapToggleBtn { font-size: 11px; }
-  .visitCountBadge { font-size: 11px; }
-  .visitBtn { font-size: 14px; }
-  .visitedBadge { font-size: 9px; }
-  .mapCloseBtn { font-size: 14px; width: 26.1px; height: 26.1px; }
+  .title { font-size: 17px; }
+  .subtitle { font-size: 12.5px; }
+  .btnPrimary { font-size: 12.5px; }
+  .btnSecondary { font-size: 12.5px; }
+  .btnDanger { font-size: 12.5px; }
+  .bmCount { font-size: 11.5px; }
+  .bookmarkTitle { font-size: 14px; }
+  .bookmarkCount { font-size: 12.5px; }
+  .bookmarkEmpty { font-size: 12.5px; }
+  .bookmarkItemName { font-size: 14px; }
+  .bookmarkItemAddr { font-size: 11.5px; }
+  .bookmarkRemoveBtn { font-size: 14px; }
+  .yearTab { font-size: 12.5px; }
+  .search { font-size: 14px; }
+  .select { font-size: 12.5px; }
+  .count { font-size: 12.5px; }
+  .areaTitle { font-size: 11.5px; }
+  .areaCount { font-size: 11.5px; }
+  .shopRowName { font-size: 14px; }
+  .shopRowAddr { font-size: 11.5px; }
+  .catBadge { font-size: 11.5px; }
+  .newBadge { font-size: 10.5px; }
+  .awardBadge { font-size: 12.5px; }
+  .bmBtn { font-size: 17px; }
+  .shopLinkBtn { font-size: 14px; }
+  .deleteBtn { font-size: 11.5px; }
+  .selectedPanelName { font-size: 15px; }
+  .clearBtn { font-size: 15px; }
+  .selectedPanelAddr { font-size: 12.5px; }
+  .selectedPanelNote { font-size: 12.5px; }
+  .selectedPanelLink { font-size: 12.5px; }
+  .selectedPanelHint { font-size: 11.5px; }
+  .mapTitle { font-size: 14px; }
+  .mapHint { font-size: 12.5px; }
+  .mapOverlayBadge span:first-child { font-size: 15px; }
+  .mapOverlayHint { font-size: 11.5px; }
+  .mapPlaceholderTitle { font-size: 17px; }
+  .mapPlaceholderSteps { font-size: 15px; }
+  .mapPlaceholderSub { font-size: 14px; }
+  .mapIdNote { font-size: 14px; }
+  .mapIdSteps { font-size: 14px; }
+  .modalTitle { font-size: 17px; }
+  .label { font-size: 14px; }
+  .input { font-size: 15px; }
+  .checkLabel { font-size: 15px; }
+  .cancelBtn { font-size: 15px; }
+  .saveBtn { font-size: 15px; }
+  .mapPlaceholderSubTitle { font-size: 15px; }
+  .exportTextarea { font-size: 12.5px; }
+  .mapToggleBtn { font-size: 12.5px; }
+  .visitCountBadge { font-size: 12.5px; }
+  .visitBtn { font-size: 16px; }
+  .visitedBadge { font-size: 10.5px; }
+  .mapCloseBtn { font-size: 16px; width: 26.1px; height: 26.1px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -409,7 +409,7 @@
      （固定位置がずれて見出しが隠れてしまうのを防ぐ） */
   .areaTitle {
     position: static;
-    font-size: 14px;
+    font-size: 16px;
     padding: 8px 14px 6px;
   }
 
@@ -419,10 +419,10 @@
     white-space: normal;      /* 長い住所は折り返す */
     overflow: visible;
     text-overflow: clip;
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.5;
   }
-  .shopRowName { font-size: 16px; line-height: 1.45; }
+  .shopRowName { font-size: 18.5px; line-height: 1.45; }
   .shopRow { padding: 12px 14px; }
   .shopRowLeft { min-width: 0; flex: 1; }
 }

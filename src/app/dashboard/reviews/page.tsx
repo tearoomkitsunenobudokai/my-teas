@@ -95,7 +95,7 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
           <div className={`${styles.topCell} ${styles.colDiv}`}>
             <div className={styles.th}>チャート</div>
             <div className={styles.chartBox}>
-              <RadarChart scores={scores} size={235} labelFontSize={12} tickFontSize={10} desktopLabelFontSize={12} desktopTickFontSize={10} fluid verticalSideLabels/>
+              <RadarChart scores={scores} size={270} labelFontSize={14} tickFontSize={11} desktopLabelFontSize={12} desktopTickFontSize={10} fluid verticalSideLabels/>
             </div>
           </div>
         </div>

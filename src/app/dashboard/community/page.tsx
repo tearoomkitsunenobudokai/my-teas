@@ -70,7 +70,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           <div className={styles.topCell}>
             <div className={styles.th}>水色</div>
             <div className={styles.cupBox}>
-              <TeaCupSvg hex={colorHex} size={72} tight/>
+              <TeaCupSvg hex={colorHex} size={83} tight/>
               {colorHex && (
                 <span className={styles.hexRow}>
                   {/* 評価カードと同じ、金の枠線付きの色見本 */}
@@ -83,7 +83,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
           <div className={`${styles.topCell} ${styles.colDiv}`}>
             <div className={styles.th}>チャート</div>
             <div className={styles.chartBox}>
-              <RadarChart scores={scores} size={235} labelFontSize={12} tickFontSize={10} desktopLabelFontSize={12} desktopTickFontSize={10} fluid verticalSideLabels/>
+              <RadarChart scores={scores} size={270} labelFontSize={14} tickFontSize={11} desktopLabelFontSize={12} desktopTickFontSize={10} fluid verticalSideLabels/>
             </div>
           </div>
         </div>

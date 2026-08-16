@@ -160,10 +160,10 @@
 .focusLabel { font-size: 12px; color: var(--text-muted); width: 32px; flex-shrink: 0; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .lockRow { font-size: 17px; }
+  .lockRow { font-size: 19.5px; }
   .lockRow input { width: 24px; height: 24px; }
-  .focusHint { font-size: 15px; }
-  .focusLabel { font-size: 16px; width: 44px; }
+  .focusHint { font-size: 17px; }
+  .focusLabel { font-size: 18.5px; width: 44px; }
 }
 .slotFileName {
   font-size: 11px;
@@ -211,8 +211,8 @@
   /* スマホでは縦に並べて、1枚ずつ大きく確認できるようにする */
   .slots { grid-template-columns: 1fr; gap: 16px; }
   .slotEmpty { min-height: 120px; }
-  .slotTitle { font-size: 14px; }
-  .slotChangeBtn, .slotClearBtn { min-height: 48px; font-size: 14px; }
+  .slotTitle { font-size: 16px; }
+  .slotChangeBtn, .slotClearBtn { min-height: 48px; font-size: 16px; }
 }
 
 
@@ -221,27 +221,27 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .title { font-size: 19px; }
-  .lead { font-size: 13px; }
-  .loading { font-size: 13px; }
-  .costLabel { font-size: 12px; }
-  .costValue { font-size: 15px; }
-  .balance { font-size: 12px; }
-  .label { font-size: 13px; }
-  .file { font-size: 13px; }
-  .hint { font-size: 11.5px; }
-  .previewTitle { font-size: 12px; }
-  .checkRow { font-size: 13px; }
-  .runBtn { font-size: 15px; }
-  .done { font-size: 13px; }
-  .guideTitle { font-size: 15px; }
-  .guideList { font-size: 13px; }
-  .guideNote { font-size: 11.5px; }
-  .slotTitle { font-size: 14px; }
-  .slotFileName { font-size: 11px; }
-  .slotChangeBtn, .slotClearBtn { font-size: 14px; }
-  .slotPlusIcon { font-size: 19px; }
-  .slotEmptyText { font-size: 13px; }
+  .title { font-size: 22px; }
+  .lead { font-size: 15px; }
+  .loading { font-size: 15px; }
+  .costLabel { font-size: 14px; }
+  .costValue { font-size: 17px; }
+  .balance { font-size: 14px; }
+  .label { font-size: 15px; }
+  .file { font-size: 15px; }
+  .hint { font-size: 13px; }
+  .previewTitle { font-size: 14px; }
+  .checkRow { font-size: 15px; }
+  .runBtn { font-size: 17px; }
+  .done { font-size: 15px; }
+  .guideTitle { font-size: 17px; }
+  .guideList { font-size: 15px; }
+  .guideNote { font-size: 13px; }
+  .slotTitle { font-size: 16px; }
+  .slotFileName { font-size: 12.5px; }
+  .slotChangeBtn, .slotClearBtn { font-size: 16px; }
+  .slotPlusIcon { font-size: 22px; }
+  .slotEmptyText { font-size: 15px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -261,8 +261,8 @@
 .resetBtn:hover { border-color: var(--green); color: var(--green); }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .focusVal { font-size: 16px; min-width: 32.2px; }
-  .resetBtn { font-size: 16px; padding: 5px 10px; }
+  .focusVal { font-size: 18.5px; min-width: 32.2px; }
+  .resetBtn { font-size: 18.5px; padding: 5px 10px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -326,9 +326,9 @@
 }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .paperName  { font-size: 15px; }
-  .paperSize  { font-size: 11.5px; }
-  .paperCount { font-size: 12px; }
+  .paperName  { font-size: 17px; }
+  .paperSize  { font-size: 13px; }
+  .paperCount { font-size: 14px; }
   .paperBtn, .paperBtnOn { padding: 16px 10px; }
 }
 
@@ -443,15 +443,15 @@
 .modalOk:disabled, .modalCancel:disabled { opacity: .45; cursor: not-allowed; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .pickBtn      { font-size: 14px; padding: 14px 24px; }
-  .pickHint     { font-size: 12px; }
-  .modalTitle   { font-size: 17px; }
-  .modalLead    { font-size: 12.5px; }
-  .pickName     { font-size: 14px; }
-  .pickSub      { font-size: 12px; }
-  .pickCheck    { width: 18.9px; height: 18.9px; font-size: 20px; }
+  .pickBtn      { font-size: 16px; padding: 14px 24px; }
+  .pickHint     { font-size: 14px; }
+  .modalTitle   { font-size: 19.5px; }
+  .modalLead    { font-size: 14.5px; }
+  .pickName     { font-size: 16px; }
+  .pickSub      { font-size: 14px; }
+  .pickCheck    { width: 18.9px; height: 18.9px; font-size: 23px; }
   .pickSwatch   { width: 22.2px; height: 22.2px; }
-  .modalCancel, .modalOk { font-size: 14px; padding: 16px; }
+  .modalCancel, .modalOk { font-size: 16px; padding: 16px; }
 }
 
 /* === v338: 選ぶ元の切り替えと絞り込み === */
@@ -491,7 +491,7 @@
 }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .srcBtn     { font-size: 13px; padding: 14px 16px; }
-  .pickSearch { font-size: 14px; padding: 14px 16px; }
-  .pickEmpty  { font-size: 13px; }
+  .srcBtn     { font-size: 15px; padding: 14px 16px; }
+  .pickSearch { font-size: 16px; padding: 14px 16px; }
+  .pickEmpty  { font-size: 15px; }
 }

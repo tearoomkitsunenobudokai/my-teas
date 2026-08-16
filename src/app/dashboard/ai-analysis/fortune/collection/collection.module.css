@@ -90,18 +90,18 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .back { font-size: 12px; }
-  .hint { font-size: 13px; }
-  .progressText { font-size: 13px; }
-  .completeBadge { font-size: 12px; }
-  .cellNo { font-size: 9px; }
-  .cellFortune { font-size: 10px; }
-  .cellUnknown { font-size: 18px; }
-  .closeBtn { font-size: 16px; }
-  .detailNo { font-size: 11px; }
-  .detailFortune { font-size: 19px; }
-  .detailMessage { font-size: 13px; }
-  .detailBlockLabel { font-size: 12px; }
-  .detailBlockTrivia { font-size: 11px; }
-  .detailLuckyThing { font-size: 12px; }
+  .back { font-size: 14px; }
+  .hint { font-size: 15px; }
+  .progressText { font-size: 15px; }
+  .completeBadge { font-size: 14px; }
+  .cellNo { font-size: 10.5px; }
+  .cellFortune { font-size: 11.5px; }
+  .cellUnknown { font-size: 20.5px; }
+  .closeBtn { font-size: 18.5px; }
+  .detailNo { font-size: 12.5px; }
+  .detailFortune { font-size: 22px; }
+  .detailMessage { font-size: 15px; }
+  .detailBlockLabel { font-size: 14px; }
+  .detailBlockTrivia { font-size: 12.5px; }
+  .detailLuckyThing { font-size: 14px; }
 }

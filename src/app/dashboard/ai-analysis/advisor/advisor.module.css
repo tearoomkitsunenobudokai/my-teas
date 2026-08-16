@@ -162,28 +162,28 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .back { font-size: 12px; }
-  .hint { font-size: 13px; }
-  .mockTag { font-size: 11px; }
-  .adminTag { font-size: 11px; }
-  .statNum { font-size: 16px; }
-  .statLabel { font-size: 11px; }
-  .runBtn { font-size: 14px; }
-  .pointsHint { font-size: 12px; }
-  .thinking { font-size: 13px; }
-  .resultLabel { font-size: 11px; }
-  .resultText { font-size: 14px; }
-  .tierStep { font-size: 11px; }
-  .tierStepEmoji { font-size: 19px; }
-  .tierStepName { font-size: 12px; }
-  .tierStepRange { font-size: 10px; }
-  .historyBtn { font-size: 11px; }
-  .avatarEmoji { font-size: 19px; width: 63.9px; height: 63.9px; }
-  .avatarTag { font-size: 10px; }
-  .bubbleName { font-size: 11px; }
-  .bubbleTime { font-size: 10px; }
-  .bubbleText { font-size: 14px; }
-  .bubbleTyping { font-size: 13px; }
-  .speechRowCompact .avatarEmoji { font-size: 19px; width: 46.1px; height: 46.1px; }
-  .historyPanelTitle { font-size: 12px; }
+  .back { font-size: 14px; }
+  .hint { font-size: 15px; }
+  .mockTag { font-size: 12.5px; }
+  .adminTag { font-size: 12.5px; }
+  .statNum { font-size: 18.5px; }
+  .statLabel { font-size: 12.5px; }
+  .runBtn { font-size: 16px; }
+  .pointsHint { font-size: 14px; }
+  .thinking { font-size: 15px; }
+  .resultLabel { font-size: 12.5px; }
+  .resultText { font-size: 16px; }
+  .tierStep { font-size: 12.5px; }
+  .tierStepEmoji { font-size: 22px; }
+  .tierStepName { font-size: 14px; }
+  .tierStepRange { font-size: 11.5px; }
+  .historyBtn { font-size: 12.5px; }
+  .avatarEmoji { font-size: 22px; width: 63.9px; height: 63.9px; }
+  .avatarTag { font-size: 11.5px; }
+  .bubbleName { font-size: 12.5px; }
+  .bubbleTime { font-size: 11.5px; }
+  .bubbleText { font-size: 16px; }
+  .bubbleTyping { font-size: 15px; }
+  .speechRowCompact .avatarEmoji { font-size: 22px; width: 46.1px; height: 46.1px; }
+  .historyPanelTitle { font-size: 14px; }
 }

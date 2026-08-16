@@ -40,5 +40,5 @@
 }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .hint { font-size: 15px; padding: 5px 14px; bottom: 8px; }
+  .hint { font-size: 17px; padding: 5px 14px; bottom: 8px; }
 }

@@ -51,15 +51,15 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .title { font-size: 19px; }
-  .lead { font-size: 13px; }
-  .tileBadge { font-size: 10px; }
-  .tileIcon { font-size: 19px; }
-  .tileTitle { font-size: 15px; }
-  .tileDesc { font-size: 12px; }
-  .tileArrow { font-size: 12px; }
-  .tileCost { font-size: 11px; }
-  .note { font-size: 12px; }
+  .title { font-size: 22px; }
+  .lead { font-size: 15px; }
+  .tileBadge { font-size: 11.5px; }
+  .tileIcon { font-size: 22px; }
+  .tileTitle { font-size: 17px; }
+  .tileDesc { font-size: 14px; }
+  .tileArrow { font-size: 14px; }
+  .tileCost { font-size: 12.5px; }
+  .note { font-size: 14px; }
 }
 
 /* ═══════════════════════════════════════════════

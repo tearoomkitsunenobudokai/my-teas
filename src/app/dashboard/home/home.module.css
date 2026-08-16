@@ -125,9 +125,9 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .wrap { padding: 1.25rem 1rem 2rem; }
   .hero { padding: 2rem 1.25rem 2.25rem; margin-bottom: 2rem; }
-  .heroTitle { font-size: 20px; }
+  .heroTitle { font-size: 23px; }
   .heroBtnRow { flex-direction: column; }
-  .btnPrimary, .btnGhost { width: 100%; justify-content: center; padding: 15px; font-size: 15px; }
+  .btnPrimary, .btnGhost { width: 100%; justify-content: center; padding: 15px; font-size: 17px; }
 
   .announceItem { flex-direction: column; gap: 4px; }
   .announceDate { width: auto; }
@@ -141,21 +141,21 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .heroEyebrow { font-size: 11px; }
-  .heroTitle { font-size: 19px; }
-  .heroLead { font-size: 14px; }
-  .btnPrimary { font-size: 15px; }
-  .btnGhost { font-size: 15px; }
-  .sectionTitle { font-size: 13px; }
-  .hint { font-size: 13px; }
-  .announceDate { font-size: 12px; }
-  .announceTitle { font-size: 15px; }
-  .announceBody { font-size: 13px; }
-  .partnerLabel { font-size: 14px; }
-  .partnerName { font-size: 13px; }
-  .snsChip { font-size: 11px; }
-  .snsIcon { font-size: 12px; }
-  .btnPrimary, .btnGhost { font-size: 15px; }
+  .heroEyebrow { font-size: 12.5px; }
+  .heroTitle { font-size: 22px; }
+  .heroLead { font-size: 16px; }
+  .btnPrimary { font-size: 17px; }
+  .btnGhost { font-size: 17px; }
+  .sectionTitle { font-size: 15px; }
+  .hint { font-size: 15px; }
+  .announceDate { font-size: 14px; }
+  .announceTitle { font-size: 17px; }
+  .announceBody { font-size: 15px; }
+  .partnerLabel { font-size: 16px; }
+  .partnerName { font-size: 15px; }
+  .snsChip { font-size: 12.5px; }
+  .snsIcon { font-size: 14px; }
+  .btnPrimary, .btnGhost { font-size: 17px; }
 }
 
 

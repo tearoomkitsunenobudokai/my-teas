@@ -175,37 +175,37 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .loading { font-size: 13px; }
-  .title { font-size: 19px; }
-  .sectionTitle { font-size: 16px; }
-  .sectionDesc { font-size: 12px; }
-  .addBtn { font-size: 13px; }
-  .moveBtn { font-size: 10px; width: 23.9px; height: 23.9px; }
-  .presetGroupName { font-size: 14px; }
-  .presetCount { font-size: 11px; }
-  .editBtn { font-size: 12px; }
-  .deleteBtn { font-size: 12px; }
-  .presetTag { font-size: 11px; }
-  .editCardTitle { font-size: 14px; }
-  .label { font-size: 12px; }
-  .input { font-size: 13px; }
-  .textarea { font-size: 13px; }
-  .cancelBtn { font-size: 12px; }
-  .saveBtn { font-size: 12px; }
-  .settingLabel { font-size: 14px; }
-  .settingDesc { font-size: 12px; }
-  .settingInput { font-size: 16px; }
-  .settingUnit { font-size: 13px; }
-  .tab { font-size: 13px; }
-  .userTable { font-size: 13px; }
-  .userTable th { font-size: 11px; }
-  .userId { font-size: 11px; }
-  .roleBadge { font-size: 11px; }
-  .statusSelect { font-size: 12px; }
-  .statusExempt { font-size: 11px; }
-  .lastSignIn { font-size: 12px; }
-  .pointsCell { font-size: 12px; }
-  .limitGroupTitle { font-size: 13px; }
-  .limitRoleLabel { font-size: 12px; }
-  .versionNote { font-size: 11.5px; }
+  .loading { font-size: 15px; }
+  .title { font-size: 22px; }
+  .sectionTitle { font-size: 18.5px; }
+  .sectionDesc { font-size: 14px; }
+  .addBtn { font-size: 15px; }
+  .moveBtn { font-size: 11.5px; width: 23.9px; height: 23.9px; }
+  .presetGroupName { font-size: 16px; }
+  .presetCount { font-size: 12.5px; }
+  .editBtn { font-size: 14px; }
+  .deleteBtn { font-size: 14px; }
+  .presetTag { font-size: 12.5px; }
+  .editCardTitle { font-size: 16px; }
+  .label { font-size: 14px; }
+  .input { font-size: 15px; }
+  .textarea { font-size: 15px; }
+  .cancelBtn { font-size: 14px; }
+  .saveBtn { font-size: 14px; }
+  .settingLabel { font-size: 16px; }
+  .settingDesc { font-size: 14px; }
+  .settingInput { font-size: 18.5px; }
+  .settingUnit { font-size: 15px; }
+  .tab { font-size: 15px; }
+  .userTable { font-size: 15px; }
+  .userTable th { font-size: 12.5px; }
+  .userId { font-size: 12.5px; }
+  .roleBadge { font-size: 12.5px; }
+  .statusSelect { font-size: 14px; }
+  .statusExempt { font-size: 12.5px; }
+  .lastSignIn { font-size: 14px; }
+  .pointsCell { font-size: 14px; }
+  .limitGroupTitle { font-size: 15px; }
+  .limitRoleLabel { font-size: 14px; }
+  .versionNote { font-size: 13px; }
 }

@@ -79,8 +79,8 @@
 .quizInput:focus { border-color: var(--green); }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .quizChip { padding: 10px 16px; font-size: 14px; }
-  .quizInput { font-size: 16px; padding: 12px; }
+  .quizChip { padding: 10px 16px; font-size: 16px; }
+  .quizInput { font-size: 18.5px; padding: 12px; }
 }
 
 
@@ -89,17 +89,17 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .back { font-size: 12px; }
-  .hint { font-size: 13px; }
-  .mockTag { font-size: 11px; }
-  .runBtn { font-size: 14px; }
-  .thinking { font-size: 13px; }
-  .pointsHint { font-size: 12px; }
-  .resultLabel { font-size: 11px; }
-  .resultTitle { font-size: 16px; }
-  .resultReason { font-size: 13px; }
-  .quizLead { font-size: 12px; }
-  .quizLabel { font-size: 13px; }
-  .quizChip { font-size: 14px; }
-  .quizInput { font-size: 16px; }
+  .back { font-size: 14px; }
+  .hint { font-size: 15px; }
+  .mockTag { font-size: 12.5px; }
+  .runBtn { font-size: 16px; }
+  .thinking { font-size: 15px; }
+  .pointsHint { font-size: 14px; }
+  .resultLabel { font-size: 12.5px; }
+  .resultTitle { font-size: 18.5px; }
+  .resultReason { font-size: 15px; }
+  .quizLead { font-size: 14px; }
+  .quizLabel { font-size: 15px; }
+  .quizChip { font-size: 16px; }
+  .quizInput { font-size: 18.5px; }
 }

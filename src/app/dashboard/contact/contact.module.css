@@ -125,16 +125,16 @@
 /* スマホ表示のみ、文字を約1.8倍に拡大する（自動生成）。
    個別に微調整したい場合は、この下に手書きで上書きしてください。 */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .title { font-size: 19px; }
-  .lead { font-size: 14px; }
-  .cardTitle { font-size: 14px; }
-  .typeList { font-size: 13px; }
-  .badge { font-size: 12px; }
-  .formBtn { font-size: 15px; }
-  .note { font-size: 12px; }
-  .notReady { font-size: 13px; }
-  .idLabel { font-size: 12px; }
-  .idValue { font-size: 12px; }
-  .copyBtn { font-size: 12px; }
-  .idHint { font-size: 11px; }
+  .title { font-size: 22px; }
+  .lead { font-size: 16px; }
+  .cardTitle { font-size: 16px; }
+  .typeList { font-size: 15px; }
+  .badge { font-size: 14px; }
+  .formBtn { font-size: 17px; }
+  .note { font-size: 14px; }
+  .notReady { font-size: 15px; }
+  .idLabel { font-size: 14px; }
+  .idValue { font-size: 14px; }
+  .copyBtn { font-size: 14px; }
+  .idHint { font-size: 12.5px; }
 }
