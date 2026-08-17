@@ -778,7 +778,7 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   const CELL_W = 70
   const CELL_H = 88
   const CELL_GAP = 3
-  const CELL_ICON = 58
+  const CELL_ICON = 66
   // マスの余白は上下左右すべて均等にする。縦は常に2行ぶんで計算するので、
   // 添え物が1行でも淹れ方のマスと高さが揃う。
   const CELL_ROWS = 2
@@ -844,10 +844,13 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
     /* 図はマスの残りの高さの中央に置く。マスの寸法を変えても、
        文字との間隔や下の余白が自動で釣り合うようにしている。 */
     if (img) {
-      const areaTop = y + LABEL_BASE + 6
-      const areaH = y + CELL_H - 6 - areaTop
+      /* 図はマスの枠のすぐ内側まで使う。
+         文字のすぐ下から、マスの下端の少し手前までを図の領域とし、
+         左右も枠から3pxだけ空ける。余白を詰めるほど図が大きく見える。 */
+      const areaTop = y + LABEL_BASE + 3
+      const areaH = y + CELL_H - 3 - areaTop
       // 図はマスの幅からもはみ出さないようにする（淹れ方の横長マスにも対応）
-      const size = Math.min(CELL_ICON, areaH, w - 14)
+      const size = Math.min(CELL_ICON, areaH, w - 6)
       ctx.save()
       if (dim) ctx.globalAlpha = THEME.DIM_ALPHA
       putIcon(img, x + (w - size) / 2, areaTop + (areaH - size) / 2, size)
