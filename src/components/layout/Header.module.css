@@ -130,8 +130,8 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .logo { font-size: 18.5px; }
   .logoIcon { font-size: 22px; }
-  .avatar { font-size: 16px; width: 33.9px; height: 33.9px; }
-  .panelAvatar { font-size: 20.5px; width: 42.2px; height: 42.2px; }
+  .avatar { font-size: 16px; width: 39px; height: 39px; }
+  .panelAvatar { font-size: 20.5px; width: 48px; height: 48px; }
   .panelName { font-size: 17px; }
   .panelLocation { font-size: 12.5px; }
   .statNum { font-size: 22px; }
@@ -149,7 +149,7 @@
   .pointsIcon { font-size: 16px; }
   .pointsNum { font-size: 17px; }
   .pointsLabel { font-size: 12.5px; }
-  .avatarPreview { font-size: 22px; width: 56.1px; height: 56.1px; }
+  .avatarPreview { font-size: 22px; width: 64px; height: 64px; }
   .avatarUploadBtn { font-size: 15px; }
   .avatarHint { font-size: 12.5px; }
   .myPageBtn { font-size: 15px; }

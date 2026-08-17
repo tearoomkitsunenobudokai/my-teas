@@ -130,7 +130,7 @@
   .stampClose { font-size: 20.5px; }
   .stampTitle { font-size: 22px; }
   .stampDesc { font-size: 16px; }
-  .stampBox { font-size: 22px; width: 60px; height: 60px; }
+  .stampBox { font-size: 22px; width: 108px; height: 108px; }
   .stampBoxGoal { font-size: 15px; }
   .stampProgress { font-size: 16px; }
 }
@@ -149,7 +149,7 @@
   /* 平均スコア：ラベル欄の幅を広げ、縦積みを防ぐ */
   .scoreRow { gap: 10px; }
   .scoreLabel {
-    width: 31.1px;
+    width: 56px;
     font-size: 18.5px;
     white-space: nowrap;   /* 「香り」が縦に割れるのを防ぐ */
   }

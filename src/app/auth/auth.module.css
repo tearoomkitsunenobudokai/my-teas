@@ -216,14 +216,14 @@
   }
 
   /* 入力欄・ボタンを押しやすく */
-  .input { min-height: 31.1px; padding: 14px 16px; font-size: 19.5px; }
-  .btnPrimary { min-height: 32.2px; font-size: 22px; font-weight: 700; }
-  .tab { min-height: 28.9px; font-size: 22px; }
+  .input { min-height: 56px; padding: 14px 16px; font-size: 19.5px; }
+  .btnPrimary { min-height: 58px; font-size: 22px; font-weight: 700; }
+  .tab { min-height: 52px; font-size: 22px; }
   .label { font-size: 18.5px; }
   .linkBtn { min-height: 48px; font-size: 18.5px; }
 
   /* お知らせ欄を読みやすく */
-  .notices { margin-top: 26px; padding-top: 10px; }
+  .notices { margin-top: 26px; padding-top: 18px; }
   .noticesTitle { font-size: 19.5px; }
   .noticeItemTitle { font-size: 18.5px; line-height: 1.6; }
   .noticeItemBody { font-size: 17px; line-height: 1.8; }
