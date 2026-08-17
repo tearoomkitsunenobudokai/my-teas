@@ -239,7 +239,7 @@
     padding: 12px;
     border-radius: 10px;
   }
-  .inputSm { width: 77.8px; }
+  .inputSm { width: 140px; }
   .textarea { min-height: 96px; }
 
   /* 水色とチャートは縦積みに */
@@ -364,7 +364,7 @@
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .swatchGrid { gap: 8px; }
-  .scoreBtn { max-height: 28.9px; font-size: 19.5px; }
+  .scoreBtn { max-height: 52px; font-size: 19.5px; }
 }
 
 /* ─── スマホでの可読性向上（案A） ───
@@ -405,7 +405,7 @@
 .otherAromaErr { font-size: 12px; color: #dc2626; margin-top: 6px; font-weight: 600; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .otherAddBtn { padding: 12px 10px; font-size: 16px; }
+  .otherAddBtn { padding: 12px 18px; font-size: 16px; }
   .otherAromaHint { font-size: 14px; }
 }
 
@@ -418,14 +418,14 @@
 
   /* ── 入力欄：高さと文字を大きく ── */
   .input, .textarea, .inputDate {
-    min-height: 28.9px;
+    min-height: 52px;
     padding: 14px 14px;
     font-size: 18.5px;
     border-radius: 12px;
     border-width: 1.5px;
   }
-  .inputSm { min-height: 28.9px; width: 100%; max-width: 88.9px; }
-  .textarea { min-height: 61.1px; line-height: 1.7; }
+  .inputSm { min-height: 52px; width: 100%; max-width: 160px; }
+  .textarea { min-height: 110px; line-height: 1.7; }
 
   /* ── 項目ラベル：見出しとして認識しやすく ── */
   .label {
@@ -445,11 +445,11 @@
     border-radius: 24px;
     border-width: 1.5px;
   }
-  .groupItems { gap: 5px; padding: 12px 10px; }
+  .groupItems { gap: 9px; padding: 12px 10px; }
 
   /* ── 香りの系統ボタン：押しやすい高さに ── */
   .groupBtn {
-    min-height: 30px;
+    min-height: 54px;
     align-items: center;
     padding: 0 16px;
     font-size: 18px;
@@ -462,7 +462,7 @@
     min-height: 46px;
     display: inline-flex;
     align-items: center;
-    padding: 0 10px;
+    padding: 0 18px;
     font-size: 17px;
     border-radius: 24px;
     border-width: 1.5px;
@@ -475,7 +475,7 @@
   .scoreItemName { font-size: 18.5px; }
   .scoreItemBtns { gap: 8px; width: 100%; }
   .scoreBtn {
-    min-height: 31.1px;
+    min-height: 56px;
     max-height: none;
     font-size: 22px;
     border-radius: 14px;
@@ -488,7 +488,7 @@
 
   /* ── 公開設定のチェックボックス：タップ領域を確保 ── */
   .checkLabel {
-    min-height: 28.9px;
+    min-height: 52px;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -497,10 +497,10 @@
   .checkLabel input[type="checkbox"] { width: 24px; height: 24px; }
 
   /* ── 「その他」自由入力 ── */
-  .otherAddBtn { min-height: 28.9px; padding: 0 22px; font-size: 17px; border-radius: 12px; }
+  .otherAddBtn { min-height: 52px; padding: 0 22px; font-size: 17px; border-radius: 12px; }
 
   /* ── 詳細の開閉ボタン ── */
-  .detailToggle { min-height: 27.8px; font-size: 17px; }
+  .detailToggle { min-height: 50px; font-size: 17px; }
 
   /* ── 選択済みの香りタグ（削除ボタン付き）── */
   .aromaSelected {
@@ -510,13 +510,13 @@
     font-size: 16px;
     padding: 0 6px 0 14px;
   }
-  .aromaSelected button { min-width: 18.9px; min-height: 18.9px; font-size: 11.5px; }
+  .aromaSelected button { min-width: 34px; min-height: 34px; font-size: 11.5px; }
 
   /* ── ステップ表示・下部ボタン ── */
   .wizBar { padding: 14px 16px; }
   .wizStep { font-size: 17px; }
   .wizListBtn { min-height: 44px; padding: 0 14px; font-size: 15px; }
-  .cancelBtn, .saveBtn { min-height: 31.1px; font-size: 19px; font-weight: 700; }
+  .cancelBtn, .saveBtn { min-height: 56px; font-size: 19px; font-weight: 700; }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -545,12 +545,12 @@
     padding: 16px 16px;
     border-radius: 14px;
   }
-  .inputSm { min-height: 66px; max-width: 111.1px; }
-  .textarea { min-height: 77.8px; line-height: 1.7; }
+  .inputSm { min-height: 66px; max-width: 200px; }
+  .textarea { min-height: 140px; line-height: 1.7; }
 
   /* ── 香りタグ（1行2〜3個に収まる範囲で拡大） ── */
   .aromaChip {
-    min-height: 31.1px;
+    min-height: 56px;
     padding: 0 20px;
     font-size: 24px;
   }
@@ -559,13 +559,13 @@
   /* ── 香りの系統ボタン ── */
   .groupBtn {
     min-height: 66px;
-    padding: 0 10px;
+    padding: 0 18px;
     font-size: 27.5px;
   }
 
   /* ── チップ（抽出方法・添え物） ── */
   .chip {
-    min-height: 31.1px;
+    min-height: 56px;
     padding: 0 20px;
     font-size: 24px;
   }
@@ -593,13 +593,13 @@
   .otherAromaErr { font-size: 22px; }
 
   /* ── 選択済みの香りタグ ── */
-  .aromaSelected { min-height: 28.9px; font-size: 23px; padding: 0 8px 0 16px; }
-  .aromaSelected button { min-width: 22.2px; min-height: 22.2px; font-size: 27.5px; }
+  .aromaSelected { min-height: 52px; font-size: 23px; padding: 0 8px 0 16px; }
+  .aromaSelected button { min-width: 40px; min-height: 40px; font-size: 27.5px; }
 
   /* ── ステップ表示・詳細・下部ボタン ── */
   .mTitle { font-size: 27.5px; }
   .wizStep { font-size: 25.5px; }
-  .wizListBtn { min-height: 27.8px; padding: 0 16px; font-size: 19.5px; }
+  .wizListBtn { min-height: 50px; padding: 0 16px; font-size: 19.5px; }
   .detailToggle { min-height: 60px; font-size: 24px; }
   .cancelBtn, .saveBtn { min-height: 66px; font-size: 26.5px; font-weight: 700; }
 }
@@ -609,10 +609,10 @@
    香りタグが枠からはみ出す・文字が不自然に折り返す問題を解消する。
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileLeft { width: 60px; }
+  .tileLeft { width: 108px; }
   .aromaTag {
     font-size: 15px;
-    padding: 3px 5px;
+    padding: 3px 9px;
     white-space: normal;
     overflow-wrap: anywhere;
     max-width: 100%;
@@ -685,7 +685,7 @@
   .tileName { font-size: 23px; line-height: 1.35; }
   .tileSub, .tilePlaceholder { font-size: 16px; }
   .tileDate { font-size: 15px; }
-  .editBtn, .delBtn { font-size: 17px; padding: 5px 16px; }
+  .editBtn, .delBtn { font-size: 17px; padding: 9px 16px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -708,7 +708,7 @@
   .tileName { font-size: 22px; line-height: 1.3; }
   .tileSub, .tileShop, .tileBrand, .tilePlaceholder { font-size: 24px; }
   .tileDate { font-size: 22px; }
-  .editBtn, .delBtn { font-size: 24px; padding: 11px 10px; }
+  .editBtn, .delBtn { font-size: 24px; padding: 11px 18px; }
   /* ツールバー（飲んだ日・公開/非公開・並び順・件数）もコミュニティと同等に */
   .fl { font-size: 24px; }
   .di, .sortSel { font-size: 24px; padding: 8px 12px; }
@@ -815,7 +815,7 @@
 .secHeadIcon { font-size: 11px; color: var(--text-muted); flex-shrink: 0; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .secHead { padding: 15px 16px; margin: 10px 0 10px; }
+  .secHead { padding: 15px 16px; margin: 18px 0 10px; }
   .secHeadLabel { font-size: 24px; }
   .secHeadIcon { font-size: 18.5px; }
 }
@@ -964,4 +964,11 @@
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .tileIcon { font-size: 41.5px; }
+}
+
+
+/* スマホのブラウザではアドレスバーの分だけ vh が実際の表示領域より大きい。
+   下端のボタンが画面外に出て押せなくなるのを防ぐため、dvh に追従させる。 */
+@supports (max-height: 100dvh) {
+  .modal, .detailModal { max-height: 94dvh; }
 }
