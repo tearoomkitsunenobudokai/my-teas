@@ -388,6 +388,47 @@ function drawTeaCircle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   ctx.strokeStyle = 'rgba(168,135,63,0.45)'; ctx.lineWidth = 1.5; ctx.stroke()
 }
 
+
+/** 段階的に縮小した画像の使い回し置き場。キーは「元画像のURL＋目標の幅」 */
+const downscaleCache = new Map<string, HTMLCanvasElement>()
+
+/**
+ * 大きな画像を、目標サイズの2倍以内になるまで半分ずつ縮めてから返す。
+ * 一気に縮小すると線がガタつくため、間に段階を挟んでなめらかさを保つ。
+ */
+function downscaled(
+  img: HTMLImageElement, targetW: number, targetH: number,
+): HTMLImageElement | HTMLCanvasElement {
+  // すでに十分小さければ、そのまま描いてよい
+  if (img.width <= targetW * 2) return img
+
+  const key = `${img.src}@${targetW}`
+  const hit = downscaleCache.get(key)
+  if (hit) return hit
+
+  let w = img.width, h = img.height
+  let cur: HTMLImageElement | HTMLCanvasElement = img
+
+  // 目標の2倍を下回るまで、半分ずつ縮める
+  while (w > targetW * 2) {
+    const nw = Math.max(targetW, Math.floor(w / 2))
+    const nh = Math.max(targetH, Math.floor(h / 2))
+    const step = document.createElement('canvas')
+    step.width = nw; step.height = nh
+    const sctx = step.getContext('2d')
+    if (!sctx) return img
+    sctx.imageSmoothingEnabled = true
+    sctx.imageSmoothingQuality = 'high'
+    sctx.drawImage(cur, 0, 0, nw, nh)
+    cur = step; w = nw; h = nh
+  }
+
+  // 最後の1回はここでは描かず、呼び出し側が目標サイズで描く
+  const out = cur as HTMLCanvasElement
+  if (out !== (img as unknown)) downscaleCache.set(key, out)
+  return out
+}
+
 // ── レーダーチャート ──
 // レーダーの外周からラベル中心までの距離。チャートを大きくした分ここを詰めて、
 // 右隣の枠囲みセクションとの間隔を確保している。
@@ -814,10 +855,23 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   }
 
   // 確保した正方形の中に画像を収める（縦横比は保ったまま中央寄せ）
+  /* アイコンを縮小して描く。
+
+     元画像は 1130px 四方、カード上の表示は 64px 前後と、17倍以上の縮小になる。
+     canvas の drawImage は一度に大きく縮小すると画素を間引くだけの処理になり、
+     細い線がガタついて見える（いわゆるジャギー）。
+     そこで、半分ずつ縮めていって目標の2倍以内に収めてから最後の1回を描く。
+     各段で隣り合う画素が混ざるので、線がなめらかに残る。
+
+     一度作った縮小結果は使い回す。1枚のカードで同じ図を何度も描くことはないが、
+     続けて複数枚のカードを作るとき（A4に8枚など）に効く。 */
   const putIcon = (img: HTMLImageElement, ox: number, oy: number, s: number) => {
     const k = Math.min(s / img.width, s / img.height)
     const w = img.width * k, h = img.height * k
-    ctx.drawImage(img, ox + (s - w) / 2, oy + (s - h) / 2, w, h)
+    const src = downscaled(img, Math.ceil(w), Math.ceil(h))
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(src, ox + (s - w) / 2, oy + (s - h) / 2, w, h)
   }
 
   // 1マス分（上に文字・下に図）。図が未用意でも枠と文字は必ず描く

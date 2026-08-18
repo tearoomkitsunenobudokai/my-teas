@@ -23,6 +23,8 @@
 // 画像が無い（404になる）場合は、これまで通り文字チップ表示にフォールバックする。
 // ─────────────────────────────────────────────────────────
 
+import { APP_VERSION } from './version'
+
 export const BREW_ICON_KEYS: Record<string, string> = {
   'リーフ': 'leaf',
   'ティーバッグ': 'teabag',
@@ -63,12 +65,19 @@ export function accompanimentShortLabel(label: string): string {
   return ACCOMPANIMENT_SHORT_LABELS[label] ?? label
 }
 
+/* アイコンの見た目を差し替えたとき、ファイル名が同じだと
+   ブラウザに残っている古い画像がそのまま使われ続ける。
+   （画像は長くキャッシュされるため、再読み込みしても直らないことがある）
+   アドレスの末尾にアプリのバージョンを付けておくと、
+   バージョンが上がった時点で別のアドレス扱いになり、確実に新しい画像が読まれる。 */
+const ICON_REV = `?v=${APP_VERSION}`
+
 export function brewIconPath(label: string): string | null {
   const key = BREW_ICON_KEYS[label]
-  return key ? `/icons/brew/${key}.png` : null
+  return key ? `/icons/brew/${key}.png${ICON_REV}` : null
 }
 
 export function accompanimentIconPath(label: string): string | null {
   const key = ACCOMPANIMENT_ICON_KEYS[label]
-  return key ? `/icons/accompaniments/${key}.png` : null
+  return key ? `/icons/accompaniments/${key}.png${ICON_REV}` : null
 }
