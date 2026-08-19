@@ -59,6 +59,9 @@ export default function PointsPage() {
   const [claiming, setClaiming] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [comingSoon, setComingSoon] = useState<string | null>(null)
+  const [buying, setBuying] = useState<string | null>(null)
+  // 決済から戻ってきたときの案内
+  const [purchaseMsg, setPurchaseMsg] = useState('')
 
   const load = useCallback(async () => {
     /* この画面はRPC1本＋クエリ6本を一度に投げるため、他の画面より通信が多い。
@@ -101,6 +104,24 @@ export default function PointsPage() {
 
   useEffect(() => { load() }, [load])
 
+  /* 決済ページから戻ってきたときの案内。
+     ポイントの付与はStripeからの通知で行われるため、
+     戻った直後はまだ反映されていないことがある。その旨を伝える。 */
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('purchase')
+    if (q === 'success') {
+      setPurchaseMsg('お支払いありがとうございます。ポイントの反映まで少し時間がかかる場合があります。')
+      // 反映済みかもしれないので、少し待ってから残高を取り直す
+      const t = setTimeout(() => load(), 3000)
+      window.history.replaceState({}, '', '/dashboard/points')
+      return () => clearTimeout(t)
+    }
+    if (q === 'cancel') {
+      setPurchaseMsg('お支払いは行われていません。')
+      window.history.replaceState({}, '', '/dashboard/points')
+    }
+  }, [load])
+
   function showComingSoon(msg: string) {
     setComingSoon(msg)
     setTimeout(() => setComingSoon(null), 3500)
@@ -108,6 +129,32 @@ export default function PointsPage() {
 
   function periodKeyOf(p: any): string {
     return p.is_limited && p.limited_until ? p.limited_until : 'permanent'
+  }
+
+  /* 購入手続きを始める。
+     金額とポイント数はサーバー側でDBから読み直すので、
+     ここからはどのプランかだけを送る。 */
+  async function startCheckout(pkg: any) {
+    if (buying) return
+    setBuying(pkg.id)
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packageId: pkg.id }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.url) {
+        alert(data.error ?? '決済ページを開けませんでした')
+        return
+      }
+      // Stripeの決済ページへ移動する
+      window.location.href = data.url
+    } catch {
+      alert('通信に失敗しました。時間をおいてお試しください。')
+    } finally {
+      setBuying(null)
+    }
   }
 
   async function claimFree(p: any) {
@@ -160,6 +207,7 @@ export default function PointsPage() {
           </div>
 
           {comingSoon && <div className={styles.comingSoonBanner}>🚧 {comingSoon}</div>}
+          {purchaseMsg && <div className={styles.comingSoonBanner}>💳 {purchaseMsg}</div>}
 
           {/* ポイント購入（モック） */}
           <section className={styles.section}>
@@ -183,15 +231,20 @@ export default function PointsPage() {
                       </button>
                     ) : (
                       <button className={styles.packageBtn}
-                        onClick={() => showComingSoon('ポイント購入機能は準備中です。決済連携完了後にご利用いただけます。')}>
-                        購入する
+                        disabled={buying === p.id}
+                        onClick={() => startCheckout(p)}>
+                        {buying === p.id ? '準備中…' : '購入する'}
                       </button>
                     )}
                   </div>
                 )
               })}
             </div>
-            <p className={styles.hint}>※ 有料プランは動作確認用のモック表示です（決済未接続のため購入は準備中）。0円の無料プランのみ、その場でポイントが付与されます。</p>
+            <p className={styles.hint}>
+              ※ 購入したポイントに有効期限はありません。決済はStripeの安全な画面で行われ、
+              カード情報が当サイトに保存されることはありません。
+              購入後の返金は、法令で定められた場合を除きお受けできません。
+            </p>
           </section>
 
           {/* 履歴 */}
