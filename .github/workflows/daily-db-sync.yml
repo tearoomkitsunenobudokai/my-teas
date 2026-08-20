@@ -1,0 +1,57 @@
+name: 検証環境へのDB複製（毎日）
+
+# 毎日 JST 3:00 (UTC 18:00) に実行
+# 本番(PROD_DB_URL)の内容を検証環境(DEV_DB_URL)へ複製し、
+# 個人情報（メールアドレス・表示名）を匿名化する。
+# Storage（画像）は対象外。テーブルのデータのみ。
+
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch: {} # 手動実行もできるようにしておく
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリを取得
+        uses: actions/checkout@v4
+
+      - name: PostgreSQLクライアントをインストール
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: 本番からdumpを取得
+        env:
+          PROD_DB_URL: ${{ secrets.PROD_DB_URL }}
+        run: |
+          pg_dump "$PROD_DB_URL" \
+            --no-owner --no-privileges \
+            --exclude-schema=supabase_functions \
+            --exclude-schema=extensions \
+            --exclude-schema=graphql \
+            --exclude-schema=graphql_public \
+            --exclude-schema=pgbouncer \
+            --exclude-schema=realtime \
+            --exclude-schema=supabase_migrations \
+            --exclude-schema=vault \
+            --exclude-schema=net \
+            --exclude-schema=storage \
+            --schema=public --schema=auth \
+            --clean --if-exists \
+            -f prod_dump.sql
+
+      - name: 検証環境へ復元
+        env:
+          DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
+        run: |
+          psql "$DEV_DB_URL" -v ON_ERROR_STOP=0 -f prod_dump.sql
+
+      - name: 個人情報を匿名化
+        env:
+          DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
+        run: |
+          psql "$DEV_DB_URL" -v ON_ERROR_STOP=1 -f scripts/anonymize_dev.sql
+
+      - name: 後片付け
+        if: always()
+        run: rm -f prod_dump.sql
