@@ -23,6 +23,14 @@ jobs:
           curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
           sudo apt-get update
           sudo apt-get install -y postgresql-client-17
+          # Ubuntu標準のpg_dump(v16)が優先されるため、v17を明示的にPATHの先頭へ追加する
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: 使用するpg_dumpのバージョンを確認
+        run: |
+          which pg_dump
+          pg_dump --version
+          psql --version
 
       - name: 本番からdumpを取得
         env:
