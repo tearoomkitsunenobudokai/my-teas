@@ -1,20 +1,24 @@
 import Link from 'next/link'
 import styles from '../legal.module.css'
 
-export const metadata = { title: '特定商取引法に基づく表記 | My-Teas' }
-
 /*
  * ポイントを有料で販売するにあたって必要な表記のページ。
  *
- * ★ 公開前に、下の「（　）」の箇所をすべて実際の内容に置き換えてください。
- *   未記入のまま販売を始めることはできません。
- *   Stripeの審査でも、このページの内容が確認されます。
+ * robots に noindex を指定しています。
+ * 特定商取引法が求めているのは「消費者がアクセスできる状態にしておくこと」であり、
+ * 検索エンジンに掲載することまでは求められていないため、
+ * ページ自体は誰でも閲覧できる状態を保ったうえで、検索結果には出ないようにしています。
+ * リンクは決済導線とフッターから辿れます。
  *
- * 個人で運営する場合、原則として氏名・住所・電話番号の記載が必要です。
- * 「請求があったら遅滞なく開示する」旨を明記すれば省略できる場合がありますが、
- * その場合も、請求時にすぐ開示できる状態にしておく必要があります。
- * 実際の書き方は、消費者庁の案内をご確認ください。
+ * 住所と電話番号は「請求があった場合に遅滞なく開示する」方式で省略しています。
+ * ★ 実際に請求があった場合は、遅滞なく開示する必要があります。
+ *   すぐ回答できるよう、連絡先メールの受信を確認できる状態にしておいてください。
  */
+export const metadata = {
+  title: '特定商取引法に基づく表記 | My-Teas',
+  robots: { index: false, follow: false },
+}
+
 export default function TokushohoPage() {
   return (
     <div className={styles.wrap}>
@@ -23,25 +27,28 @@ export default function TokushohoPage() {
 
       <section className={styles.section}>
         <h2>販売事業者</h2>
-        <p>（運営者名・屋号を記載）</p>
+        <p>狐の葡萄会</p>
       </section>
 
       <section className={styles.section}>
         <h2>運営統括責任者</h2>
-        <p>（氏名を記載）</p>
+        <p>植田 昌樹</p>
       </section>
 
       <section className={styles.section}>
         <h2>所在地</h2>
-        <p>（住所を記載。請求があった場合に遅滞なく開示する旨で省略する場合は、その旨を記載）</p>
+        <p>
+          ご請求をいただいた場合、遅滞なく開示いたします。
+          下記のメールアドレスまでご連絡ください。
+        </p>
       </section>
 
       <section className={styles.section}>
         <h2>連絡先</h2>
         <p>
-          メールアドレス：（連絡先メールアドレスを記載）<br />
-          電話番号：（電話番号を記載。請求があった場合に遅滞なく開示する旨で省略する場合は、その旨を記載）<br />
-          お問い合わせは、原則として本サービス内のお問い合わせフォームよりお願いいたします。
+          メールアドレス：tearoomkitsunenobudokai@gmail.com<br />
+          電話番号：ご請求をいただいた場合、遅滞なく開示いたします。<br />
+          お問い合わせは、上記のメールアドレスにて承ります。
         </p>
       </section>
 
