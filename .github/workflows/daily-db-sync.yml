@@ -1,9 +1,11 @@
-name: 検証環境へのDB複製（毎日）
+name: 本番のバックアップと検証環境への複製（毎日）
 
 # 毎日 JST 3:00 (UTC 18:00) に実行
-# 本番(PROD_DB_URL)の内容を検証環境(DEV_DB_URL)へ複製し、
-# 個人情報（メールアドレス・表示名）を匿名化する。
+# 1. 本番(PROD_DB_URL)をdumpし、Artifactsに90日分保存する（バックアップ）
+# 2. その内容を検証環境(DEV_DB_URL)へ複製し、個人情報を匿名化する
 # Storage（画像）は対象外。テーブルのデータのみ。
+#
+# 注意: Artifactsのバックアップは匿名化前の状態です（個人情報を含みます）。
 
 on:
   schedule:
@@ -52,6 +54,21 @@ jobs:
             --clean --if-exists \
             -f prod_dump.sql
 
+      - name: バックアップとして保存（世代を残す）
+        run: |
+          # 日付入りのファイル名にして、どの時点のものか分かるようにする
+          STAMP=$(TZ=Asia/Tokyo date +%Y%m%d)
+          gzip -c prod_dump.sql > "my-teas-backup-${STAMP}.sql.gz"
+          ls -lh "my-teas-backup-${STAMP}.sql.gz"
+          echo "STAMP=${STAMP}" >> "$GITHUB_ENV"
+
+      - name: バックアップをArtifactsへアップロード
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.STAMP }}
+          path: my-teas-backup-*.sql.gz
+          retention-days: 90
+
       - name: 検証環境へ復元
         env:
           DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
@@ -66,4 +83,4 @@ jobs:
 
       - name: 後片付け
         if: always()
-        run: rm -f prod_dump.sql
+        run: rm -f prod_dump.sql my-teas-backup-*.sql.gz
