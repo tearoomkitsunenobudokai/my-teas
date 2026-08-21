@@ -152,6 +152,7 @@ export default function ContactPage() {
       <div style={{ marginTop: 32, paddingTop: 16, borderTop: '0.5px solid var(--border)', display: 'flex', gap: 16, fontSize: 13 }}>
         <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--green-dark)' }}>プライバシーポリシー</a>
         <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--green-dark)' }}>利用規約</a>
+        <a href="/tokushoho" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--green-dark)' }}>特定商取引法に基づく表記</a>
       </div>
     </div>
   )

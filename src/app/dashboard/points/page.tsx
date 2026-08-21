@@ -245,6 +245,13 @@ export default function PointsPage() {
               カード情報が当サイトに保存されることはありません。
               購入後の返金は、法令で定められた場合を除きお受けできません。
             </p>
+            {/* 特定商取引法に基づく表記への導線。
+                購入手続きの前に確認できる位置に置く必要があるため、購入ボタンと同じ枠内に置いています。 */}
+            <p className={styles.hint}>
+              <a href="/tokushoho" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--green-dark)' }}>
+                特定商取引法に基づく表記
+              </a>
+            </p>
           </section>
 
           {/* 履歴 */}
