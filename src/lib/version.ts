@@ -10,11 +10,35 @@
 // 「pushしたのに反映されていないのでは？」という確認に使える。
 // ─────────────────────────────────────────────────────────
 
-export const APP_VERSION = 'v349'
+export const APP_VERSION = 'v355'
 
 // Vercelが自動で提供する環境変数（ローカルでは undefined）
 export const BUILD_COMMIT =
   process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local'
+
+// ─────────────────────────────────────────────────────────
+// 環境の判定（v355で追加）
+//
+// Vercelが自動で入れる NEXT_PUBLIC_VERCEL_ENV には
+// 'production' / 'preview' / 'development' のいずれかが入る。
+//
+// プレビュー環境には、Vercelの環境変数でPreviewスコープにのみ
+// 検証用Supabase（my-teas-dev）の接続先を設定してある。
+// そのため、プレビューURLで操作しても本番データには影響しない。
+// ─────────────────────────────────────────────────────────
+export const VERCEL_ENV = process.env.NEXT_PUBLIC_VERCEL_ENV ?? ''
+export const IS_PREVIEW = VERCEL_ENV === 'preview'
+
+/** 接続先Supabaseのホスト名だけを取り出す（例: lekytemjcqhrcsdpriwx） */
+export const SUPABASE_HOST = (() => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (!url) return ''
+  try {
+    return new URL(url).hostname.split('.')[0]
+  } catch {
+    return ''
+  }
+})()
 
 // next.config.js でビルド時刻を埋め込んでいる
 export const BUILD_TIME = process.env.NEXT_PUBLIC_BUILD_TIME ?? ''

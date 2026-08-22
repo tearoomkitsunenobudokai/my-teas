@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { APP_VERSION, BUILD_COMMIT, BUILD_TIME } from '@/lib/version'
+import { APP_VERSION, BUILD_COMMIT, BUILD_TIME, VERCEL_ENV } from '@/lib/version'
+import EnvBadge from '@/components/EnvBadge'
 
 export const metadata: Metadata = {
   title: 'My-Teas — 紅茶評価アプリ',
@@ -43,6 +44,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* 内部確認用: ページのソースを表示すると、どのバージョンが動いているか分かる */}
         <meta name="app-version" content={APP_VERSION} />
         <meta name="app-build" content={`${BUILD_COMMIT} ${BUILD_TIME}`} />
+        {/* どの環境か（production / preview）もソースから確認できるようにする */}
+        <meta name="app-env" content={VERCEL_ENV || 'local'} />
         {supabaseOrigin && (
           <>
             <link rel="preconnect" href={supabaseOrigin} crossOrigin="anonymous" />
@@ -50,7 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </>
         )}
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <EnvBadge />
+      </body>
     </html>
   )
 }
