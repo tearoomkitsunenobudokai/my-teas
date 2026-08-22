@@ -73,7 +73,22 @@ jobs:
         env:
           DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
         run: |
-          psql "$DEV_DB_URL" -v ON_ERROR_STOP=0 -f prod_dump.sql
+          # dumpには本番固有の拡張機能やロールに関する記述が含まれ、
+          # 検証環境では実行できない行が必ず出る。そのため ON_ERROR_STOP=0 で続行する。
+          # ただし黙って進むと不整合に気付けないので、エラー行を数えて表示する。
+          psql "$DEV_DB_URL" -v ON_ERROR_STOP=0 -f prod_dump.sql 2> restore_errors.log || true
+          echo "----- 復元時のエラー件数 -----"
+          grep -c "^ERROR" restore_errors.log || echo "0"
+          echo "----- 内容（先頭20件）-----"
+          grep "^ERROR" restore_errors.log | head -20 || true
+
+      - name: ロールへの権限を付け直す
+        env:
+          DEV_DB_URL: ${{ secrets.DEV_DB_URL }}
+        run: |
+          # pg_dumpに--no-privilegesを付けているためGRANTが含まれない。
+          # これが無いとアプリからデータが一切読めない（v355で発覚）。
+          psql "$DEV_DB_URL" -v ON_ERROR_STOP=1 -f scripts/restore_dev_grants.sql
 
       - name: 個人情報を匿名化
         env:
@@ -83,4 +98,4 @@ jobs:
 
       - name: 後片付け
         if: always()
-        run: rm -f prod_dump.sql my-teas-backup-*.sql.gz
+        run: rm -f prod_dump.sql my-teas-backup-*.sql.gz restore_errors.log
