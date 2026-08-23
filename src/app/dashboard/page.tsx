@@ -280,7 +280,7 @@ export default function DashboardPage() {
                   { label: '香り', key: 'aroma', weak: '弱', strong: '強' },
                   { label: '渋み', key: 'astringency', weak: '弱', strong: '強' },
                   { label: 'コク', key: 'richness', weak: '少', strong: '多' },
-                  { label: '水色', key: 'colorDepth', weak: '薄い', strong: '濃い' },
+                  { label: '水色', key: 'colorDepth', weak: '薄', strong: '濃' },
                 ].map(s => (
                   <div key={s.key} className={styles.scoreRow}>
                     <span className={styles.scoreLabel}>{s.label}</span>

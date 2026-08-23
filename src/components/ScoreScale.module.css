@@ -22,11 +22,14 @@
   flex-shrink: 0;
 }
 
-/* 両端の語（弱⇔強 など）。控えめに出して丸の邪魔をしない */
+/* 両端の語（弱⇔強 など）。控えめに出して丸の邪魔をしない。
+   語はすべて1文字に統一してあるので、幅を固定して丸の開始位置を揃える。 */
 .edge {
   font-size: 9px;
   color: var(--text-hint);
   flex-shrink: 0;
+  width: 1em;
+  text-align: center;
 }
 
 .dots {
