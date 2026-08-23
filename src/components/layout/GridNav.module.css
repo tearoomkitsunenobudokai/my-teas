@@ -1,0 +1,127 @@
+/* 上部に配置するアイコングリッド型のメニュー（v357で追加）
+   スマホでの操作を主に想定し、指で押しやすい大きさを確保する。 */
+
+.wrap {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* PCでは左右に余白ができ、中央にスマホ幅で寄る */
+.inner {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 10px 12px 12px;
+}
+
+/* ── 展開時: 横4 × 縦2 ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 4px 8px;
+  border-radius: var(--radius);
+  background: var(--bg-muted);
+  border: 1px solid transparent;
+  color: var(--text);
+  text-decoration: none;
+  min-height: 68px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cell:active { background: #e9e6e1; }
+
+.cellActive {
+  background: var(--green-light);
+  border-color: var(--green);
+}
+
+.cellIcon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cellLabel {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  letter-spacing: -0.01em;
+}
+
+/* ── 折りたたみ時: 1列に小さいアイコンを並べる ── */
+.rail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+}
+
+.railItem {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 19px;
+  text-decoration: none;
+  background: transparent;
+}
+.railItem:active { background: var(--bg-muted); }
+
+.railActive {
+  background: var(--green-light);
+}
+
+/* ── 開閉ボタン ── */
+.toggleRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.toggleBtn {
+  border: none;
+  background: transparent;
+  color: var(--text-hint);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.toggleBtn:active { background: var(--bg-muted); }
+
+.chevron {
+  font-size: 9px;
+  line-height: 1;
+}
+
+/* 折りたたみ時はボタンを右端に小さく寄せ、縦の場所を取らない */
+.toggleRowCollapsed {
+  margin-top: 2px;
+}
+
+/* ── スマホ（実機）での調整 ──
+   既存の方針にならい、素の値に約1.15倍を掛けている。
+   個別に触ると不揃いになるため、変更するときは一律に掛け直すこと。 */
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .inner { padding: 12px 14px 14px; }
+  .grid { gap: 9px; }
+  .cell { min-height: 78px; padding: 12px 4px 9px; }
+  .cellIcon { font-size: 25px; }
+  .cellLabel { font-size: 13px; }
+  .railItem { height: 46px; font-size: 22px; }
+  .toggleBtn { font-size: 13px; padding: 5px 18px; }
+}
