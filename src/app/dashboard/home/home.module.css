@@ -1,10 +1,11 @@
 /* 他のページと同じく左揃えにする（中央寄せの margin:auto をやめる） */
-.wrap { max-width: 780px; padding: 2rem 1.5rem 3rem; }
+/* v364: 上にメニューとサブタブがあるため、ページ側の上余白は最小限にする */
+.wrap { max-width: 780px; padding: 0 0 3rem; }
 
 /* ─── ヒーロー ─── */
 .hero {
   text-align: center;
-  padding: 2.5rem 1.5rem 2.75rem;
+  padding: 1.5rem 1.25rem 1.75rem;
   margin-bottom: 2.5rem;
   background: linear-gradient(160deg, #F3FAF7 0%, #FFFFFF 70%);
   border: 0.5px solid var(--border);
@@ -123,8 +124,8 @@
 
 /* ─── スマホ ─── */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .wrap { padding: 1.25rem 1rem 2rem; }
-  .hero { padding: 2rem 1.25rem 2.25rem; margin-bottom: 2rem; }
+  .wrap { padding: 0 0 2rem; }
+  .hero { padding: 1.25rem 1rem 1.5rem; margin-bottom: 1.5rem; }
   .heroTitle { font-size: 23px; }
   .heroBtnRow { flex-direction: column; }
   .btnPrimary, .btnGhost { width: 100%; justify-content: center; padding: 15px; font-size: 17px; }
@@ -159,24 +160,9 @@
 }
 
 
-/* ═══════════════════════════════════════════════
-   v280: ヒーロー（お知らせより上）を画面上部に固定
-   ═══════════════════════════════════════════════ */
+/* v280でヒーローを画面上部に固定していたが、v364で解除した。
+   上にメニューとサブタブが常時あるため、ここまで固定すると
+   本文の表示領域が三重に削られて狭くなるため。 */
 .stickyHead {
-  position: sticky;
-  top: -2rem;                /* .wrap の上パディング分を打ち消す */
-  z-index: 20;
-  background: var(--bg);
-  margin: -2rem -1.5rem 0;   /* 左右も塗りつぶし、隙間から中身が覗かないようにする */
-  padding: 2rem 1.5rem 0.5rem;
-}
-/* ヒーロー自身の下余白は固定側で持つため、ここでは詰める */
-.stickyHead .hero { margin-bottom: 0; }
-/* 固定位置の上に隙間が残らないよう、上方向へ拡張して塞ぐ */
-.stickyHead::before {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; bottom: 100%;
-  height: 4rem;
-  background: var(--bg);
+  position: static;
 }
