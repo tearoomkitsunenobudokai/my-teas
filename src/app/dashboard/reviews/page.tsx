@@ -100,7 +100,7 @@ function ReviewTile({ r, onEdit, onDelete, onMakeCard, cardCost, cardBusy }: {
             <div className={styles.th}>チャート</div>
             <div className={styles.chartBox}>
               {/* チャートの大きさは mobileSize props で決まる（CSSでは変えられない。v367参照）*/}
-              <RadarChart scores={scores} size={150} mobileSize={112} labelFontSize={9} tickFontSize={7} desktopLabelFontSize={11} desktopTickFontSize={9} verticalSideLabels/>
+              <RadarChart scores={scores} size={150} mobileSize={134} labelFontSize={9} tickFontSize={7} desktopLabelFontSize={11} desktopTickFontSize={9} verticalSideLabels/>
               {/* チャートだけだと小さくて数値が読めないため、右に目盛りを添える（v368）*/}
               <ScoreScale scores={scores} />
             </div>
