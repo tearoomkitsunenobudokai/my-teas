@@ -647,7 +647,7 @@
 .tileDate { padding-top: 2px; }
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  .tileName { font-size: 23px; line-height: 1.35; }
+  .tileName { font-size: 17px; line-height: 1.35; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -686,7 +686,7 @@
   .attrRow { grid-template-columns: 86px minmax(0, 1fr); }
   .cupBox svg { max-width: 100%; }
   /* タイル周辺の文字も拡大 */
-  .tileName { font-size: 23px; line-height: 1.35; }
+  .tileName { font-size: 17px; line-height: 1.35; }
   .tileSub, .tilePlaceholder { font-size: 16px; }
   .tileDate { font-size: 15px; }
   .editBtn, .delBtn { font-size: 17px; padding: 9px 16px; }
@@ -697,22 +697,23 @@
    ページタイトルはコミュニティ側にのみ拡大指定があり、こちらは小さいままだったため揃える。
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  /* ページ見出し（コミュニティと同じサイズに） */
-  .title { font-size: 22px; }
+  /* v359: 文字が大きすぎて枠からはみ出し、香り名が1語で改行されていたため縮小した。
+     コミュニティ側と同じ値に揃えてある。片方だけ変えないこと。 */
+  .title { font-size: 19px; }
   /* 表組みの見出し・ラベル */
-  .th, .attrLabel { font-size: 25.5px; }
-  .attrRow { grid-template-columns: 110px minmax(0, 1fr); }
-  /* 香り・添え物のチップ */
-  .tagAroma, .tagAccomp { font-size: 25.5px; padding: 7px 16px; border-radius: 24px; }
-  .colEmpty { font-size: 25.5px; }
-  .attrValue { padding: 12px 14px; gap: 10px; }
-  /* カラーコード */
-  .hexCode { font-size: 23px; }
+  .th, .attrLabel { font-size: 14px; }
+  .attrRow { grid-template-columns: 84px minmax(0, 1fr); }
+  /* 香り・添え物のチップ。長い語（グレープフルーツ等）が折り返さない大きさにする */
+  .tagAroma, .tagAccomp { font-size: 14px; padding: 5px 11px; border-radius: 16px; }
+  .colEmpty { font-size: 14px; }
+  .attrValue { padding: 8px 10px; gap: 6px; }
+  /* カラーコード。透明度付きの9桁（#8F3400FF）でも枠に収まる大きさ */
+  .hexCode { font-size: 13px; }
   /* タイル周辺 */
-  .tileName { font-size: 22px; line-height: 1.3; }
-  .tileSub, .tileShop, .tileBrand, .tilePlaceholder { font-size: 24px; }
-  .tileDate { font-size: 22px; }
-  .editBtn, .delBtn { font-size: 24px; padding: 11px 18px; }
+  .tileName { font-size: 17px; line-height: 1.3; }
+  .tileSub, .tileShop, .tileBrand, .tilePlaceholder { font-size: 14px; }
+  .tileDate { font-size: 14px; }
+  .editBtn, .delBtn { font-size: 14px; padding: 8px 14px; }
   /* ツールバー（飲んだ日・公開/非公開・並び順・件数）
      v359: 折り返して縦に伸びていたため、1行に収まる大きさまで縮小した。
      日付入力はiOSで最小幅があるため、font-sizeを下げて幅を稼いでいる。 */
