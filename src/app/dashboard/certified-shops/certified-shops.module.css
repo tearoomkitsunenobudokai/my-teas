@@ -247,6 +247,11 @@
     left: 0;
     right: 0;
     bottom: 0;
+    /* iOS Safari の vh はアドレスバーが隠れた状態の高さを指すため、
+       バーが出ている間はパネルが実表示領域より高くなり、
+       上端の ✕ ボタンが画面外にはみ出して押せなくなる。
+       実際の表示領域に追従する dvh を使う。（v361）
+       ※ 他のモーダルでも同じ理由で dvh に統一している。 */
     height: 88vh;
     max-height: none;
     background: var(--bg-card);
@@ -299,6 +304,11 @@
     flex-shrink: 0;
   }
   .mapCloseBtn:hover { background: var(--border-strong); }
+
+  /* vh 未対応ブラウザ向けに上の 88vh を残しつつ、対応環境では dvh で上書きする */
+  @supports (height: 100dvh) {
+    .rightPane { height: 88dvh; }
+  }
 }
 
 
