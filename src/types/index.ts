@@ -44,7 +44,8 @@ export const SCORE_LABELS: Record<keyof ReviewScores, string> = {
 export const SCORE_DESCRIPTIONS: Record<keyof ReviewScores, { weak: string; strong: string; note?: string }> = {
   score_aroma:       { weak: '弱', strong: '強' },
   score_richness:    { weak: '少', strong: '多' },
-  score_color_depth: { weak: '薄い', strong: '濃い', note: '抽出した紅茶の水色の濃さ。ミルクティーにしたときの色残りの目安にもなります' },
+  // 両端の語は1文字に揃える（一覧の目盛りで幅が不揃いになるため）
+  score_color_depth: { weak: '薄', strong: '濃', note: '抽出した紅茶の水色の濃さ。ミルクティーにしたときの色残りの目安にもなります' },
   score_astringency: { weak: '弱', strong: '強' },
 }
 
