@@ -699,7 +699,11 @@
   .cupBox svg { max-width: 104px; }
   .cupBox { padding: 6px 4px; gap: 4px; }
   .chartBox { padding: 4px 3px; }
-  .chartBox > div { max-width: 168px; margin: 0 auto; }
+  /* v366: カップ（104px）と高さを揃える。
+     チャートは正方形なので、幅を決めれば高さも同じだけ縮む。
+     ラベル（香り・コク・渋み・水色）が外側に張り出すため、
+     カップより少しだけ大きくして文字が欠けないようにしている。 */
+  .chartBox > div { max-width: 124px; margin: 0 auto; }
   /* タイル周辺の文字も拡大 */
   .tileName { font-size: 17px; line-height: 1.35; }
   .tileSub, .tilePlaceholder { font-size: 16px; }
