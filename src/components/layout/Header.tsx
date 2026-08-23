@@ -51,7 +51,7 @@ function TeaCupTiny({ color, size = 32 }: { color?: string; size?: number }) {
   )
 }
 
-export default function Header({ profile: initialProfile }: { profile: any }) {
+export default function Header({ profile: initialProfile, isAdmin = false }: { profile: any; isAdmin?: boolean }) {
   const router = useRouter()
   const supabase = createClient()
   const [open, setOpen] = useState(false)
@@ -183,6 +183,13 @@ export default function Header({ profile: initialProfile }: { profile: any }) {
         My-Teas
       </Link>
       <div className={styles.right} ref={panelRef}>
+        {/* 管理者メニュー。対象者が限られるため、グリッドではなくここに置く（v362） */}
+        {isAdmin && (
+          <Link href="/dashboard/admin" className={styles.adminBtn}
+            title="管理者メニュー" aria-label="管理者メニュー">
+            ⚙️
+          </Link>
+        )}
         <button className={styles.avatarBtn} onClick={() => { setOpen(v => !v); setEditing(false) }}>
           <div className={styles.avatar}>
             {profile?.avatar_url

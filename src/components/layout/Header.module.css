@@ -5,6 +5,21 @@
 .right { display: flex; align-items: center; gap: 12px; position: relative; }
 
 /* ─── アバターボタン ─── */
+/* 管理者メニューへの入口。アバターの左に置く（v362） */
+.adminBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg-muted);
+  font-size: 17px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.adminBtn:hover { background: var(--border-strong); }
+
 .avatarBtn { background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; }
 .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--green-light); color: var(--green-dark); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; border: 2px solid transparent; transition: border-color 0.15s; }
 .avatarBtn:hover .avatar { border-color: var(--green); }
