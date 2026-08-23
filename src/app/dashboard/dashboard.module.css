@@ -3,7 +3,9 @@
 .loading { font-size: 13px; color: var(--text-muted); padding: 2rem; }
 
 /* ─── 統計カード ─── */
-.statsRow { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+/* v363: auto-fill だと画面幅次第で3列になり、上のメニューと列がずれていた。
+   グリッドメニューと同じ4列に固定して揃える。 */
+.statsRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .statCard { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .statNum { font-size: 28px; font-weight: 700; color: var(--green); }
 .statLabel { font-size: 12px; color: var(--text-muted); }
@@ -141,10 +143,13 @@
    潰れてしまう問題を解消する。
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  /* 統計カード：カード幅を広げ、ラベルは折り返さない大きさに */
-  .statsRow { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .statLabel { font-size: 17px; white-space: nowrap; text-align: center; }
-  .statNum { font-size: 34.5px; }
+  /* 統計カード：グリッドメニューと同じ4列。
+     v363: 1マスが狭くなるため、文字とパディングもそれに合わせて縮めている。
+     ラベルは折り返さない大きさにすること（縦積みになると高さが不揃いになる）。 */
+  .statsRow { grid-template-columns: repeat(4, 1fr); gap: 7px; }
+  .statCard { padding: 10px 4px; gap: 2px; border-radius: 10px; }
+  .statLabel { font-size: 11px; white-space: nowrap; text-align: center; letter-spacing: -0.02em; }
+  .statNum { font-size: 22px; }
 
   /* 平均スコア：ラベル欄の幅を広げ、縦積みを防ぐ */
   .scoreRow { gap: 10px; }
