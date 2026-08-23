@@ -11,6 +11,10 @@ ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, 
 
 interface Props {
   scores: ReviewScores; label?: string; size?: number
+  /** スマホ表示のときの最大サイズ（未指定なら size と同じ）
+      ★ この値はインラインの style で入るため、CSS の max-width では上書きできない。
+         一覧の大きさを変えたいときは CSS ではなくこの props を変えること。（v367） */
+  mobileSize?: number
   /** スマホ表示のときの文字サイズ */
   labelFontSize?: number; tickFontSize?: number
   /** PC表示のときの文字サイズ（未指定なら既定値を使う） */
@@ -35,7 +39,7 @@ function useIsMobile(): boolean {
 }
 
 export default function RadarChart({
-  scores, label = '', size = 260,
+  scores, label = '', size = 260, mobileSize,
   labelFontSize = 13, tickFontSize = 11,
   desktopLabelFontSize = 13, desktopTickFontSize = 11,
   fluid = false, verticalSideLabels = false,
@@ -43,6 +47,8 @@ export default function RadarChart({
   const isMobile = useIsMobile()
   const labelFs = isMobile ? labelFontSize : desktopLabelFontSize
   const tickFs  = isMobile ? tickFontSize  : desktopTickFontSize
+  // スマホだけ小さくしたい場合に mobileSize を使う（未指定なら従来どおり size）
+  const boxSize = isMobile ? (mobileSize ?? size) : size
   const keys = Object.keys(SCORE_LABELS) as (keyof ReviewScores)[]
   /* 軸の並びは 上→右→下→左。verticalSideLabels=true のときは
      左右（コク・渋み）のラベルを1文字ずつ改行して縦書きにする。
@@ -58,8 +64,8 @@ export default function RadarChart({
   return (
     /* fluid=true のときは親要素の幅いっぱいに描画する（正方形を維持） */
     <div style={fluid
-      ? { width: '100%', aspectRatio: '1 / 1', maxWidth: size }
-      : { width: size, height: size, maxWidth: '100%' }}>
+      ? { width: '100%', aspectRatio: '1 / 1', maxWidth: boxSize, margin: '0 auto' }
+      : { width: boxSize, height: boxSize, maxWidth: '100%' }}>
       <Radar
         data={{
           labels,
