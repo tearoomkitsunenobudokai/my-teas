@@ -1,0 +1,52 @@
+/* 評価スコアの丸表示（v368） */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 2px 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.name {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+  width: 30px;
+  flex-shrink: 0;
+}
+
+/* 両端の語（弱⇔強 など）。控えめに出して丸の邪魔をしない */
+.edge {
+  font-size: 9px;
+  color: var(--text-hint);
+  flex-shrink: 0;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.dotOn, .dotOff {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dotOn  { background: var(--green); }
+.dotOff { background: var(--border); }
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .wrap { gap: 6px; }
+  .name { font-size: 12px; width: 32px; }
+  .edge { font-size: 10px; }
+  .dotOn, .dotOff { width: 8px; height: 8px; }
+}
