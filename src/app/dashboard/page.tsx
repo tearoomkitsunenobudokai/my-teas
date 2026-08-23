@@ -137,7 +137,7 @@ export default function DashboardPage() {
     <div className={styles.page}>
       {/* タイトル〜基本統計までを上部に固定する */}
       <div className={styles.stickyHead}>
-      <h1 className={styles.title}>🏠 ダッシュボード</h1>
+      <h1 className={styles.title}>📊 統計</h1>
 
       {/* ─── 基本統計カード ─── */}
       <div className={styles.statsRow}>

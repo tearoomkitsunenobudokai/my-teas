@@ -1,0 +1,38 @@
+/* グリッドメニュー直下の第2階層タブ（v362） */
+
+.wrap {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* グリッドメニュー・本文と同じ幅で中央に寄せる */
+.inner {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 12px;
+  display: flex;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab:active { background: var(--bg-muted); }
+
+.tabActive {
+  color: var(--green-dark);
+  border-bottom-color: var(--green);
+}
+
+@media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
+  .inner { padding: 0 14px; }
+  .tab { font-size: 13.5px; padding: 9px 4px 8px; }
+}
