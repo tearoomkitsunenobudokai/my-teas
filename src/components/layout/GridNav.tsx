@@ -18,17 +18,18 @@ import styles from './GridNav.module.css'
  */
 
 const NAV = [
-  { href: '/dashboard', label: 'ダッシュボード', icon: '📊' },
+  // ラベルは4列に収まるよう短めにしている（折り返すと行が増えて高さを取るため）
+  { href: '/dashboard', label: '統計', icon: '📊' },
   { href: '/dashboard/reviews', label: '自分の評価', icon: '⭐' },
   { href: '/dashboard/community', label: 'コミュニティ', icon: '👥' },
   { href: '/dashboard/certified-shops', label: '認定店', icon: '🏅' },
-  { href: '/dashboard/colors', label: 'カラーパレット', icon: '🎨' },
+  { href: '/dashboard/colors', label: '色パレット', icon: '🎨' },
   { href: '/dashboard/ai-analysis', label: 'AI分析', icon: '🤖' },
-  { href: '/dashboard/card-print', label: '印刷用に変換', icon: '🖨' },
-  { href: '/dashboard/contact', label: 'お問い合わせ', icon: '✉️' },
+  { href: '/dashboard/card-print', label: '印刷', icon: '🖨' },
+  { href: '/dashboard/contact', label: '問い合わせ', icon: '✉️' },
 ]
 
-const ADMIN = { href: '/dashboard/admin', label: '管理者メニュー', icon: '⚙️' }
+const ADMIN = { href: '/dashboard/admin', label: '管理', icon: '⚙️' }
 
 const COLLAPSE_KEY = 'teanote_gridnav_collapsed'
 
@@ -61,7 +62,16 @@ export default function GridNav({ isAdmin }: { isAdmin: boolean }) {
     <div className={styles.wrap}>
       <div className={styles.inner}>
         {collapsed ? (
+          /* 折りたたみ時は、開くボタンも同じ1行に入れて縦幅を使わない */
           <div className={styles.rail}>
+            <button
+              type="button"
+              className={styles.railToggle}
+              onClick={toggle}
+              aria-expanded={false}
+              aria-label="メニューを開く">
+              ▽
+            </button>
             {items.map(({ href, label, icon }) => (
               <Link
                 key={href}
@@ -74,30 +84,31 @@ export default function GridNav({ isAdmin }: { isAdmin: boolean }) {
             ))}
           </div>
         ) : (
-          <div className={styles.grid}>
-            {items.map(({ href, label, icon }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`${styles.cell} ${isActive(href) ? styles.cellActive : ''}`}>
-                <span className={styles.cellIcon}>{icon}</span>
-                <span className={styles.cellLabel}>{label}</span>
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className={styles.grid}>
+              {items.map(({ href, label, icon }) => (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`${styles.cell} ${isActive(href) ? styles.cellActive : ''}`}>
+                  <span className={styles.cellIcon}>{icon}</span>
+                  <span className={styles.cellLabel}>{label}</span>
+                </Link>
+              ))}
+            </div>
+            <div className={styles.toggleRow}>
+              <button
+                type="button"
+                className={styles.toggleBtn}
+                onClick={toggle}
+                aria-expanded={true}
+                aria-label="メニューを閉じる">
+                <span className={styles.chevron}>▲</span>
+                閉じる
+              </button>
+            </div>
+          </>
         )}
-
-        <div className={`${styles.toggleRow} ${collapsed ? styles.toggleRowCollapsed : ''}`}>
-          <button
-            type="button"
-            className={styles.toggleBtn}
-            onClick={toggle}
-            aria-expanded={!collapsed}
-            aria-label={collapsed ? 'メニューを開く' : 'メニューを閉じる'}>
-            <span className={styles.chevron}>{collapsed ? '▼' : '▲'}</span>
-            {collapsed ? 'メニュー' : '閉じる'}
-          </button>
-        </div>
       </div>
     </div>
   )

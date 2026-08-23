@@ -5,7 +5,17 @@
   .app { height: 100dvh; }
 }
 .body { display: flex; flex: 1; overflow: hidden; }
-.main { flex: 1; overflow-y: auto; padding: 1.25rem 1rem 2rem; }
+/* スマホで本文の表示領域を最大化するため、上下の余白は最小限にする（v359） */
+/* 本文の余白。認定店のように「画面いっぱいに広げたい」ページが
+   負のマージンで打ち消せるよう、値を変数に出しておく。（v359）
+   ここを変えたら --main-pad-x / --main-pad-y も必ず一致させること。 */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--main-pad-y) var(--main-pad-x) 2rem;
+  --main-pad-y: 0.6rem;
+  --main-pad-x: 0.75rem;
+}
 
 /* スマホでの利用が中心のため、本文もスマホ幅で中央に寄せる。
    PCで見たときは左右が余白になる。（v357） */

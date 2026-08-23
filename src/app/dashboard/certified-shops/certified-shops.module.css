@@ -1,5 +1,13 @@
 /* ─── 2カラムレイアウト ─── */
-.pageWrap { display: flex; height: calc(100vh - 56px); overflow: hidden; margin: -1.75rem; }
+/* 画面いっぱいに広げるため、本文の余白を負のマージンで打ち消す。
+   値は app-layout.module.css の --main-pad-y / --main-pad-x と一致させること。（v359）
+   高さはヘッダーの実寸に依存しないよう、親(.main)の高さを基準にする。 */
+.pageWrap {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  margin: calc(var(--main-pad-y, 0.6rem) * -1) calc(var(--main-pad-x, 0.75rem) * -1);
+}
 
 /* ─── 左ペイン ─── */
 .leftPane { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; border-right: 0.5px solid var(--border); background: var(--bg-card); }
@@ -226,13 +234,9 @@
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   /* 左右2カラム → リストを縦フル幅に。地図は overlay として重ねる
-     スマホのブラウザでは 100vh がアドレスバー分を含んでしまい、リスト下部が
-     画面外に隠れてスクロールで到達できなくなる。実際の表示領域に追従する
-     100dvh を使い、未対応ブラウザ向けに 100vh をフォールバックとして残す。 */
-  .pageWrap { flex-direction: column; height: calc(100vh - 56px); margin: -1rem; }
-  @supports (height: 100dvh) {
-    .pageWrap { height: calc(100dvh - 56px); }
-  }
+     高さは親(.main)基準の100%にしている。.app 側で 100dvh を使っているため、
+     iOSのアドレスバーによる高さの変動もそちらで吸収される。 */
+  .pageWrap { flex-direction: column; height: 100%; }
   .leftPane { width: 100%; }
   /* 最後の行が下端に貼り付いて押しづらくならないよう、余白を確保 */
   .shopList { padding-bottom: 24px; }

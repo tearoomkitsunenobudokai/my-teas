@@ -5,7 +5,12 @@
 .subtitle { font-size: 13px; color: var(--text-muted); }
 
 /* ─── ツールバー ─── */
-.toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+/* v359: 折り返すと縦に伸びて一覧の表示領域を圧迫するため、1行に収める。
+   入りきらない場合は横スクロールさせる（折り返さない）。 */
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: nowrap; overflow-x: auto; background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+.toolbar > * { flex-shrink: 0; }
+.toolbar .searchInput { flex: 1 1 auto; min-width: 90px; }
+.countBadge { margin-left: auto; }
 .searchInput { flex: 1; min-width: 160px; border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 6px 10px; font-size: 12px; font-family: inherit; background: var(--bg-muted); color: var(--text); outline: none; }
 .searchInput:focus { border-color: var(--green); }
 .select { border: 0.5px solid var(--border-strong); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-family: inherit; background: var(--bg-muted); color: var(--text); outline: none; }
@@ -263,11 +268,11 @@
    ═══════════════════════════════════════════════ */
 .toolbar {
   position: sticky;
-  top: -1.75rem;              /* .main の padding 分を打ち消す */
+  top: calc(var(--main-pad-y, 0.6rem) * -1);  /* .main の padding 分を打ち消す */
   z-index: 20;
   /* 固定中に背後の内容が透けないよう、上下に余白を足して塗りつぶす */
   margin: -0.5rem 0 0;
-  padding-top: calc(10px + 1.75rem);
+  padding-top: calc(10px + var(--main-pad-y, 0.6rem));
   border-top: none;
   border-radius: 0 0 10px 10px;
 }
@@ -320,11 +325,12 @@
   .tileDate { font-size: 22px; }
   .tileAuthor, .tileLocation { font-size: 24px; }
   .tileWantBtn { font-size: 24px; padding: 10px 18px; border-radius: 22px; }
-  /* 検索ボックスを大きく（入力しやすさを優先） */
-  .searchInput { font-size: 27.5px; padding: 12px 16px; min-width: 100%; border-radius: 8px; }
-  .select { font-size: 25.5px; padding: 10px 12px; }
-  .wantFilterBtn { font-size: 25.5px; padding: 10px 16px; }
-  .countBadge { font-size: 23px; }
+  /* v359: 1行に収めるため、フィルター類は控えめな大きさにする。
+     min-width:100% を外さないと検索欄が必ず折り返す。 */
+  .searchInput { font-size: 13px; padding: 6px 10px; min-width: 90px; border-radius: 8px; }
+  .select { font-size: 13px; padding: 6px 8px; }
+  .wantFilterBtn { font-size: 13px; padding: 6px 10px; }
+  .countBadge { font-size: 12px; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -335,11 +341,13 @@
    ═══════════════════════════════════════════════ */
 .stickyHead {
   position: sticky;
-  top: -1.75rem;                 /* .main の上パディング分を打ち消す */
+  /* .main の上パディング分を打ち消す。値は app-layout.module.css の
+     --main-pad-y と一致している必要がある。（v359で変数化） */
+  top: calc(var(--main-pad-y, 0.6rem) * -1);
   z-index: 25;
   background: var(--bg);
-  margin: -1.75rem -0.5rem 0;    /* 左右も塗りつぶし、隙間から中身が覗かないようにする */
-  padding: 1.75rem 0.5rem 8px;
+  margin: calc(var(--main-pad-y, 0.6rem) * -1) -0.5rem 0;  /* 左右も塗りつぶし、隙間から中身が覗かないようにする */
+  padding: var(--main-pad-y, 0.6rem) 0.5rem 6px;
   display: flex;
   flex-direction: column;
   gap: 10px;
