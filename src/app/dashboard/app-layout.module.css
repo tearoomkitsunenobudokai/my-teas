@@ -5,7 +5,15 @@
   .app { height: 100dvh; }
 }
 .body { display: flex; flex: 1; overflow: hidden; }
-.main { flex: 1; overflow-y: auto; padding: 1.75rem; }
+.main { flex: 1; overflow-y: auto; padding: 1.25rem 1rem 2rem; }
+
+/* スマホでの利用が中心のため、本文もスマホ幅で中央に寄せる。
+   PCで見たときは左右が余白になる。（v357） */
+.mainInner {
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+}
 
 /* メンテナンス中の告知バー */
 .maintenanceBar {

@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import Sidebar from '@/components/layout/Sidebar'
 import Header from '@/components/layout/Header'
+import GridNav from '@/components/layout/GridNav'
 import LoginBonus from '@/components/LoginBonus'
 import styles from './app-layout.module.css'
 
@@ -34,10 +34,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           🔧 メンテナンス（全面停止）中です。一般ユーザーはアクセスできません。
         </div>
       )}
+      {/* 上部にメニューを置き、本文は下に広く取る（v357）
+          製作者(is_creator)も管理者メニューが見えるようにする */}
+      <GridNav isAdmin={isPrivileged} />
       <div className={styles.body}>
-        {/* 製作者(is_creator)も管理者メニューが見えるようにする */}
-        <Sidebar isAdmin={isPrivileged} />
-        <main className={styles.main}>{children}</main>
+        <main className={styles.main}>
+          <div className={styles.mainInner}>{children}</div>
+        </main>
       </div>
     </div>
   )
