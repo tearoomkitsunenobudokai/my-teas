@@ -92,8 +92,10 @@ export default function RadarChart({
                 font: { size: labelFs, weight: 600 },
                 /* 軸名（香り・コク・水色・渋み）の背景に薄い青を敷いて読みやすくする */
                 backdropColor: 'rgba(214, 233, 250, 0.9)',
+                /* v370: 余白が大きいとその分チャート本体が小さくなるため、
+                   読みやすさを保てる範囲まで詰めている。 */
                 backdropPadding: isMobile
-                  ? { top: 4, bottom: 4, left: 7, right: 7 }
+                  ? { top: 1, bottom: 1, left: 2, right: 2 }
                   : { top: 3, bottom: 3, left: 5, right: 5 },
               },
             },

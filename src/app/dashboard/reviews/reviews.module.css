@@ -50,7 +50,7 @@
 /* fluid のチャートがセル幅いっぱいに広がるようにする */
 
 /* v368: チャートを左に寄せ、右に評価の目盛りを並べる */
-.chartBox { display:flex; align-items:center; justify-content:flex-start; gap:6px; padding:7px 5px; flex:1; }
+.chartBox { display:flex; align-items:center; justify-content:flex-start; gap:14px; padding:7px 5px; flex:1; }
 /* チャート本体。fluid で width:100% になるため、ここで幅を握らないと
    右の目盛りを押し出してしまう。実際の上限は mobileSize props 側。 */
 .chartBox > div:first-child { flex: 0 0 auto; }
