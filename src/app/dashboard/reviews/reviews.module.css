@@ -61,7 +61,17 @@
 .tagAroma { font-size:13px; background:#E1F5EE; color:#085041; padding:3px 10px; border-radius:20px; border:0.5px solid #9FE1CB; }
 .tagAccomp { font-size:13px; background:#FBEFD9; color:#7A4A00; padding:3px 10px; border-radius:20px; border:0.5px solid #E6C88A; }
 .colEmpty { font-size:13px; color:var(--text-hint); opacity:0.5; }
-.tileActions { display:flex; gap:8px; justify-content:flex-end; padding-top:6px; border-top:0.5px solid var(--border); }
+.tileActions { display:flex; gap:8px; align-items:center; padding-top:6px; border-top:0.5px solid var(--border); }
+/* カード作成は左端。編集・削除は右に寄せたいので、間を自動マージンで空ける（v365） */
+.tileCardBtn { margin-right: auto; }
+.tileCardBtn {
+  font-size:13px; font-weight:600;
+  border:1px solid #8B6F47; background:#FBF5EC; color:#6B4F2A;
+  border-radius:8px; padding:7px 12px; cursor:pointer;
+  white-space: nowrap;
+}
+.tileCardBtn:hover { background:#F3E7D3; }
+.tileCardBtn:disabled { opacity:0.6; cursor:default; }
 .editBtn { background:none; border:0.5px solid var(--border-strong); border-radius:6px; padding:4px 12px; font-size:12px; cursor:pointer; color:var(--text-muted); }
 .editBtn:hover { background:var(--bg-muted); }
 .delBtn { background:none; border:0.5px solid #fca5a5; border-radius:6px; padding:4px 12px; font-size:12px; cursor:pointer; color:#dc2626; }
@@ -684,7 +694,12 @@
   .colEmpty { font-size: 17px; }
   .attrValue { padding: 10px 12px; gap: 8px; }
   .attrRow { grid-template-columns: 86px minmax(0, 1fr); }
-  .cupBox svg { max-width: 100%; }
+  /* v365: max-width:100% だと画面幅いっぱいまで伸びて縦を圧迫するため、上限を設ける。
+     チャートも同じ高さに揃えている（片方だけ変えると左右で高さがずれる）。 */
+  .cupBox svg { max-width: 104px; }
+  .cupBox { padding: 6px 4px; gap: 4px; }
+  .chartBox { padding: 4px 3px; }
+  .chartBox > div { max-width: 168px; margin: 0 auto; }
   /* タイル周辺の文字も拡大 */
   .tileName { font-size: 17px; line-height: 1.35; }
   .tileSub, .tilePlaceholder { font-size: 16px; }
