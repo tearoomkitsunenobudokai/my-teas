@@ -294,7 +294,12 @@
   .colEmpty { font-size: 17px; }
   .attrValue { padding: 10px 12px; gap: 8px; }
   .attrRow { grid-template-columns: 86px minmax(0, 1fr); }
-  .cupBox svg { max-width: 100%; }
+  /* v365: max-width:100% だと画面幅いっぱいまで伸びて縦を圧迫するため、上限を設ける。
+     チャートも同じ高さに揃えている（片方だけ変えると左右で高さがずれる）。 */
+  .cupBox svg { max-width: 104px; }
+  .cupBox { padding: 6px 4px; gap: 4px; }
+  .chartBox { padding: 4px 3px; }
+  .chartBox > div { max-width: 168px; margin: 0 auto; }
   .hexCode { letter-spacing: 0.03em; }
   /* タイル周辺の文字も拡大 */
   .tileName { font-size: 17px; line-height: 1.35; }

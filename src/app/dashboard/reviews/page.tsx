@@ -53,7 +53,10 @@ function fmtDate(d?: string) { return d ? d.slice(0,10).replace(/-/g,'/') : '' }
 // 水色カップの描画は共通コンポーネント @/components/TeaCup を使用
 
 // ─── タイル ───────────────────────────────────────
-function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDelete: () => void }) {
+function ReviewTile({ r, onEdit, onDelete, onMakeCard, cardCost, cardBusy }: {
+  r: any; onEdit: () => void; onDelete: () => void
+  onMakeCard: () => void; cardCost: number; cardBusy: boolean
+}) {
   const scores: ReviewScores = {
     score_aroma: r.score_aroma ?? 3, score_astringency: r.score_astringency ?? 3,
     score_richness: r.score_richness ?? 3, score_color_depth: r.score_color_depth ?? 3,
@@ -118,6 +121,10 @@ function ReviewTile({ r, onEdit, onDelete }: { r: any; onEdit: () => void; onDel
       </div>
 
       <div className={styles.tileActions}>
+        {/* カード作成は左端に置く（v365）。編集・削除は右寄せのまま。 */}
+        <button className={styles.tileCardBtn} onClick={onMakeCard} disabled={cardBusy}>
+          {cardBusy ? '作成中…' : `🖼️ カード作成（${cardCost}pt）`}
+        </button>
         <button className={styles.editBtn} onClick={onEdit}>✏️ 編集</button>
         <button className={styles.delBtn} onClick={onDelete}>🗑 削除</button>
       </div>
@@ -1053,6 +1060,65 @@ export default function ReviewsPage() {
   const [costOjou,   setCostOjou]   = useState(1)
   const [costCard,   setCostCard]   = useState(1)
 
+  /* 一覧のタイルから直接カードを作る（v365）
+     モーダル内の makeCard と同じ処理だが、あちらは入力中のフォームの値を使う。
+     こちらは保存済みの行(r)をそのまま使うため、別実装にしている。
+     ★ 片方だけ直すと挙動がずれるので、変更するときは両方を見ること。 */
+  const [cardBusyId, setCardBusyId] = useState<string | null>(null)
+
+  async function makeCardFromRow(r: any) {
+    if (cardBusyId) return
+    if (!confirm(`${costCard}ptを消費して評価カード画像を作成します。よろしいですか？`)) return
+    setCardBusyId(r.id)
+    try {
+      const { data: consumed, error } = await supabase.rpc('consume_points', {
+        p_amount: costCard, p_feature: 'tea_card',
+      })
+      if (error) { alert(error.message); return }
+      const row = Array.isArray(consumed) ? consumed[0] : consumed
+      if (row && row.success === false) { alert(row.message || 'ポイントが不足しています'); return }
+
+      const { data: profile } = await supabase.from('profiles').select('name').eq('id', userId).single()
+
+      // 水色の色名をパレットから照合する。一致しなければ保存済みの色名を使う。
+      let colorName: string | null = r.color_name ?? null
+      if (r.color_hex) {
+        const { data: paletteRows } = await supabase.from('tea_colors').select('name,hex')
+        const norm = (h: string) => {
+          let t = h.replace('#', '').trim()
+          if (t.length === 3 || t.length === 4) t = t.split('').map(c => c + c).join('')
+          return t.toUpperCase()
+        }
+        const hit = (paletteRows ?? []).find(c => norm(c.hex) === norm(r.color_hex))
+        colorName = hit?.name ?? (r.color_name || null)
+      }
+
+      const blob = await generateTeaCard({
+        tea_name: r.tea_name, brand_name: r.brand_name, shop_name: r.shop_name,
+        user_name: profile?.name ?? null, drank_at: r.drank_at,
+        color_hex: r.color_hex, color_name: colorName,
+        /* 文章ソース（メモ / AI要約 / お嬢様風）の選択は一覧からは再現できないため、
+           印刷機能と同じく comment を使う。 */
+        comment: r.comment,
+        aroma_notes: r.aroma_notes ?? [],
+        brew_method: r.brew_method || '不明',
+        tea_garden: r.tea_garden || null,
+        origin_country: r.origin_country || null,
+        steep_seconds: r.steep_seconds ?? null,
+        tea_grams: r.tea_grams ?? null,
+        water_ml: r.water_ml ?? null,
+        accompaniments: r.accompaniments ?? [],
+        score_aroma: r.score_aroma, score_astringency: r.score_astringency,
+        score_richness: r.score_richness, score_color_depth: r.score_color_depth,
+      })
+      downloadBlob(blob, `${(r.tea_name || 'tea').replace(/[/\\?%*:|"<>]/g, '_')}_card.png`)
+    } catch (e: any) {
+      alert(e?.message ?? 'カードの作成に失敗しました')
+    } finally {
+      setCardBusyId(null)
+    }
+  }
+
   useEffect(() => {
     const sb = createClient()
     sb.rpc('get_feature_cost', { p_feature: 'summary' }).then(({ data }) => { if (typeof data === 'number') setCostNormal(data) })
@@ -1233,7 +1299,10 @@ export default function ReviewsPage() {
           {list.map(r => (
             <ReviewTile key={r.id} r={r}
               onEdit={() => { setEditTarget(r); setShowModal(true) }}
-              onDelete={() => del(r.id)}/>
+              onDelete={() => del(r.id)}
+              onMakeCard={() => makeCardFromRow(r)}
+              cardCost={costCard}
+              cardBusy={cardBusyId === r.id}/>
           ))}
         </div>
       )}
