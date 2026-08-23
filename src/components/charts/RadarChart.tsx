@@ -15,6 +15,8 @@ interface Props {
       ★ この値はインラインの style で入るため、CSS の max-width では上書きできない。
          一覧の大きさを変えたいときは CSS ではなくこの props を変えること。（v367） */
   mobileSize?: number
+  /** 頂点の点の大きさ。目盛りの数字と重なって読みにくいときは小さくする（v371） */
+  pointRadius?: number
   /** スマホ表示のときの文字サイズ */
   labelFontSize?: number; tickFontSize?: number
   /** PC表示のときの文字サイズ（未指定なら既定値を使う） */
@@ -39,7 +41,7 @@ function useIsMobile(): boolean {
 }
 
 export default function RadarChart({
-  scores, label = '', size = 260, mobileSize,
+  scores, label = '', size = 260, mobileSize, pointRadius,
   labelFontSize = 13, tickFontSize = 11,
   desktopLabelFontSize = 13, desktopTickFontSize = 11,
   fluid = false, verticalSideLabels = false,
@@ -76,8 +78,9 @@ export default function RadarChart({
             borderColor: '#1D9E75',
             pointBackgroundColor: '#1D9E75',
             borderWidth: 2,
-            /* PCではタイルが複数列に並び1枚が小さくなるため、点も小さくする */
-            pointRadius: isMobile ? 5 : 3.5,
+            /* PCではタイルが複数列に並び1枚が小さくなるため、点も小さくする。
+               pointRadius が渡された場合はそちらを優先する（v371）。 */
+            pointRadius: pointRadius ?? (isMobile ? 5 : 3.5),
           }],
         }}
         options={{
