@@ -86,7 +86,7 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
               {/* v366: カップと高さを揃えるため縮小。fluid なので実際の大きさは
                   CSS 側の .chartBox > div の max-width で決まる。
                   ラベルが外側に張り出すぶん、文字も一緒に小さくしないと欠ける。 */}
-              <RadarChart scores={scores} size={270} labelFontSize={10} tickFontSize={8} desktopLabelFontSize={12} desktopTickFontSize={10} fluid verticalSideLabels/>
+              <RadarChart scores={scores} size={270} mobileSize={132} labelFontSize={10} tickFontSize={8} desktopLabelFontSize={12} desktopTickFontSize={10} fluid verticalSideLabels/>
             </div>
           </div>
         </div>
