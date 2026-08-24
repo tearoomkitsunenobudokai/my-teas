@@ -115,7 +115,17 @@
 /* アバター画像 */
 .authorAvatar { overflow: hidden; }
 .authorAvatarImg { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-.tileAuthor { display: inline-flex; align-items: center; gap: 4px; }
+/* v373: 押すとその投稿者で絞り込めるようにしたため button にしている。
+   ボタンの既定のスタイルを消し、押せると分かる程度の装飾だけ残す。 */
+.tileAuthor {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: none; background: transparent; padding: 2px 4px;
+  cursor: pointer; border-radius: 6px;
+  text-decoration: underline; text-decoration-style: dotted;
+  text-underline-offset: 3px;
+}
+.tileAuthor:hover:not(:disabled) { background: var(--bg-muted); color: var(--text); }
+.tileAuthor:disabled { cursor: default; text-decoration: none; }
 .tileAuthorAvatar { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; vertical-align: middle; }
 
 /* 飲みたいボタン・飲みたい数 */
@@ -142,6 +152,19 @@
 .wantFilterActive { background: var(--green); color: #fff; border-color: var(--green); }
 
 /* タイル内の飲みたいボタン */
+/* 検索の解除ボタン（v373） */
+.clearSearchBtn {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+}
+.clearSearchBtn:hover { background: var(--bg-muted); }
+
 /* カードを集める（タイル用・v372）。詳細モーダルの .collectBtn と同じ配色にしている。
    右寄せは「集める」側で行うため、こちらの margin-left:auto は外した。 */
 .tileCollectBtn {

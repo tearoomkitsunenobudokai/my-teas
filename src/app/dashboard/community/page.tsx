@@ -32,9 +32,10 @@ function fmtDate(d?: string) { return d ? d.slice(0,10).replace(/-/g,'/') : '' }
 
 // ─── コミュニティタイル ───────────────────────────
 function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant,
-  canCollect, isCollected, onCollect, collecting }:
+  canCollect, isCollected, onCollect, collecting, onFilterAuthor }:
   { review: any; onClick: () => void; isWanted: boolean; onToggleWant: () => void; canWant: boolean
-    canCollect: boolean; isCollected: boolean; onCollect: () => void; collecting: boolean }) {
+    canCollect: boolean; isCollected: boolean; onCollect: () => void; collecting: boolean
+    onFilterAuthor: (name: string) => void }) {
   // reviews.tea_name 優先、なければ teas.name
   const teaName = review.tea_name ?? '不明'
   const aroma: string[] = review.aroma_notes ?? []
@@ -114,12 +115,18 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant,
       </div>
       {/* 投稿者 */}
       <div className={styles.tileFooter}>
-        <span className={styles.tileAuthor}>
+        {/* 投稿者名を押すと、その人の評価だけに絞り込む（v373）
+            絞り込みは検索欄と同じ仕組みを使っている（検索は投稿者名も対象のため）。 */}
+        <button
+          type="button"
+          className={styles.tileAuthor}
+          onClick={e => { e.stopPropagation(); onFilterAuthor(review.profiles?.name ?? '') }}
+          disabled={!review.profiles?.name}
+          title={review.profiles?.name ? `${review.profiles.name} さんの評価だけを見る` : undefined}>
           {review.profiles?.avatar_url
             ? <img src={review.profiles.avatar_url} alt="" className={styles.tileAuthorAvatar} />
             : '👤'} {review.profiles?.name ?? '匿名'}
-        </span>
-        {formatLocation(review.profiles) && <span className={styles.tileLocation}>📍 {formatLocation(review.profiles)}</span>}
+        </button>
         {/* カードを集める。飲みたいの左に置く（v372）。
             自分の評価には出さない（通常のカード作成から無料で作れるため）。 */}
         {canCollect && (
@@ -492,6 +499,11 @@ export default function CommunityPage() {
       <div className={styles.toolbar}>
         <input className={styles.searchInput} value={search}
           onChange={e => setSearch(e.target.value)} placeholder="茶葉名・投稿者で検索…"/>
+        {/* 投稿者名を押して絞り込んだあと、すぐ戻れるようにする（v373）*/}
+        {search && (
+          <button className={styles.clearSearchBtn} onClick={() => setSearch('')}
+            title="絞り込みを解除">✕</button>
+        )}
         <select className={styles.select} value={sortBy} onChange={e => setSortBy(e.target.value as 'date'|'score')}>
           <option value="date">新しい順</option>
           <option value="score">スコア順</option>
@@ -522,6 +534,7 @@ export default function CommunityPage() {
               isCollected={collected.has(r.id)}
               onCollect={() => collectFromTile(r)}
               collecting={tileCollectingId === r.id}
+              onFilterAuthor={setSearch}
               onClick={() => setSelected(selected?.id===r.id ? null : r)}/>)}
           </div>
         )
