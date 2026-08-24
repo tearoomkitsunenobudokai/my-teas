@@ -31,8 +31,10 @@ function fmtDate(d?: string) { return d ? d.slice(0,10).replace(/-/g,'/') : '' }
 // 水色カップの描画は共通コンポーネント @/components/TeaCup を使用
 
 // ─── コミュニティタイル ───────────────────────────
-function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
-  { review: any; onClick: () => void; isWanted: boolean; onToggleWant: () => void; canWant: boolean }) {
+function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant,
+  canCollect, isCollected, onCollect, collecting }:
+  { review: any; onClick: () => void; isWanted: boolean; onToggleWant: () => void; canWant: boolean
+    canCollect: boolean; isCollected: boolean; onCollect: () => void; collecting: boolean }) {
   // reviews.tea_name 優先、なければ teas.name
   const teaName = review.tea_name ?? '不明'
   const aroma: string[] = review.aroma_notes ?? []
@@ -118,6 +120,17 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant }:
             : '👤'} {review.profiles?.name ?? '匿名'}
         </span>
         {formatLocation(review.profiles) && <span className={styles.tileLocation}>📍 {formatLocation(review.profiles)}</span>}
+        {/* カードを集める。飲みたいの左に置く（v372）。
+            自分の評価には出さない（通常のカード作成から無料で作れるため）。 */}
+        {canCollect && (
+          <button
+            className={`${styles.tileCollectBtn} ${isCollected ? styles.tileCollectBtnOwned : ''}`}
+            onClick={e => { e.stopPropagation(); onCollect() }}
+            disabled={collecting}
+            title={isCollected ? 'もう一度作る' : 'カードを集める'}>
+            {collecting ? '作成中…' : isCollected ? '◆ 収集済み' : '◆ 集める'}
+          </button>
+        )}
         {canWant && (
           <button
             className={`${styles.tileWantBtn} ${isWanted ? styles.tileWantBtnActive : ''}`}
@@ -343,14 +356,36 @@ export default function CommunityPage() {
     else setCollectState(null)
   }, [selected, checkCollect])
 
+  /* 一覧のタイルから集める（v372）
+     モーダル版の collectCard は、開いたときに取得済みの collectState を前提にしている。
+     一覧では全件を事前判定すると重いため、押された時点で can_collect_card を呼ぶ。
+     実際の収集処理はモーダル版と同じ collectCard に委ねる。 */
+  const [tileCollectingId, setTileCollectingId] = useState<string | null>(null)
+
+  async function collectFromTile(review: any) {
+    if (!userId || tileCollectingId) return
+    setTileCollectingId(review.id)
+    try {
+      const { data, error } = await supabase.rpc('can_collect_card', { p_review_id: review.id })
+      if (error) { alert(error.message); return }
+      if (data?.ok !== true) { alert(data?.message ?? 'このカードは集められません'); return }
+      // 判定結果を渡して、以降はモーダルと同じ処理を使う
+      await collectCard(review, data)
+    } finally {
+      setTileCollectingId(null)
+    }
+  }
+
   /** カードを集める（ポイント消費 → COLLECTION版のカード画像を作成） */
-  async function collectCard(review: any) {
+  async function collectCard(review: any, stateOverride?: any) {
     if (!userId || collecting) return
     const already = collected.has(review.id)
+    // 一覧から呼ばれた場合は、その場で取得した判定結果を使う
+    const st = stateOverride ?? collectState
 
-    if (!already && (collectState?.cost ?? 0) > 0) {
+    if (!already && (st?.cost ?? 0) > 0) {
       if (!confirm(
-        `${collectState!.cost}ptを消費して、このカードを集めます。\n\n` +
+        `${st!.cost}ptを消費して、このカードを集めます。\n\n` +
         `※ カードは元の評価から毎回作り直すため、投稿者が評価を更新すると内容も変わります。\n` +
         `※ 元の評価が削除されると、一覧からも消えます。\n\n` +
         `よろしいですか？`
@@ -483,6 +518,10 @@ export default function CommunityPage() {
               isWanted={wants.has(r.id)}
               onToggleWant={() => toggleWant(r.id)}
               canWant={!!userId}
+              canCollect={!!userId && r.user_id !== userId}
+              isCollected={collected.has(r.id)}
+              onCollect={() => collectFromTile(r)}
+              collecting={tileCollectingId === r.id}
               onClick={() => setSelected(selected?.id===r.id ? null : r)}/>)}
           </div>
         )
