@@ -32,10 +32,10 @@ function fmtDate(d?: string) { return d ? d.slice(0,10).replace(/-/g,'/') : '' }
 
 // ─── コミュニティタイル ───────────────────────────
 function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant,
-  canCollect, isCollected, onCollect, collecting, onFilterAuthor }:
+  canCollect, isCollected, onCollect, collecting, collectCost, onFilterAuthor }:
   { review: any; onClick: () => void; isWanted: boolean; onToggleWant: () => void; canWant: boolean
     canCollect: boolean; isCollected: boolean; onCollect: () => void; collecting: boolean
-    onFilterAuthor: (name: string) => void }) {
+    collectCost: number | null; onFilterAuthor: (name: string) => void }) {
   // reviews.tea_name 優先、なければ teas.name
   const teaName = review.tea_name ?? '不明'
   const aroma: string[] = review.aroma_notes ?? []
@@ -135,7 +135,11 @@ function CommunityTile({ review, onClick, isWanted, onToggleWant, canWant,
             onClick={e => { e.stopPropagation(); onCollect() }}
             disabled={collecting}
             title={isCollected ? 'もう一度作る' : 'カードを集める'}>
-            {collecting ? '作成中…' : isCollected ? '◆ 収集済み' : '◆ 集める'}
+            {collecting ? '作成中…'
+              : isCollected ? '◆ 収集済み'
+              /* コストが未取得のうちは数字を出さない（0ptと誤解させないため） */
+              : collectCost != null ? `◆ 集める（${collectCost}pt）`
+              : '◆ 集める'}
           </button>
         )}
         {canWant && (
@@ -157,6 +161,11 @@ export default function CommunityPage() {
   const [reviews, setReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  /* カードを集めるのに必要なポイント数。
+     管理画面「機能ごとのポイント消費数」で変更すると、ここにも反映される。（v374）
+     判定（can_collect_card）は押した時点で行うが、表示だけは先に必要なので
+     feature_costs から1回だけ読む。 */
+  const [collectCost, setCollectCost] = useState<number | null>(null)
   const [sortBy, setSortBy] = useState<'date'|'score'>('date')
   const [showWantsOnly, setShowWantsOnly] = useState(false)
   const [selected, setSelected] = useState<any>(null)
@@ -236,6 +245,10 @@ export default function CommunityPage() {
       setCollected(new Set((myCards ?? []).map((c: any) => c.review_id)))
       setMyName(me?.name ?? '')
     }
+    // 「カードを集める」の消費ポイント（管理画面の設定に追従する）
+    const { data: costVal } = await supabase.rpc('get_feature_cost', { p_feature: 'card_collect' })
+    if (typeof costVal === 'number') setCollectCost(costVal)
+
     // 飲みたい上限（権限区分ごと）を取得
     const { data: limitVal } = await supabase.rpc('get_my_limit', { p_feature: 'wants' })
     if (typeof limitVal === 'number') setMaxWants(limitVal)
@@ -534,6 +547,7 @@ export default function CommunityPage() {
               isCollected={collected.has(r.id)}
               onCollect={() => collectFromTile(r)}
               collecting={tileCollectingId === r.id}
+              collectCost={collectCost}
               onFilterAuthor={setSearch}
               onClick={() => setSelected(selected?.id===r.id ? null : r)}/>)}
           </div>
