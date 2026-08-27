@@ -18,6 +18,7 @@
 
 import { brewIconPath, accompanimentIconPath, accompanimentShortLabel, ACCOMPANIMENT_ORDER, BREW_FILLER_ICON } from './icons'
 import { formatGardenOrigin } from './reviewFormat'
+import { formatReviewNo } from './reviewNo'
 
 export interface TeaCardData {
   tea_name: string
@@ -41,6 +42,9 @@ export interface TeaCardData {
   score_astringency: number
   score_richness: number
   score_color_depth: number
+  /** 管理番号（v375）。カードから元の評価を特定するために印字する。
+      列が無い環境でも動くよう任意にしている（未指定なら印字しない）。 */
+  review_no?: number | null
   /** カードの種類（省略時は自分の記録） */
   variant?: TeaCardVariant
   /** 集めた人の表示名（variant='collection' のときだけ使う） */
@@ -1087,6 +1091,20 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
   ctx.strokeStyle = 'rgba(168,135,63,0.45)'
   ctx.lineWidth = 1
   ctx.beginPath(); ctx.moveTo(nameX, H - 132); ctx.lineTo(footerRuleEnd, H - 132); ctx.stroke()
+
+  /* 管理番号（v375）。この番号をサイトの検索欄に入れると元の評価を開ける。
+     フッターの行に足すと5行になり、右下の隅飾り(y=734)と重なるため、
+     罫線のすぐ上に独立して置いている。
+     列が未追加の環境では undefined になるので、その場合は何も描かない。 */
+  if (data.review_no != null) {
+    ctx.save()
+    ctx.font = `500 15px ${SERIF}`
+    ctx.fillStyle = INK_SOFT
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    ctx.fillText(`No. ${formatReviewNo(data.review_no)}`, nameX, H - 142)
+    ctx.restore()
+  }
   ctx.fillStyle = INK_SOFT
   ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'

@@ -10,6 +10,18 @@
    入りきらない場合は横スクロールさせる（折り返さない）。 */
 .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:nowrap; overflow-x:auto; background:var(--bg-card); border:0.5px solid var(--border); border-radius:10px; padding:8px 10px; }
 .toolbar > * { flex-shrink: 0; }
+/* 検索欄（v375）。ここだけは幅を詰められるようにする */
+.searchInput {
+  flex: 1 1 auto; min-width: 110px;
+  font-size: 13px; padding: 5px 8px;
+  border: 0.5px solid var(--border); border-radius: 8px;
+  background: var(--bg-muted); color: var(--text);
+}
+/* タイルに出す管理番号 */
+.tileNo {
+  font-size: 11px; color: var(--text-hint);
+  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
+}
 .cnt { margin-left: auto; }
 .fg { display:flex; align-items:center; gap:6px; }
 .fl { font-size:12px; color:var(--text-muted); white-space:nowrap; }

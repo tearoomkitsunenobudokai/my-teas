@@ -15,6 +15,7 @@ import { brewIconPath, accompanimentIconPath, ACCOMPANIMENT_ORDER } from '@/lib/
 import { buildCsv, parseReviewsCsv, dropDuplicates } from '@/lib/reviewCsv'
 import TeaCup from '@/components/TeaCup'
 import ScoreScale from '@/components/ScoreScale'
+import { formatReviewNo, looksLikeReviewNo, parseReviewNo } from '@/lib/reviewNo'
 import styles from './reviews.module.css'
 
 const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr: false })
@@ -69,6 +70,11 @@ function ReviewTile({ r, onEdit, onDelete, onMakeCard, cardCost, cardBusy }: {
         <div className={styles.tileNameRow}>
           <span className={styles.tileName}>{r.tea_name ?? '不明'}</span>
           <span className={styles.tileDate}>{fmtDate(r.drank_at ?? r.created_at?.slice(0,10))}</span>
+          {/* 管理番号（v375）。カードの印字と同じ形式で出す。
+              列が未追加の環境では出さない。 */}
+          {r.review_no != null && (
+            <span className={styles.tileNo}>{formatReviewNo(r.review_no)}</span>
+          )}
           {r.is_public && <span>🌐</span>}
         </div>
         <div className={styles.tileMeta}>
@@ -276,6 +282,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         accompaniments: accs,
         score_aroma: scores.score_aroma, score_astringency: scores.score_astringency,
         score_richness: scores.score_richness, score_color_depth: scores.score_color_depth,
+        /* 編集中の評価から作る場合。新規作成中はまだ番号が無いので印字されない。 */
+        review_no: initial?.review_no ?? null,
       })
       downloadBlob(blob, `${(teaName || 'tea').replace(/[/\\?%*:|"<>]/g, '_')}_card.png`)
     } catch (e: any) {
@@ -1041,6 +1049,7 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<any[]>([])
   const [userId,  setUserId]  = useState('')
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
   const [filterFrom, setFilterFrom] = useState('')
   const [filterTo,   setFilterTo]   = useState('')
   const [filterPub,  setFilterPub]  = useState<'all'|'public'|'private'>('all')
@@ -1114,6 +1123,7 @@ export default function ReviewsPage() {
         accompaniments: r.accompaniments ?? [],
         score_aroma: r.score_aroma, score_astringency: r.score_astringency,
         score_richness: r.score_richness, score_color_depth: r.score_color_depth,
+        review_no: r.review_no ?? null,
       })
       downloadBlob(blob, `${(r.tea_name || 'tea').replace(/[/\\?%*:|"<>]/g, '_')}_card.png`)
     } catch (e: any) {
@@ -1147,16 +1157,24 @@ export default function ReviewsPage() {
       .select(cols)
       .eq('user_id', user.id).order('drank_at', { ascending: false })
 
+    /* review_no（v375）は allow_card_export と同じく後から足した列。
+       未適用の環境では取得が失敗するため、失敗したら外して再取得する。
+       （v323で同種の事故が起きているため、最初からこの形にしている） */
     const [first, { data: profile }] = await Promise.all([
-      fetchMine(`${BASE_COLS},allow_card_export`),
+      fetchMine(`${BASE_COLS},allow_card_export,review_no`),
       supabase.from('profiles').select('is_subscribed,is_admin,is_creator').eq('id', user.id).single(),
     ])
 
     let data = first.data
     if (first.error) {
-      const retry = await fetchMine(BASE_COLS)
-      data = retry.data
-      if (retry.error) console.error('評価の取得に失敗しました', retry.error)
+      // まず review_no だけを外して試す（allow_card_export は既に本番にある）
+      const retry1 = await fetchMine(`${BASE_COLS},allow_card_export`)
+      data = retry1.data
+      if (retry1.error) {
+        const retry2 = await fetchMine(BASE_COLS)
+        data = retry2.data
+        if (retry2.error) console.error('評価の取得に失敗しました', retry2.error)
+      }
     }
 
     setReviews((data ?? []) as any[])
@@ -1223,12 +1241,25 @@ export default function ReviewsPage() {
     }
   }
 
+  /* 検索（v375）。カードに印字した管理番号でも、紅茶名でも引ける。
+     「MT-000123」「000123」「123」のどれでも同じ評価に当たるよう、
+     番号らしき入力は parseReviewNo を通して数値で突き合わせる。 */
+  const searchNo = looksLikeReviewNo(search) ? parseReviewNo(search) : null
+  const searchText = search.trim().toLowerCase()
+
   const list = reviews.filter(r => {
     const d = r.drank_at ?? r.created_at?.slice(0,10) ?? ''
     if (filterFrom && d < filterFrom) return false
     if (filterTo   && d > filterTo)   return false
     if (filterPub === 'public'  && !r.is_public) return false
     if (filterPub === 'private' &&  r.is_public) return false
+    if (searchNo != null) {
+      if (r.review_no !== searchNo) return false
+    } else if (searchText) {
+      const hay = [r.tea_name, r.brand_name, r.shop_name, r.tea_garden]
+        .filter(Boolean).join(' ').toLowerCase()
+      if (!hay.includes(searchText)) return false
+    }
     return true
   }).sort((a,b) => {
     const da = a.drank_at ?? a.created_at ?? '', db = b.drank_at ?? b.created_at ?? ''
@@ -1270,6 +1301,18 @@ export default function ReviewsPage() {
       </div>
 
       <div className={styles.toolbar}>
+        {/* 検索（v375）。カードに印字した「MT-000123」をそのまま貼れる。
+            紅茶名・ブランド・店名でも引ける。 */}
+        <input
+          className={styles.searchInput}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="No.または紅茶名で検索…"
+          inputMode="text"
+        />
+        {search && (
+          <button className={styles.clr} onClick={() => setSearch('')} title="検索を解除">✕</button>
+        )}
         <div className={styles.fg}>
           <span className={styles.fl}>飲んだ日</span>
           <input type="date" className={styles.di} value={filterFrom} onChange={e=>setFilterFrom(e.target.value)}/>
