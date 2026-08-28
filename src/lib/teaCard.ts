@@ -18,6 +18,7 @@
 
 import { brewIconPath, accompanimentIconPath, accompanimentShortLabel, ACCOMPANIMENT_ORDER, BREW_FILLER_ICON } from './icons'
 import { formatGardenOrigin } from './reviewFormat'
+import { formatReviewNo } from './reviewNo'
 
 export interface TeaCardData {
   tea_name: string
@@ -41,6 +42,9 @@ export interface TeaCardData {
   score_astringency: number
   score_richness: number
   score_color_depth: number
+  /** 管理番号（v375）。カードから元の評価を特定するために印字する。
+      列が無い環境でも動くよう任意にしている（未指定なら印字しない）。 */
+  review_no?: number | null
   /** カードの種類（省略時は自分の記録） */
   variant?: TeaCardVariant
   /** 集めた人の表示名（variant='collection' のときだけ使う） */
@@ -1062,6 +1066,31 @@ export async function generateTeaCard(data: TeaCardData): Promise<Blob> {
       drawCell(accompanimentShortLabel(label), accImgs[i] ?? null, cx, cy, CELL_W, !selected.has(label))
     })
   }
+
+  /* ── 右下: 管理番号（v375） ──
+     この番号をサイトの検索欄に入れると、元の評価を開ける。
+
+     置き場所について:
+       左下の茶園名の下に置くと文字が重なる（実機で確認）。
+       フッターの行に足すと5行になり、右下の隅飾り(y=734)と当たる。
+       そのため、下段の枠(LOWER_BOTTOM=716)と隅飾りの間の空きに、
+       右端(boxRight)へ揃えて置いている。
+
+     列が未追加の環境では undefined になるので、その場合は何も描かない。 */
+  if (data.review_no != null) {
+    ctx.save()
+    ctx.font = `500 15px ${SERIF}`
+    ctx.fillStyle = INK_SOFT
+    ctx.textAlign = 'right'
+    ctx.textBaseline = 'alphabetic'
+    ctx.fillText(
+      formatReviewNo(data.review_no, variant === 'collection' ? 'collected' : 'own'),
+      boxRight,
+      LOWER_BOTTOM + 14,   // 隅飾りの横線(y=734)に触れない位置
+    )
+    ctx.restore()
+  }
+
   // ── 左下: フッター（上に細罫を敷く） ──
   const now = new Date()
   const jst = new Intl.DateTimeFormat('ja-JP', {
