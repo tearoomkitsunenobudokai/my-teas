@@ -10,7 +10,7 @@
  * 接頭辞だけを変えて、そのカードが自分の記録か、集めたものかを示す。
  *
  *   MY-00000010  自分が記録した評価から作ったカード
- *   OT-00000010  他の人の評価を集めて作ったカード（同じ評価なので数字は同じ）
+ *   CO-00000010  他の人の評価を集めて作ったカード（同じ評価なので数字は同じ）
  *
  * ── 桁数について ──
  * 8桁で 1〜99,999,999（約1億件）まで扱える。
@@ -24,12 +24,12 @@ export type ReviewNoKind = 'own' | 'collected'
 
 const PREFIX: Record<ReviewNoKind, string> = {
   own: 'MY',
-  collected: 'OT',
+  collected: 'CO',
 }
 
 const DIGITS = 8
 
-/** 10 → "MY-00000010" / "OT-00000010" */
+/** 10 → "MY-00000010" / "CO-00000010" */
 export function formatReviewNo(
   no: number | null | undefined,
   kind: ReviewNoKind = 'own',
@@ -42,12 +42,12 @@ export function formatReviewNo(
  * 利用者が入力した文字列から番号を取り出す。
  *
  * カードを見ながら手入力する前提なので、表記ゆれを幅広く受ける。
- *   "MY-00000010" / "OT-00000010" / "my00000010" / "No. MY-00000010"
+ *   "MY-00000010" / "CO-00000010" / "my00000010" / "No. MY-00000010"
  *   "00000010" / "10"
  * いずれも 10 として扱う。
  *
  * ★ 接頭辞は無視する。番号が同じなら指している評価も同じなので、
- *   MY/OT のどちらで入力されても同じ評価に当たるのが正しい。
+ *   MY/CO のどちらで入力されても同じ評価に当たるのが正しい。
  */
 export function parseReviewNo(input: string): number | null {
   if (!input) return null
@@ -64,6 +64,6 @@ export function parseReviewNo(input: string): number | null {
 export function looksLikeReviewNo(input: string): boolean {
   const t = input.trim().replace(/^no\.?\s*/i, '')
   if (!t) return false
-  // MY- / OT- で始まる、または数字だけ（茶葉名に数字が混ざる場合と区別する）
-  return /^((my|ot)[-\s]?)?\d+$/i.test(t)
+  // MY- / CO- で始まる、または数字だけ（茶葉名に数字が混ざる場合と区別する）
+  return /^((my|co)[-\s]?)?\d+$/i.test(t)
 }
