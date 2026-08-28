@@ -8,6 +8,7 @@ import TeaCupSvg from '@/components/TeaCup'
 import { formatGardenOrigin, formatLeafWater } from '@/lib/reviewFormat'
 import { generateTeaCard } from '@/lib/teaCard'
 import ScoreScale from '@/components/ScoreScale'
+import { looksLikeReviewNo, parseReviewNo } from '@/lib/reviewNo'
 import styles from './community.module.css'
 
 const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr: false })
@@ -201,12 +202,18 @@ export default function CommunityPage() {
       .eq('is_public', true)
       .order('created_at', { ascending: false })
 
-    let { data, error } = await fetchReviews(`${BASE_COLS}, allow_card_export`)
+    /* review_no（v378）は後から足した列。未適用の環境では取得が失敗するため、
+       段階的に外して再取得する（v323で同種の事故が起きているため）。 */
+    let { data, error } = await fetchReviews(`${BASE_COLS}, allow_card_export, review_no`)
     if (error) {
-      // 列が無い環境向けの再取得。この場合は全件を「収集を許可」として扱う
-      const retry = await fetchReviews(BASE_COLS)
-      data = retry.data
-      if (retry.error) console.error('コミュニティの取得に失敗しました', retry.error)
+      const retry1 = await fetchReviews(`${BASE_COLS}, allow_card_export`)
+      data = retry1.data
+      if (retry1.error) {
+        // 列が無い環境向けの再取得。この場合は全件を「収集を許可」として扱う
+        const retry2 = await fetchReviews(BASE_COLS)
+        data = retry2.data
+        if (retry2.error) console.error('コミュニティの取得に失敗しました', retry2.error)
+      }
     }
 
     const reviewRows = (data ?? []) as any[]
@@ -468,7 +475,16 @@ export default function CommunityPage() {
   const filtered = reviews
     .filter(r => {
       if (showWantsOnly && !wants.has(r.id)) return false
-      if (search && !r.tea_name?.includes(search) && !r.profiles?.name?.includes(search)) return false
+      /* 番号で検索（v378）。カードに印字した MY-/CO- をそのまま貼れる。
+         接頭辞は無視する。番号が同じなら指している評価も同じため。 */
+      if (search) {
+        const no = looksLikeReviewNo(search) ? parseReviewNo(search) : null
+        if (no != null) {
+          if (r.review_no !== no) return false
+        } else if (!r.tea_name?.includes(search) && !r.profiles?.name?.includes(search)) {
+          return false
+        }
+      }
       return true
     })
     .sort((a, b) => {
@@ -511,7 +527,7 @@ export default function CommunityPage() {
       {tab === 'all' && (
       <div className={styles.toolbar}>
         <input className={styles.searchInput} value={search}
-          onChange={e => setSearch(e.target.value)} placeholder="茶葉名・投稿者で検索…"/>
+          onChange={e => setSearch(e.target.value)} placeholder="番号・茶葉名・投稿者で検索…"/>
         {/* 投稿者名を押して絞り込んだあと、すぐ戻れるようにする（v373）*/}
         {search && (
           <button className={styles.clearSearchBtn} onClick={() => setSearch('')}
