@@ -1307,7 +1307,7 @@ export default function ReviewsPage() {
           className={styles.searchInput}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="No.または紅茶名で検索…"
+          placeholder="MY-00000010 または紅茶名で検索…"
           inputMode="text"
         />
         {search && (
