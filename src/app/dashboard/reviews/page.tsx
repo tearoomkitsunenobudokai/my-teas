@@ -1296,13 +1296,15 @@ export default function ReviewsPage() {
       </div>
 
       <div className={styles.toolbar}>
-        {/* 検索（v375）。カードに印字した「MT-000123」をそのまま貼れる。
-            紅茶名・ブランド・店名でも引ける。 */}
+        {/* 検索（v375）。カードに印字した番号（MY-/CO-）でも引ける。
+            番号は画面に出していないので、プレースホルダーには書かず、
+            日常的に使う紅茶名などを案内している。
+            文字列で引く対象は 紅茶名 / ブランド / 店名 / 茶園 の4つ。 */}
         <input
           className={styles.searchInput}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="MY-00000010 または紅茶名で検索…"
+          placeholder="紅茶名・ブランド・店名で検索…"
           inputMode="text"
         />
         {search && (
