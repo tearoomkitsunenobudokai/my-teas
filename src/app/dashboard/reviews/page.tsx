@@ -15,7 +15,7 @@ import { brewIconPath, accompanimentIconPath, ACCOMPANIMENT_ORDER } from '@/lib/
 import { buildCsv, parseReviewsCsv, dropDuplicates } from '@/lib/reviewCsv'
 import TeaCup from '@/components/TeaCup'
 import ScoreScale from '@/components/ScoreScale'
-import { formatReviewNo, looksLikeReviewNo, parseReviewNo } from '@/lib/reviewNo'
+import { looksLikeReviewNo, parseReviewNo } from '@/lib/reviewNo'
 import styles from './reviews.module.css'
 
 const RadarChart = dynamic(() => import('@/components/charts/RadarChart'), { ssr: false })
@@ -70,11 +70,6 @@ function ReviewTile({ r, onEdit, onDelete, onMakeCard, cardCost, cardBusy }: {
         <div className={styles.tileNameRow}>
           <span className={styles.tileName}>{r.tea_name ?? '不明'}</span>
           <span className={styles.tileDate}>{fmtDate(r.drank_at ?? r.created_at?.slice(0,10))}</span>
-          {/* 管理番号（v375）。カードの印字と同じ形式で出す。
-              列が未追加の環境では出さない。 */}
-          {r.review_no != null && (
-            <span className={styles.tileNo}>{formatReviewNo(r.review_no)}</span>
-          )}
           {r.is_public && <span>🌐</span>}
         </div>
         <div className={styles.tileMeta}>
