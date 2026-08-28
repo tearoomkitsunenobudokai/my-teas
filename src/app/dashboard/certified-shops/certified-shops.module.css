@@ -1,16 +1,22 @@
-/* ─── 2カラムレイアウト ─── */
-/* 画面いっぱいに広げるため、本文の余白を負のマージンで打ち消す。
+/* ─── レイアウト ─── */
+/* v380: PCの左右2カラムを廃止し、画面幅にかかわらずスマホと同じ形にした。
+   2カラムのままだと、幅の狭い左ペインで店名が縦に潰れ、地図も崩れていた。
+   一覧は縦フル幅、地図は選択時にせり上がる overlay として重ねる。
+   ※ スマホの見た目は従来どおり（もともとこの形だったため変化しない）。
+
+   画面いっぱいに広げるため、本文の余白を負のマージンで打ち消す。
    値は app-layout.module.css の --main-pad-y / --main-pad-x と一致させること。（v359）
    高さはヘッダーの実寸に依存しないよう、親(.main)の高さを基準にする。 */
 .pageWrap {
   display: flex;
+  flex-direction: column;
   height: 100%;
   overflow: hidden;
   margin: calc(var(--main-pad-y, 0.6rem) * -1) calc(var(--main-pad-x, 0.75rem) * -1);
 }
 
-/* ─── 左ペイン ─── */
-.leftPane { width: 400px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; border-right: 0.5px solid var(--border); background: var(--bg-card); }
+/* ─── 一覧側 ─── */
+.leftPane { width: 100%; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-card); }
 .pageHeader { padding: 0.875rem 1.25rem 0.75rem; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
 .title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
 .subtitle { font-size: 11px; color: var(--text-muted); }
@@ -88,7 +94,44 @@
 .selectedPanelHint { font-size: 10px; color: #6b6760; background: rgba(255,255,255,0.6); padding: 5px 8px; border-radius: 6px; line-height: 1.5; }
 
 /* ─── 右ペイン（マイマップ） ─── */
-.rightPane { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+/* 地図パネル（v380で全画面幅共通に）
+   通常時は画面外に隠し、店舗を選んだときだけ画面下からせり上がる。
+   高さは iOS Safari のアドレスバー対策で dvh を使う（v361）。 */
+.rightPane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 88vh;
+  background: var(--bg-card);
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+  z-index: 400;
+}
+@supports (height: 100dvh) {
+  .rightPane { height: 88dvh; }
+}
+.rightPaneOpen { transform: translateY(0); }
+
+/* PCでの調整（v380）
+   一覧も地図も横幅いっぱいだと間延びするため、中央に寄せて上限を設ける。
+   スマホ側には影響しない（min-width で分けているため）。 */
+@media (min-width: 769px) {
+  .leftPane { max-width: 720px; margin: 0 auto; width: 100%; }
+
+  .rightPane {
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, 100%);
+    width: min(900px, 92vw);
+    border-radius: 16px 16px 0 0;
+  }
+  .rightPaneOpen { transform: translate(-50%, 0); }
+}
 .mapHeader { display: flex; flex-direction: column; gap: 3px; padding: 8px 16px; background: var(--bg-card); border-bottom: 0.5px solid var(--border); flex-shrink: 0; min-height: 48px; justify-content: center; }
 .mapTitle { font-size: 12px; font-weight: 600; color: var(--text-muted); }
 .mapHint { font-size: 11px; color: var(--text-hint); }
@@ -229,86 +272,53 @@
 
 /* ─── スマホ対応（〜768px） ─── */
 /* 右ペインの地図を「店舗選択時に画面下からせり上がるパネル」に切り替える */
-.mapCloseBtn { display: none; }
-.mapScrim { display: none; }
+/* 地図が開いている間、背後を押して閉じられるよう半透明の背景を敷く（v380で全幅共通に） */
+.mapScrim {
+  display: block;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 390;
+}
+
+.mapCloseBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mapCloseBtn:hover { background: var(--border-strong); }
+
+/* つまみ（見た目のみ。閉じる操作は✕ボタン） */
+.mapHeader { position: relative; padding-top: 14px; }
+.mapHeader::before {
+  content: '';
+  position: absolute;
+  top: 6px; left: 50%;
+  transform: translateX(-50%);
+  width: 36px; height: 4px;
+  border-radius: 4px;
+  background: var(--border-strong);
+}
 
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
-  /* 左右2カラム → リストを縦フル幅に。地図は overlay として重ねる
-     高さは親(.main)基準の100%にしている。.app 側で 100dvh を使っているため、
-     iOSのアドレスバーによる高さの変動もそちらで吸収される。 */
-  .pageWrap { flex-direction: column; height: 100%; }
-  .leftPane { width: 100%; }
+  /* レイアウトと地図パネルの指定は v380 でデフォルト側へ移した
+     （PCも同じ形にしたため）。ここではスマホ固有の調整だけを残す。 */
   /* 最後の行が下端に貼り付いて押しづらくならないよう、余白を確保 */
   .shopList { padding-bottom: 24px; }
 
-  /* 地図パネル：通常時は画面外に隠し、選択中のみ画面下からせり上がらせる */
-  .rightPane {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    /* iOS Safari の vh はアドレスバーが隠れた状態の高さを指すため、
-       バーが出ている間はパネルが実表示領域より高くなり、
-       上端の ✕ ボタンが画面外にはみ出して押せなくなる。
-       実際の表示領域に追従する dvh を使う。（v361）
-       ※ 他のモーダルでも同じ理由で dvh に統一している。 */
-    height: 88vh;
-    max-height: none;
-    background: var(--bg-card);
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
-    transform: translateY(100%);
-    transition: transform 0.25s ease;
-    z-index: 400;
-  }
-  .rightPaneOpen {
-    transform: translateY(0);
-  }
 
-  /* 地図が開いている間、背後をタップで閉じられるよう半透明の背景を敷く */
-  .mapScrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 390;
-  }
 
-  /* つまみ（ドラッグハンドル風の見た目。閉じる操作は✕ボタンで行う） */
-  .mapHeader { position: relative; padding-top: 14px; }
-  .mapHeader::before {
-    content: '';
-    position: absolute;
-    top: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 36px;
-    height: 4px;
-    border-radius: 4px;
-    background: var(--border-strong);
-  }
 
-  .mapCloseBtn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    border: none;
-    background: var(--bg-muted);
-    color: var(--text-muted);
-    font-size: 16px;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  .mapCloseBtn:hover { background: var(--border-strong); }
 
-  /* vh 未対応ブラウザ向けに上の 88vh を残しつつ、対応環境では dvh で上書きする */
-  @supports (height: 100dvh) {
-    .rightPane { height: 88dvh; }
-  }
 }
 
 
