@@ -165,10 +165,12 @@ export default function DashboardPage() {
         <Link href="/dashboard/points" className={`${styles.statCard} ${styles.statCardLink}`}>
           <span className={styles.statNum}>{pointsUnlimited ? '∞' : (points ?? '—')}<span className={styles.statPt}>💎</span></span>
           <span className={styles.statLabel}>所持ポイント</span>
+          <span className={styles.statAction}>確認・購入 ›</span>
         </Link>
         <button className={`${styles.statCard} ${styles.statCardLink}`} onClick={() => setShowStamp(true)}>
           <span className={styles.statNum}>{Math.min(loginCount, stampDays)}<span className={styles.statPt}>/{stampDays}</span></span>
           <span className={styles.statLabel}>ログインカード</span>
+          <span className={styles.statAction}>確認 ›</span>
         </button>
       </div>
 
