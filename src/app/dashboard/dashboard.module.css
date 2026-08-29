@@ -64,8 +64,24 @@
 .startBtn:hover { background: var(--green-dark); }
 
 /* ポイントカード */
-.statCardLink { text-decoration: none; cursor: pointer; transition: border-color 0.15s; }
-.statCardLink:hover { border-color: var(--green); }
+.statCardLink {
+  text-decoration: none; cursor: pointer;
+  border-color: var(--green); background: var(--green-light);
+  transition: border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.12s;
+}
+.statCardLink:hover {
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(29,158,117,0.18);
+  transform: translateY(-1px);
+}
+/* カード下部の「確認・購入 ›」。押せる場所だと一目で分かるようにする */
+.statAction {
+  margin-top: 2px;
+  font-size: 11px; font-weight: 700; line-height: 1;
+  color: #fff; background: var(--green);
+  border-radius: 999px; padding: 4px 10px;
+  white-space: nowrap;
+}
 .statPt { font-size: 14px; margin-left: 2px; }
 
 /* ログインスタンプカード */

@@ -85,6 +85,9 @@ export default function HomePage() {
           <Link href="/dashboard/certified-shops" className={styles.btnGhost}>
             🏪 紅茶の美味しいお店を探す
           </Link>
+          <Link href="/dashboard/points" className={styles.btnGhost}>
+            💎 ポイント確認
+          </Link>
         </div>
       </section>
       </div>
