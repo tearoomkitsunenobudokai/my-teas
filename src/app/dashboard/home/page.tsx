@@ -88,7 +88,7 @@ export default function HomePage() {
           </Link>
           <Link href="/dashboard/certified-shops" className={styles.tile}>
             <span className={styles.tileIcon}>🥇</span>
-            <span className={styles.tileLabel}>紅茶の美味しい<br/>お店を探す</span>
+            <span className={styles.tileLabel}>紅茶の美味しいお店を探す</span>
           </Link>
           <Link href="/dashboard/points" className={styles.tile}>
             <span className={styles.tileIcon}>💎</span>
