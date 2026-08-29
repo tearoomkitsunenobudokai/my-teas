@@ -48,23 +48,35 @@ interface PaperSpec {
   footerMM: number
   /** 用紙を選んだときに出す説明 */
   hint: string
+  /** 仕上がりの説明（切り取るのか、そのまま使うのか） */
+  resultNote: string
+  /** カード1枚の大きさ(mm)。省略時は名刺サイズ */
+  cardWMM?: number
+  cardHMM?: number
+  /** 切り取り線を引くか。1枚を用紙いっぱいに使う場合は不要 */
+  cutGuide?: boolean
 }
 
 export const PAPERS: Record<PaperKind, PaperSpec> = {
   postcard1: {
     label: 'ハガキ 1枚',
-    sizeLabel: 'ハガキ',
+    sizeLabel: 'ハガキ（横）',
     printName: 'はがき',
-    wMM: 100, hMM: 148,
+    // 横向き
+    wMM: 148, hMM: 100,
     cols: 1, rows: 1,
     gapXMM: 0, gapYMM: 0,
     dpi: 350,
     footerMM: 2.6,
-    hint: 'ハガキの中央にカードを1枚だけ配置します。1枚をきれいに印刷したいときや、そのまま飾りたいときに向いています。',
+    // 名刺サイズ(91×55)の比率を保ったまま、ハガキいっぱいまで拡大する
+    cardWMM: 140, cardHMM: 140 * (CARD_H_MM / CARD_W_MM),
+    cutGuide: false,
+    hint: 'ハガキ1枚をまるごと使い、カードを大きく引き伸ばして印刷します。切り取らずにそのまま飾りたいときに向いています。',
+    resultNote: '切り取らずに、そのまま1枚のカードとして使えます。',
   },
   postcard: {
     label: 'ハガキ 2枚',
-    sizeLabel: 'ハガキ',
+    sizeLabel: 'ハガキ（縦）',
     printName: 'はがき',
     wMM: 100, hMM: 148,
     cols: 1, rows: 2,
@@ -72,6 +84,7 @@ export const PAPERS: Record<PaperKind, PaperSpec> = {
     dpi: 350,
     footerMM: 2.6,
     hint: 'ハガキに縦2枚並べます。1〜2枚だけ印刷したいときに向いています。',
+    resultNote: `線に沿って切り取ると名刺サイズ（${CARD_W_MM}×${CARD_H_MM}mm）のカードになります。`,
   },
   a4: {
     label: 'A4',
@@ -83,6 +96,7 @@ export const PAPERS: Record<PaperKind, PaperSpec> = {
     dpi: 300,
     footerMM: 3.2,
     hint: 'A4は横2列×縦4段で8枚まとめられます。まとめて作って配りたいときに向いています。',
+    resultNote: `線に沿って切り取ると名刺サイズ（${CARD_W_MM}×${CARD_H_MM}mm）のカードになります。`,
   },
 }
 
@@ -155,8 +169,8 @@ export async function composeSheet(
 
   const W = mm(spec.wMM)
   const H = mm(spec.hMM)
-  const cw = mm(CARD_W_MM)
-  const ch = mm(CARD_H_MM)
+  const cw = mm(spec.cardWMM ?? CARD_W_MM)
+  const ch = mm(spec.cardHMM ?? CARD_H_MM)
   const gapX = mm(spec.gapXMM)
   const gapY = mm(spec.gapYMM)
 
@@ -216,7 +230,7 @@ export async function composeSheet(
     }
   })
 
-  if (cutGuide) {
+  if (cutGuide && spec.cutGuide !== false) {
     // 切り取りの目安線（薄いグレーの破線）。カードを置いた枠にだけ引く。
     ctx.strokeStyle = '#BBBBBB'
     ctx.lineWidth = Math.max(1, Math.round(spec.dpi / 300))
