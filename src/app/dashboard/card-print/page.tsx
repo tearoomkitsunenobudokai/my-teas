@@ -5,7 +5,7 @@ import CropPreview from './CropPreview'
 import { createClient } from '@/lib/supabase'
 import { generateTeaCard } from '@/lib/teaCard'
 import {
-  composeSheet, downloadSheet, PAPERS, paperCapacity,
+  composeSheet, downloadSheet, PAPERS, PAPER_KINDS, paperCapacity,
   CARD_W_MM, CARD_H_MM,
   type PaperKind,
 } from '@/lib/cardPrint'
@@ -13,7 +13,7 @@ import styles from './card-print.module.css'
 
 /* 用紙のうち一番多く並べられる枚数。
    状態は常にこの数だけ持っておき、用紙を切り替えても選んだ画像が消えないようにする。 */
-const MAX_SLOTS = Math.max(paperCapacity('postcard'), paperCapacity('a4'))
+const MAX_SLOTS = Math.max(...PAPER_KINDS.map(paperCapacity))
 
 const CIRCLED = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧']
 
@@ -109,9 +109,9 @@ export default function CardPrintPage() {
     const overflow = files.slice(nextCap).filter(Boolean).length
     if (overflow > 0) {
       const ok = confirm(
-        `${PAPERS[next].label}は${nextCap}枚までです。\n` +
+        `「${PAPERS[next].label}」で使えるのはカード${nextCap}枚までです。\n` +
         `${nextCap + 1}枚目以降に選んだ${overflow}枚は、この用紙では使われません。\n` +
-        `（選んだ状態は残るので、${PAPERS[paper].label}に戻せばまた使えます）`,
+        `（選んだ状態は残るので、「${PAPERS[paper].label}」に戻せばまた使えます）`,
       )
       if (!ok) return
     }
@@ -331,8 +331,8 @@ export default function CardPrintPage() {
       <div className={styles.stickyHead}>
         <h1 className={styles.title}>🖨 印刷用に変換</h1>
         <p className={styles.lead}>
-          評価カードをまとめて、{spec.label}サイズ（{spec.wMM}×{spec.hMM}mm）の
-          画像に変換します。コンビニのカラー印刷で「{spec.label === 'ハガキ' ? 'はがき' : 'A4'}」を選んで印刷し、
+          評価カードをまとめて、{spec.sizeLabel}サイズ（{spec.wMM}×{spec.hMM}mm）の
+          画像に変換します。コンビニのカラー印刷で「{spec.printName}」を選んで印刷し、
           線に沿って切り取ると名刺サイズのカードになります。
         </p>
       </div>
@@ -351,7 +351,7 @@ export default function CardPrintPage() {
         {/* 用紙の選択 */}
         <label className={styles.label}>用紙のサイズ</label>
         <div className={styles.paperRow}>
-          {(['postcard', 'a4'] as const).map(k => (
+          {PAPER_KINDS.map(k => (
             <button
               key={k}
               type="button"
@@ -365,9 +365,7 @@ export default function CardPrintPage() {
           ))}
         </div>
         <p className={styles.hint}>
-          {paper === 'a4'
-            ? 'A4は横2列×縦4段で8枚まとめられます。まとめて作って配りたいときに向いています。'
-            : 'ハガキは縦に2枚並びます。1〜2枚だけ印刷したいときに向いています。'}
+          {spec.hint}
         </p>
 
         <label className={styles.label}>評価カードの画像</label>
@@ -397,9 +395,11 @@ export default function CardPrintPage() {
             const preview = previews[i]
             const lock = locks[i]
             const focus = focuses[i]
-            const label = paper === 'postcard'
-              ? (i === 0 ? '① 上段' : '② 下段')
-              : `${CIRCLED[i]} ${Math.floor(i / 2) + 1}段目の${i % 2 === 0 ? '左' : '右'}`
+            const label = paper === 'postcard1'
+              ? 'カード'
+              : paper === 'postcard'
+                ? (i === 0 ? '① 上段' : '② 下段')
+                : `${CIRCLED[i]} ${Math.floor(i / 2) + 1}段目の${i % 2 === 0 ? '左' : '右'}`
             return (
               <div key={i} className={styles.slot}>
                 <p className={styles.slotTitle}>{label}</p>
@@ -555,7 +555,7 @@ export default function CardPrintPage() {
         <h2 className={styles.guideTitle}>コンビニで印刷するには</h2>
         <ol className={styles.guideList}>
           <li>作成したファイルを、各社の印刷アプリやネットプリントに登録します。</li>
-          <li>用紙サイズは「<strong>{spec.label === 'ハガキ' ? 'はがき' : 'A4'}</strong>」、カラーを選びます。</li>
+          <li>用紙サイズは「<strong>{spec.printName}</strong>」、カラーを選びます。</li>
           <li>「原寸」または「等倍」で印刷すると、切り取り後に名刺サイズ（{CARD_W_MM}×{CARD_H_MM}mm）になります。</li>
           <li>印刷後、切り取り線に沿ってカットしてください。</li>
         </ol>

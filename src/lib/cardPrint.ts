@@ -24,10 +24,15 @@ export const CARD_W_MM = 91
 export const CARD_H_MM = 55
 
 /** 用紙の種類 */
-export type PaperKind = 'postcard' | 'a4'
+export type PaperKind = 'postcard1' | 'postcard' | 'a4'
 
 interface PaperSpec {
+  /** ボタンに出す名前 */
   label: string
+  /** 用紙そのものの呼び名（説明文で使う） */
+  sizeLabel: string
+  /** コンビニの印刷設定で選ぶ名前 */
+  printName: string
   /** 用紙サイズ(mm) */
   wMM: number
   hMM: number
@@ -41,26 +46,48 @@ interface PaperSpec {
   dpi: number
   /** フッターの文字サイズ(mm) */
   footerMM: number
+  /** 用紙を選んだときに出す説明 */
+  hint: string
 }
 
 export const PAPERS: Record<PaperKind, PaperSpec> = {
+  postcard1: {
+    label: 'ハガキ 1枚',
+    sizeLabel: 'ハガキ',
+    printName: 'はがき',
+    wMM: 100, hMM: 148,
+    cols: 1, rows: 1,
+    gapXMM: 0, gapYMM: 0,
+    dpi: 350,
+    footerMM: 2.6,
+    hint: 'ハガキの中央にカードを1枚だけ配置します。1枚をきれいに印刷したいときや、そのまま飾りたいときに向いています。',
+  },
   postcard: {
-    label: 'ハガキ',
+    label: 'ハガキ 2枚',
+    sizeLabel: 'ハガキ',
+    printName: 'はがき',
     wMM: 100, hMM: 148,
     cols: 1, rows: 2,
     gapXMM: 0, gapYMM: 8,
     dpi: 350,
     footerMM: 2.6,
+    hint: 'ハガキに縦2枚並べます。1〜2枚だけ印刷したいときに向いています。',
   },
   a4: {
     label: 'A4',
+    sizeLabel: 'A4',
+    printName: 'A4',
     wMM: 210, hMM: 297,
     cols: 2, rows: 4,
     gapXMM: 6, gapYMM: 8,
     dpi: 300,
     footerMM: 3.2,
+    hint: 'A4は横2列×縦4段で8枚まとめられます。まとめて作って配りたいときに向いています。',
   },
 }
+
+/** 選べる用紙を、画面に並べたい順で返す */
+export const PAPER_KINDS: PaperKind[] = ['postcard1', 'postcard', 'a4']
 
 /** その用紙に何枚並べられるか */
 export function paperCapacity(paper: PaperKind): number {
@@ -269,5 +296,10 @@ export function downloadPostcard(blob: Blob, filename = 'my-teas-postcard.png') 
 
 /** 生成した画像をダウンロードする（用紙名をファイル名に含める） */
 export function downloadSheet(blob: Blob, paper: PaperKind) {
-  downloadPostcard(blob, paper === 'a4' ? 'my-teas-a4.png' : 'my-teas-postcard.png')
+  const names: Record<PaperKind, string> = {
+    postcard1: 'my-teas-postcard-1.png',
+    postcard: 'my-teas-postcard.png',
+    a4: 'my-teas-a4.png',
+  }
+  downloadPostcard(blob, names[paper])
 }
