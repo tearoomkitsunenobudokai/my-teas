@@ -78,15 +78,18 @@ export default function HomePage() {
           {name ? `おかえりなさい、${name}さん` : 'ようこそ'}
         </h1>
         <p className={styles.heroLead}>今日の一杯を、記録に。</p>
-        <div className={styles.heroBtnRow}>
-          <Link href="/dashboard/reviews?new=1" className={styles.btnPrimary}>
-            🍵 お茶を評価する
+        <div className={styles.heroTileRow}>
+          <Link href="/dashboard/reviews?new=1" className={`${styles.tile} ${styles.tilePrimary}`}>
+            <span className={styles.tileIcon}>🍵</span>
+            <span className={styles.tileLabel}>お茶を評価する</span>
           </Link>
-          <Link href="/dashboard/certified-shops" className={styles.btnGhost}>
-            🏪 紅茶の美味しいお店を探す
+          <Link href="/dashboard/certified-shops" className={styles.tile}>
+            <span className={styles.tileIcon}>🏪</span>
+            <span className={styles.tileLabel}>紅茶の美味しい<br/>お店を探す</span>
           </Link>
-          <Link href="/dashboard/points" className={styles.btnGhost}>
-            💎 ポイント確認
+          <Link href="/dashboard/points" className={styles.tile}>
+            <span className={styles.tileIcon}>💎</span>
+            <span className={styles.tileLabel}>ポイント確認</span>
           </Link>
         </div>
       </section>
