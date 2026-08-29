@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase'
 import { generateTeaCard } from '@/lib/teaCard'
 import {
   composeSheet, downloadSheet, PAPERS, PAPER_KINDS, paperCapacity,
-  CARD_W_MM, CARD_H_MM,
+  // 寸法の表記は用紙定義側の resultNote に集約したため、ここでは使わない
   type PaperKind,
 } from '@/lib/cardPrint'
 import styles from './card-print.module.css'
@@ -332,8 +332,8 @@ export default function CardPrintPage() {
         <h1 className={styles.title}>🖨 印刷用に変換</h1>
         <p className={styles.lead}>
           評価カードをまとめて、{spec.sizeLabel}サイズ（{spec.wMM}×{spec.hMM}mm）の
-          画像に変換します。コンビニのカラー印刷で「{spec.printName}」を選んで印刷し、
-          線に沿って切り取ると名刺サイズのカードになります。
+          画像に変換します。コンビニのカラー印刷で「{spec.printName}」を選んで印刷してください。
+          {spec.resultNote}
         </p>
       </div>
 
@@ -556,8 +556,8 @@ export default function CardPrintPage() {
         <ol className={styles.guideList}>
           <li>作成したファイルを、各社の印刷アプリやネットプリントに登録します。</li>
           <li>用紙サイズは「<strong>{spec.printName}</strong>」、カラーを選びます。</li>
-          <li>「原寸」または「等倍」で印刷すると、切り取り後に名刺サイズ（{CARD_W_MM}×{CARD_H_MM}mm）になります。</li>
-          <li>印刷後、切り取り線に沿ってカットしてください。</li>
+          <li>「原寸」または「等倍」で印刷すると、想定どおりの大きさになります。</li>
+          <li>{spec.resultNote}</li>
         </ol>
         <p className={styles.guideNote}>
           ※ 印刷機の設定によっては、用紙のふちが少し切れることがあります。
