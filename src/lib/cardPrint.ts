@@ -50,6 +50,8 @@ interface PaperSpec {
   hint: string
   /** 仕上がりの説明（切り取るのか、そのまま使うのか） */
   resultNote: string
+  /** 印刷後に手元に残るものの大きさと枚数 */
+  resultSize: string
   /** カード1枚の大きさ(mm)。省略時は名刺サイズ */
   cardWMM?: number
   cardHMM?: number
@@ -72,6 +74,7 @@ export const PAPERS: Record<PaperKind, PaperSpec> = {
     cardWMM: 140, cardHMM: 140 * (CARD_H_MM / CARD_W_MM),
     cutGuide: false,
     hint: 'ハガキ1枚をまるごと使い、カードを大きく引き伸ばして印刷します。切り取らずにそのまま飾りたいときに向いています。',
+    resultSize: 'ハガキ 1枚',
     resultNote: '切り取らずに、そのまま1枚のカードとして使えます。',
   },
   postcard: {
@@ -84,6 +87,7 @@ export const PAPERS: Record<PaperKind, PaperSpec> = {
     dpi: 350,
     footerMM: 2.6,
     hint: 'ハガキに縦2枚並べます。1〜2枚だけ印刷したいときに向いています。',
+    resultSize: '名刺 2枚',
     resultNote: `線に沿って切り取ると名刺サイズ（${CARD_W_MM}×${CARD_H_MM}mm）のカードになります。`,
   },
   a4: {
@@ -96,12 +100,13 @@ export const PAPERS: Record<PaperKind, PaperSpec> = {
     dpi: 300,
     footerMM: 3.2,
     hint: 'A4は横2列×縦4段で8枚まとめられます。まとめて作って配りたいときに向いています。',
+    resultSize: '名刺 8枚',
     resultNote: `線に沿って切り取ると名刺サイズ（${CARD_W_MM}×${CARD_H_MM}mm）のカードになります。`,
   },
 }
 
 /** 選べる用紙を、画面に並べたい順で返す */
-export const PAPER_KINDS: PaperKind[] = ['postcard1', 'postcard', 'a4']
+export const PAPER_KINDS: PaperKind[] = ['postcard', 'postcard1', 'a4']
 
 /** その用紙に何枚並べられるか */
 export function paperCapacity(paper: PaperKind): number {

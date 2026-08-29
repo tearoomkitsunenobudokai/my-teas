@@ -360,7 +360,8 @@ export default function CardPrintPage() {
             >
               <span className={styles.paperName}>{PAPERS[k].label}</span>
               <span className={styles.paperSize}>{PAPERS[k].wMM}×{PAPERS[k].hMM}mm</span>
-              <span className={styles.paperCount}>カード{paperCapacity(k)}枚</span>
+              <span className={styles.paperResultLabel}>印刷後のサイズ</span>
+              <span className={styles.paperCount}>{PAPERS[k].resultSize}</span>
             </button>
           ))}
         </div>
@@ -466,10 +467,12 @@ export default function CardPrintPage() {
           })}
         </div>
 
-        <label className={styles.checkRow}>
-          <input type="checkbox" checked={cutGuide} onChange={e => setCutGuide(e.target.checked)}/>
-          <span>切り取り線を入れる</span>
-        </label>
+        {spec.cutGuide !== false && (
+          <label className={styles.checkRow}>
+            <input type="checkbox" checked={cutGuide} onChange={e => setCutGuide(e.target.checked)}/>
+            <span>切り取り線を入れる</span>
+          </label>
+        )}
 
         <button className={styles.runBtn} onClick={run} disabled={working || usedCount === 0}>
           {working ? '変換中…' : `印刷用ファイルを作成する（${usedCount}枚）`}
