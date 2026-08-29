@@ -40,6 +40,7 @@ export default function HomePage() {
   const [name, setName] = useState('')
   const [announcements, setAnnouncements] = useState<any[]>([])
   const [partners, setPartners] = useState<any[]>([])
+  const [manualUrl, setManualUrl] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -50,15 +51,17 @@ export default function HomePage() {
          セッションごと破棄される（＝ログアウトされる）ことがあるため。 */
       const { data: { user } } = await supabase.auth.getUser()
       const now = new Date().toISOString()
-      const [{ data: profile }, { data: ann }, { data: links }] = await Promise.all([
+      const [{ data: profile }, { data: ann }, { data: links }, { data: settings }] = await Promise.all([
         user ? supabase.from('profiles').select('name').eq('id', user.id).single() : Promise.resolve({ data: null }),
         supabase.from('announcements').select('*').eq('is_active', true)
           .lte('published_at', now)
           .or(`expires_at.is.null,expires_at.gte.${now}`)
           .order('published_at', { ascending: false }),
         supabase.from('home_links').select('*').eq('kind', 'ad').eq('is_active', true).order('sort_order'),
+        supabase.from('app_settings').select('key,value').eq('key', 'manual_url'),
       ])
       setName(profile?.name ?? '')
+      setManualUrl((settings ?? []).find(r => r.key === 'manual_url')?.value?.trim() ?? '')
       setAnnouncements(ann ?? [])
       // 掲載期間内のパートナーのみ表示
       setPartners((links ?? []).filter(l =>
@@ -84,13 +87,20 @@ export default function HomePage() {
             <span className={styles.tileLabel}>お茶を評価する</span>
           </Link>
           <Link href="/dashboard/certified-shops" className={styles.tile}>
-            <span className={styles.tileIcon}>🏪</span>
+            <span className={styles.tileIcon}>🥇</span>
             <span className={styles.tileLabel}>紅茶の美味しい<br/>お店を探す</span>
           </Link>
           <Link href="/dashboard/points" className={styles.tile}>
             <span className={styles.tileIcon}>💎</span>
             <span className={styles.tileLabel}>ポイント確認</span>
           </Link>
+          {/* マニュアルのURLが未設定のあいだは出さない */}
+          {manualUrl && (
+            <a href={manualUrl} target="_blank" rel="noopener noreferrer" className={styles.tile}>
+              <span className={styles.tileIcon}>📖</span>
+              <span className={styles.tileLabel}>使用方法</span>
+            </a>
+          )}
         </div>
       </section>
       </div>

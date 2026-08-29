@@ -140,7 +140,8 @@ export default function AdminPage() {
       .then(({ data }) => setHomeLinks(data ?? []))
     supabase.from('app_settings').select('key,value')
       .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days', 'maintenance_mode', 'maintenance_message', 'signup_enabled', 'signup_closed_message',
-                  'card_collect_min_reviews', 'card_collect_min_account_days', 'card_collect_daily_limit', 'card_collect_paid_only'])
+                  'card_collect_min_reviews', 'card_collect_min_account_days', 'card_collect_daily_limit', 'card_collect_paid_only',
+                  'manual_url'])
       .then(({ data }) => {
         const m: any = {}
         for (const r of data ?? []) m[r.key] = r.value
@@ -156,6 +157,7 @@ export default function AdminPage() {
           dailyLimit: m['card_collect_daily_limit'] ?? '5',
           paidOnly: (m['card_collect_paid_only'] ?? 'false').toLowerCase() === 'true',
         })
+        setManualUrl(m['manual_url'] ?? '')
         setMaintMode((m['maintenance_mode'] ?? 'off') as 'off' | 'readonly' | 'full')
         setMaintMessage(m['maintenance_message'] ?? '')
         setSignupEnabled((m['signup_enabled'] ?? 'true') === 'true')
@@ -193,6 +195,24 @@ export default function AdminPage() {
     if (error) { alert(error.message); return }
     setMaintMode(mode)
     setMaintSaved(true); setTimeout(() => setMaintSaved(false), 2500)
+  }
+
+  /* ホームの「使用方法」タイルが開くURLを保存する。
+     空にすると、ホームからタイルごと消える。 */
+  async function saveManualUrl() {
+    const url = manualUrl.trim()
+    if (url && !/^https:\/\//i.test(url)) {
+      alert('URLは https:// で始まる必要があります。')
+      return
+    }
+    setSavingManual(true)
+    const { error } = await supabase.from('app_settings').upsert([
+      { key: 'manual_url', value: url, updated_at: new Date().toISOString() },
+    ])
+    setSavingManual(false)
+    if (error) { alert(error.message); return }
+    setManualUrl(url)
+    setManualSaved(true); setTimeout(() => setManualSaved(false), 2500)
   }
 
   async function savePointPolicy() {
@@ -356,6 +376,9 @@ export default function AdminPage() {
   }
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
+  const [manualUrl, setManualUrl] = useState('')
+  const [savingManual, setSavingManual] = useState(false)
+  const [manualSaved, setManualSaved] = useState(false)
 
   useEffect(() => {
     supabase.from('plan_limits').select('role,feature,max_count')
@@ -614,6 +637,40 @@ export default function AdminPage() {
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>⚙️ アプリ設定</h2>
           <p className={styles.sectionDesc}>My-Teasの各種制限・設定を管理します。</p>
+        </div>
+
+        {/* ホームの「使用方法」タイル */}
+        <div className={styles.settingsCard} style={{ marginBottom: 20 }}>
+          <p className={styles.settingLabel} style={{ marginBottom: 6 }}>
+            📖 使用方法マニュアルのリンク
+          </p>
+          <p className={styles.settingDesc} style={{ marginBottom: 10 }}>
+            ホーム画面に「使用方法」のタイルを追加し、ここで設定したURLを新しいタブで開きます。
+            空にすると、タイルごと表示されません。
+            Googleドライブのファイルを指定する場合は、共有設定を
+            「リンクを知っている全員」にしておいてください（限定公開のままだと、利用者に見えません）。
+          </p>
+          {manualSaved && <p style={{ fontSize: 12, color: 'var(--green)', marginBottom: 8 }}>✓ 保存しました</p>}
+
+          <input
+            type="url"
+            className={`${styles.settingInput} ${styles.settingInputText}`}
+            style={{ width: '100%', marginBottom: 10 }}
+            value={manualUrl}
+            onChange={e => setManualUrl(e.target.value)}
+            placeholder="https://drive.google.com/file/d/..."
+          />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button className={styles.saveBtn} disabled={savingManual} onClick={saveManualUrl}>
+              {savingManual ? '保存中…' : '保存する'}
+            </button>
+            {manualUrl.trim() && (
+              <a href={manualUrl.trim()} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: 12, color: 'var(--green)' }}>
+                リンクを開いて確認する ↗
+              </a>
+            )}
+          </div>
         </div>
 
         {/* 新規登録の受付 */}
