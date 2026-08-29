@@ -25,19 +25,21 @@
 .heroBtnRow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
 /* ─── ヒーローのタイル ───
-   PCは横一列。スマホは2列に折り返して、1枚あたりを大きく保つ。 */
+   画面幅にかかわらず横一列。1fr のままだと中の文字より狭くできず、
+   狭い画面で枠からはみ出すため minmax(0, 1fr) で縮めるようにしている。 */
 .heroTileRow {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 10px; max-width: 560px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px; max-width: 560px; margin: 0 auto;
 }
 .tile {
   aspect-ratio: 1 / 1;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 6px;
-  padding: 6px;
+  align-items: center; justify-content: center; gap: 5px;
+  padding: 5px;
   background: #fff; color: var(--green-dark);
   border: 1px solid var(--green); border-radius: 16px;
   text-align: center; text-decoration: none;
+  overflow: hidden;
   transition: background 0.12s, transform 0.12s, box-shadow 0.12s;
 }
 .tile:hover { background: var(--green-light); transform: translateY(-2px); }
@@ -46,22 +48,21 @@
   box-shadow: 0 4px 14px rgba(29,158,117,0.25);
 }
 .tilePrimary:hover { background: var(--green-dark); box-shadow: 0 6px 18px rgba(29,158,117,0.32); }
-.tileIcon { font-size: 28px; line-height: 1; }
-.tileLabel { font-size: 14px; font-weight: 700; line-height: 1.3; }
 
-/* タイルが3つ以下のときは横幅を詰めて、間延びさせない */
+/* タイルの幅に合わせて文字を伸縮させる。狭い画面でも4枚が1列に収まる。 */
+.tileIcon { font-size: clamp(19px, 6.2vw, 30px); line-height: 1; }
+.tileLabel {
+  font-size: clamp(9.5px, 2.9vw, 15px);
+  font-weight: 700; line-height: 1.25;
+  word-break: auto-phrase;
+}
+
+/* タイルが3つ以下（マニュアル未設定）のときは横幅を詰めて、間延びさせない */
 .heroTileRow:has(> :nth-child(3):last-child) {
-  grid-template-columns: repeat(3, 1fr); max-width: 420px;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 430px;
 }
-
-@media (max-width: 560px) {
-  .heroTileRow,
-  .heroTileRow:has(> :nth-child(3):last-child) {
-    grid-template-columns: repeat(2, 1fr); max-width: 320px;
-  }
-  .tileIcon { font-size: 34px; }
-  .tileLabel { font-size: 15px; }
-}
+.heroTileRow:has(> :nth-child(3):last-child) .tileIcon { font-size: clamp(22px, 7.5vw, 30px); }
+.heroTileRow:has(> :nth-child(3):last-child) .tileLabel { font-size: clamp(11px, 3.6vw, 15px); }
 .btnPrimary {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--green); color: #fff;
