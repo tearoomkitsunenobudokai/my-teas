@@ -14,6 +14,7 @@ import {
   TONE_OPTIONS, LENGTH_OPTIONS,
   type SummaryTone, type SummaryLength, type SummaryStyle,
 } from '@/lib/reviewSummary'
+import { buildPostUrl } from '@/lib/postToX'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import { brewIconPath, accompanimentIconPath, ACCOMPANIMENT_ORDER } from '@/lib/icons'
 import { buildCsv, parseReviewsCsv, dropDuplicates } from '@/lib/reviewCsv'
@@ -59,9 +60,9 @@ function fmtDate(d?: string) { return d ? d.slice(0,10).replace(/-/g,'/') : '' }
 // 水色カップの描画は共通コンポーネント @/components/TeaCup を使用
 
 // ─── タイル ───────────────────────────────────────
-function ReviewTile({ r, onEdit, onDelete, onMakeCard, cardCost, cardBusy }: {
+function ReviewTile({ r, onEdit, onDelete, onMakeCard, onPostToX, cardCost, cardBusy }: {
   r: any; onEdit: () => void; onDelete: () => void
-  onMakeCard: () => void; cardCost: number; cardBusy: boolean
+  onMakeCard: () => void; onPostToX: () => void; cardCost: number; cardBusy: boolean
 }) {
   const scores: ReviewScores = {
     score_aroma: r.score_aroma ?? 3, score_astringency: r.score_astringency ?? 3,
@@ -134,6 +135,7 @@ function ReviewTile({ r, onEdit, onDelete, onMakeCard, cardCost, cardBusy }: {
         <button className={styles.tileCardBtn} onClick={onMakeCard} disabled={cardBusy}>
           {cardBusy ? '作成中…' : `🖼️ カード作成（${cardCost}pt）`}
         </button>
+        <button className={styles.xBtn} onClick={onPostToX}>𝕏 ポスト</button>
         <button className={styles.editBtn} onClick={onEdit}>✏️ 編集</button>
         <button className={styles.delBtn} onClick={onDelete}>🗑 削除</button>
       </div>
@@ -227,6 +229,12 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         summary_text: text, summary_tone: style.tone, summary_length: style.length,
       }).eq('id', initial.id)
       if (saveErr) { alert('要約は生成されましたが保存に失敗しました: ' + saveErr.message); return }
+
+      // 一覧が持っている元データにも反映する。
+      // これをしないと、モーダルを開き直したときに生成前の要約へ戻ってしまう。
+      initial.summary_text   = text
+      initial.summary_tone   = style.tone
+      initial.summary_length = style.length
 
       setSummaryText(text)
       setSavedStyle(style)
@@ -1100,6 +1108,13 @@ export default function ReviewsPage() {
      ★ 片方だけ直すと挙動がずれるので、変更するときは両方を見ること。 */
   const [cardBusyId, setCardBusyId] = useState<string | null>(null)
 
+  /* Xの投稿画面を、下書きを入れた状態で開く。
+     実際に投稿するかどうかはX側で決められる（ここでは何も送信しない）。 */
+  function postToX(r: any) {
+    const url = buildPostUrl(r, typeof window !== 'undefined' ? window.location.origin : undefined)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   async function makeCardFromRow(r: any) {
     if (cardBusyId) return
     if (!confirm(`${costCard}ptを消費して評価カード画像を作成します。よろしいですか？`)) return
@@ -1172,7 +1187,7 @@ export default function ReviewsPage() {
     /* allow_card_export は v320 のマイグレーション(089)で追加された列。
        未実行の環境では存在せず、指定するとクエリ全体が失敗して評価が
        一件も表示されなくなるため、失敗したらその列を外して取り直す。 */
-    const BASE_COLS = 'id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,tea_garden,origin_country,tea_grams,water_ml,color_name'
+    const BASE_COLS = 'id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,summary_text,summary_tone,summary_length,tea_garden,origin_country,tea_grams,water_ml,color_name'
 
     const fetchMine = (cols: string) => supabase.from('reviews')
       .select(cols)
@@ -1371,6 +1386,7 @@ export default function ReviewsPage() {
               onEdit={() => { setEditTarget(r); setShowModal(true) }}
               onDelete={() => del(r.id)}
               onMakeCard={() => makeCardFromRow(r)}
+              onPostToX={() => postToX(r)}
               cardCost={costCard}
               cardBusy={cardBusyId === r.id}/>
           ))}
