@@ -994,9 +994,9 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                   <select className={styles.input} value={cardSource}
                     onChange={e => setCardSource(e.target.value as any)}
                     style={{ fontSize: 13 }}>
-                    <option value="memo">自分のメモ</option>
-                    <option value="summary">📝 AI要約（最新・{styleLabel(latest.style)}）</option>
-                    {prev && <option value="summaryPrev">📝 AI要約（ひとつ前・{styleLabel(prev.style)}）</option>}
+                    <option value="memo">自分のコメント</option>
+                    <option value="summary">📝 AI要約①（{styleLabel(latest.style)}）</option>
+                    {prev && <option value="summaryPrev">📝 AI要約②（{styleLabel(prev.style)}）</option>}
                   </select>
                 </div>
               )}
@@ -1013,7 +1013,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               <div className={`${styles.summaryBubble} ${latest.style.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
                 <div className={styles.summaryBubbleHead}>
                   <span className={styles.summaryTag}>
-                    📝 AI要約（{styleLabel(latest.style)}）
+                    📝 AI要約①（{styleLabel(latest.style)}）
                     <span className={styles.summaryAge}>最新</span>
                   </span>
                   <button type="button" className={styles.copyBtn} onClick={() => copySummary('latest')}>
@@ -1027,7 +1027,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               <div className={`${styles.summaryBubble} ${styles.summaryBubblePrev}`}>
                 <div className={styles.summaryBubbleHead}>
                   <span className={styles.summaryTag}>
-                    📝 AI要約（{styleLabel(prev.style)}）
+                    📝 AI要約②（{styleLabel(prev.style)}）
                     <span className={`${styles.summaryAge} ${styles.summaryAgePrev}`}>ひとつ前</span>
                   </span>
                   <button type="button" className={styles.copyBtn} onClick={() => copySummary('prev')}>
@@ -1039,7 +1039,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             )}
             {prev && (
               <p className={styles.hint} style={{ marginTop: 4 }}>
-                残るのは直近2件までです。次に作り直すと「ひとつ前」は消えます。
+                残るのは直近2件までです。次に作り直すと、いまの①が②に移り、②は消えます。
               </p>
             )}
           </div>
