@@ -9,7 +9,11 @@ import { isCommentClean, isTextClean } from '@/lib/moderation'
 import { sortByPrefecture, prefectureOrder } from '@/lib/prefectures'
 import ColorPickerModal from '@/components/ColorPickerModal'
 import { MAX_COLOR_NAME } from '@/lib/colorPalette'
-import { summarizeReview, SummaryTone } from '@/lib/reviewSummary'
+import {
+  summarizeReview, styleLabel, DEFAULT_STYLE,
+  TONE_OPTIONS, LENGTH_OPTIONS,
+  type SummaryTone, type SummaryLength, type SummaryStyle,
+} from '@/lib/reviewSummary'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import { brewIconPath, accompanimentIconPath, ACCOMPANIMENT_ORDER } from '@/lib/icons'
 import { buildCsv, parseReviewsCsv, dropDuplicates } from '@/lib/reviewCsv'
@@ -175,60 +179,77 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   const [waterMl,   setWaterMl]   = useState(initial?.water_ml != null ? String(initial.water_ml) : '')
   const [accs,      setAccs]      = useState<string[]>(initial?.accompaniments ?? [])
 
-  // AI要約（通常/お嬢様風）。既存の保存済み要約があれば復元。
-  const [summaryNormal, setSummaryNormal] = useState<string | null>(initial?.summary_normal ?? null)
-  const [summaryOjou,   setSummaryOjou]   = useState<string | null>(initial?.summary_ojou ?? null)
-  const [summarizing,   setSummarizing]   = useState<SummaryTone | null>(null)
-  const [copiedTone,    setCopiedTone]    = useState<SummaryTone | null>(null)
+  // 文体を選べるようになったので、要約の料金は1種類に統一する。
+  // （管理画面の「お嬢様風」の料金設定は使わなくなる）
+  const costSummary = costNormal
 
-  async function runSummary(tone: SummaryTone) {
+  // AI要約。要約は1本だけ持ち、生成時に選んだ文体・長さを一緒に覚えておく。
+  // 旧バージョンの summary_normal / summary_ojou しか無いデータも読めるようにする。
+  const [summaryText, setSummaryText] = useState<string | null>(
+    initial?.summary_text ?? initial?.summary_normal ?? initial?.summary_ojou ?? null
+  )
+  const [savedStyle, setSavedStyle] = useState<SummaryStyle | null>(
+    initial?.summary_text
+      ? { tone: (initial.summary_tone ?? 'desumasu') as SummaryTone,
+          length: (initial.summary_length ?? 'normal') as SummaryLength }
+      : initial?.summary_normal ? { tone: 'desumasu', length: 'normal' }
+      : initial?.summary_ojou   ? { tone: 'ojou',     length: 'normal' }
+      : null
+  )
+  // これから生成するときの指定。前回の設定があればそれを引き継ぐ。
+  const [tone,   setTone]   = useState<SummaryTone>(savedStyle?.tone ?? DEFAULT_STYLE.tone)
+  const [length, setLength] = useState<SummaryLength>(savedStyle?.length ?? DEFAULT_STYLE.length)
+  const [summarizing, setSummarizing] = useState(false)
+  const [copied,      setCopied]      = useState(false)
+
+  async function runSummary() {
     if (!isEdit) return
-    const cost = tone === 'ojou' ? costOjou : costNormal
-    const already = tone === 'ojou' ? summaryOjou : summaryNormal
-    const confirmMsg = already
-      ? `${cost}ptを消費して再生成します。既存の要約は上書きされます。よろしいですか？`
-      : `${cost}ptを消費して要約を生成します。よろしいですか？`
+    const style: SummaryStyle = { tone, length }
+    const confirmMsg = summaryText
+      ? `${costSummary}ptを消費して、${styleLabel(style)}で作り直します。今の要約は置き換わります。よろしいですか？`
+      : `${costSummary}ptを消費して、${styleLabel(style)}で要約を作ります。よろしいですか？`
     if (!confirm(confirmMsg)) return
-    setSummarizing(tone)
+    setSummarizing(true)
     try {
       // ポイント消費（製作者/管理者は消費なし判定）。失敗時は生成しない。
       const { data: consumed, error } = await supabase.rpc('consume_points', {
-        p_amount: cost, p_feature: tone === 'ojou' ? 'summary_ojou' : 'summary',
+        p_amount: costSummary, p_feature: 'summary',
       })
       if (error) { alert(error.message); return }
       const row = Array.isArray(consumed) ? consumed[0] : consumed
       if (row && row.success === false) { alert(row.message || 'ポイントが不足しています'); return }
 
-      const text = await summarizeReview(initial, tone)
+      const text = await summarizeReview(initial, style)
 
       // ポイントは既に消費済みのため、生成結果は即座にDBへ保存する
       // （このモーダルの「保存」ボタンを押さなくても消えないようにする）
-      const col = tone === 'ojou' ? 'summary_ojou' : 'summary_normal'
-      const { error: saveErr } = await supabase.from('reviews').update({ [col]: text }).eq('id', initial.id)
+      const { error: saveErr } = await supabase.from('reviews').update({
+        summary_text: text, summary_tone: style.tone, summary_length: style.length,
+      }).eq('id', initial.id)
       if (saveErr) { alert('要約は生成されましたが保存に失敗しました: ' + saveErr.message); return }
 
-      if (tone === 'ojou') setSummaryOjou(text); else setSummaryNormal(text)
+      setSummaryText(text)
+      setSavedStyle(style)
     } catch (e: any) {
       alert(e?.message ?? '要約の生成に失敗しました')
     } finally {
-      setSummarizing(null)
+      setSummarizing(false)
     }
   }
 
-  async function copySummary(tone: SummaryTone) {
-    const text = tone === 'ojou' ? summaryOjou : summaryNormal
-    if (!text) return
+  async function copySummary() {
+    if (!summaryText) return
     try {
-      await navigator.clipboard.writeText(text)
-      setCopiedTone(tone)
-      setTimeout(() => setCopiedTone(null), 1500)
+      await navigator.clipboard.writeText(summaryText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
     } catch {
       alert('コピーに失敗しました。手動で選択してコピーしてください。')
     }
   }
 
   const [makingCard, setMakingCard] = useState(false)
-  const [cardSource, setCardSource] = useState<'memo' | 'normal' | 'ojou'>('memo')
+  const [cardSource, setCardSource] = useState<'memo' | 'summary'>('memo')
 
   async function makeCard() {
     if (!isEdit) return
@@ -260,11 +281,8 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         colorName = hit?.name ?? (customName.trim() || null)
       }
 
-      // 選択された文章ソース（メモ / AI要約 / お嬢様風）
-      const cardText =
-        cardSource === 'normal' && summaryNormal ? summaryNormal :
-        cardSource === 'ojou' && summaryOjou ? summaryOjou :
-        comment
+      // 選択された文章ソース（自分のメモ / AI要約）
+      const cardText = cardSource === 'summary' && summaryText ? summaryText : comment
 
       const blob = await generateTeaCard({
         tea_name: teaName, brand_name: brandName, shop_name: shopName,
@@ -903,19 +921,37 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
         {/* AI要約（編集時のみ表示。新規登録時はまず保存してから利用可能） */}
         {isEdit ? (
           <div className={styles.summaryEditBlock}>
-            <div className={styles.summaryRow}>
-              <button type="button" className={styles.summaryBtn} disabled={summarizing !== null}
-                onClick={() => runSummary('normal')}>
-                {summarizing === 'normal' ? '生成中…' : `📝 まとめる（${costNormal}pt）`}
-              </button>
-              <button type="button" className={`${styles.summaryBtn} ${styles.summaryBtnOjou}`} disabled={summarizing !== null}
-                onClick={() => runSummary('ojou')}>
-                {summarizing === 'ojou' ? '生成中…' : `🎀 お嬢様風（${costOjou}pt）`}
-              </button>
+            <div className={styles.styleRow}>
+              <label className={styles.styleField}>
+                <span className={styles.styleLabel}>語尾・文体</span>
+                <select className={styles.input} value={tone} style={{ fontSize: 13 }}
+                  onChange={e => setTone(e.target.value as SummaryTone)}>
+                  {TONE_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}（{o.sample}）</option>
+                  ))}
+                </select>
+              </label>
+              <label className={styles.styleField}>
+                <span className={styles.styleLabel}>長さ</span>
+                <select className={styles.input} value={length} style={{ fontSize: 13 }}
+                  onChange={e => setLength(e.target.value as SummaryLength)}>
+                  {LENGTH_OPTIONS.map(o => (
+                    <option key={o.value} value={o.value}>{o.label}（{o.note}）</option>
+                  ))}
+                </select>
+              </label>
             </div>
 
+            <button type="button" className={styles.summaryBtn} disabled={summarizing}
+              style={{ width: '100%' }} onClick={runSummary}>
+              {summarizing ? '生成中…' : `📝 まとめる（${costSummary}pt）`}
+            </button>
+            <p className={styles.hint} style={{ marginTop: 4 }}>
+              作り直すたびにポイントを消費します。要約は1件だけ保存され、前の内容は置き換わります。
+            </p>
+
             <div style={{ marginTop: 10 }}>
-              {(summaryNormal || summaryOjou) && (
+              {summaryText && (
                 <div style={{ marginBottom: 8 }}>
                   <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
                     カードに載せる文章
@@ -924,8 +960,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                     onChange={e => setCardSource(e.target.value as any)}
                     style={{ fontSize: 13 }}>
                     <option value="memo">自分のメモ</option>
-                    {summaryNormal && <option value="normal">📝 AI要約</option>}
-                    {summaryOjou && <option value="ojou">🎀 お嬢様風の要約</option>}
+                    <option value="summary">📝 AI要約</option>
                   </select>
                 </div>
               )}
@@ -938,26 +973,17 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               </p>
             </div>
 
-            {summaryNormal && (
-              <div className={styles.summaryBubble}>
+            {summaryText && (
+              <div className={`${styles.summaryBubble} ${savedStyle?.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
                 <div className={styles.summaryBubbleHead}>
-                  <span className={styles.summaryTag}>📝 AI要約</span>
-                  <button type="button" className={styles.copyBtn} onClick={() => copySummary('normal')}>
-                    {copiedTone === 'normal' ? '✅ コピーしました' : '📋 コピー'}
+                  <span className={styles.summaryTag}>
+                    📝 AI要約{savedStyle ? `（${styleLabel(savedStyle)}）` : ''}
+                  </span>
+                  <button type="button" className={styles.copyBtn} onClick={copySummary}>
+                    {copied ? '✅ コピーしました' : '📋 コピー'}
                   </button>
                 </div>
-                <p className={styles.summaryText}>{summaryNormal}</p>
-              </div>
-            )}
-            {summaryOjou && (
-              <div className={`${styles.summaryBubble} ${styles.summaryBubbleOjou}`}>
-                <div className={styles.summaryBubbleHead}>
-                  <span className={styles.summaryTag}>🎀 お嬢様風の要約</span>
-                  <button type="button" className={styles.copyBtn} onClick={() => copySummary('ojou')}>
-                    {copiedTone === 'ojou' ? '✅ コピーしました' : '📋 コピー'}
-                  </button>
-                </div>
-                <p className={styles.summaryText}>{summaryOjou}</p>
+                <p className={styles.summaryText}>{summaryText}</p>
               </div>
             )}
           </div>
