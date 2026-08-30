@@ -185,30 +185,47 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
   // （管理画面の「お嬢様風」の料金設定は使わなくなる）
   const costSummary = costNormal
 
-  // AI要約。要約は1本だけ持ち、生成時に選んだ文体・長さを一緒に覚えておく。
+  // AI要約は直近2件まで残す（最新／ひとつ前）。
   // 旧バージョンの summary_normal / summary_ojou しか無いデータも読めるようにする。
-  const [summaryText, setSummaryText] = useState<string | null>(
-    initial?.summary_text ?? initial?.summary_normal ?? initial?.summary_ojou ?? null
-  )
-  const [savedStyle, setSavedStyle] = useState<SummaryStyle | null>(
-    initial?.summary_text
-      ? { tone: (initial.summary_tone ?? 'desumasu') as SummaryTone,
-          length: (initial.summary_length ?? 'normal') as SummaryLength }
-      : initial?.summary_normal ? { tone: 'desumasu', length: 'normal' }
-      : initial?.summary_ojou   ? { tone: 'ojou',     length: 'normal' }
-      : null
-  )
+  type SummaryEntry = { text: string; style: SummaryStyle; at: string | null }
+
+  function readLatest(src: any): SummaryEntry | null {
+    if (src?.summary_text) return {
+      text: src.summary_text,
+      style: { tone: (src.summary_tone ?? 'desumasu') as SummaryTone,
+               length: (src.summary_length ?? 'normal') as SummaryLength },
+      at: src.summary_at ?? null,
+    }
+    // v386より前のデータ
+    if (src?.summary_normal) return { text: src.summary_normal, style: { tone: 'desumasu', length: 'normal' }, at: null }
+    if (src?.summary_ojou)   return { text: src.summary_ojou,   style: { tone: 'ojou',     length: 'normal' }, at: null }
+    return null
+  }
+  function readPrev(src: any): SummaryEntry | null {
+    if (!src?.summary_prev_text) return null
+    return {
+      text: src.summary_prev_text,
+      style: { tone: (src.summary_prev_tone ?? 'desumasu') as SummaryTone,
+               length: (src.summary_prev_length ?? 'normal') as SummaryLength },
+      at: src.summary_prev_at ?? null,
+    }
+  }
+
+  const [latest, setLatest] = useState<SummaryEntry | null>(readLatest(initial))
+  const [prev,   setPrev]   = useState<SummaryEntry | null>(readPrev(initial))
   // これから生成するときの指定。前回の設定があればそれを引き継ぐ。
-  const [tone,   setTone]   = useState<SummaryTone>(savedStyle?.tone ?? DEFAULT_STYLE.tone)
-  const [length, setLength] = useState<SummaryLength>(savedStyle?.length ?? DEFAULT_STYLE.length)
+  const [tone,   setTone]   = useState<SummaryTone>(latest?.style.tone ?? DEFAULT_STYLE.tone)
+  const [length, setLength] = useState<SummaryLength>(latest?.style.length ?? DEFAULT_STYLE.length)
   const [summarizing, setSummarizing] = useState(false)
-  const [copied,      setCopied]      = useState(false)
+  const [copied,      setCopied]      = useState<'latest' | 'prev' | null>(null)
 
   async function runSummary() {
     if (!isEdit) return
     const style: SummaryStyle = { tone, length }
-    const confirmMsg = summaryText
-      ? `${costSummary}ptを消費して、${styleLabel(style)}で作り直します。今の要約は置き換わります。よろしいですか？`
+    const confirmMsg = latest
+      ? (prev
+          ? `${costSummary}ptを消費して、${styleLabel(style)}で作り直します。\n今の要約が「ひとつ前」に移り、いちばん古い要約は消えます。よろしいですか？`
+          : `${costSummary}ptを消費して、${styleLabel(style)}で作り直します。\n今の要約は「ひとつ前」として残ります。よろしいですか？`)
       : `${costSummary}ptを消費して、${styleLabel(style)}で要約を作ります。よろしいですか？`
     if (!confirm(confirmMsg)) return
     setSummarizing(true)
@@ -223,21 +240,27 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
       const text = await summarizeReview(initial, style)
 
+      // 今の最新を「ひとつ前」へ送り、新しいものを最新にする。
+      const now = new Date().toISOString()
+      const patch = {
+        summary_text: text, summary_tone: style.tone, summary_length: style.length, summary_at: now,
+        summary_prev_text:   latest?.text ?? null,
+        summary_prev_tone:   latest?.style.tone ?? null,
+        summary_prev_length: latest?.style.length ?? null,
+        summary_prev_at:     latest?.at ?? null,
+      }
+
       // ポイントは既に消費済みのため、生成結果は即座にDBへ保存する
       // （このモーダルの「保存」ボタンを押さなくても消えないようにする）
-      const { error: saveErr } = await supabase.from('reviews').update({
-        summary_text: text, summary_tone: style.tone, summary_length: style.length,
-      }).eq('id', initial.id)
+      const { error: saveErr } = await supabase.from('reviews').update(patch).eq('id', initial.id)
       if (saveErr) { alert('要約は生成されましたが保存に失敗しました: ' + saveErr.message); return }
 
       // 一覧が持っている元データにも反映する。
       // これをしないと、モーダルを開き直したときに生成前の要約へ戻ってしまう。
-      initial.summary_text   = text
-      initial.summary_tone   = style.tone
-      initial.summary_length = style.length
+      Object.assign(initial, patch)
 
-      setSummaryText(text)
-      setSavedStyle(style)
+      setPrev(latest)
+      setLatest({ text, style, at: now })
     } catch (e: any) {
       alert(e?.message ?? '要約の生成に失敗しました')
     } finally {
@@ -245,19 +268,20 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
     }
   }
 
-  async function copySummary() {
-    if (!summaryText) return
+  async function copySummary(which: 'latest' | 'prev') {
+    const text = which === 'prev' ? prev?.text : latest?.text
+    if (!text) return
     try {
-      await navigator.clipboard.writeText(summaryText)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
+      await navigator.clipboard.writeText(text)
+      setCopied(which)
+      setTimeout(() => setCopied(null), 1500)
     } catch {
       alert('コピーに失敗しました。手動で選択してコピーしてください。')
     }
   }
 
   const [makingCard, setMakingCard] = useState(false)
-  const [cardSource, setCardSource] = useState<'memo' | 'summary'>('memo')
+  const [cardSource, setCardSource] = useState<'memo' | 'summary' | 'summaryPrev'>('memo')
 
   async function makeCard() {
     if (!isEdit) return
@@ -290,7 +314,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       }
 
       // 選択された文章ソース（自分のメモ / AI要約）
-      const cardText = cardSource === 'summary' && summaryText ? summaryText : comment
+      const cardText =
+        cardSource === 'summary'     && latest?.text ? latest.text :
+        cardSource === 'summaryPrev' && prev?.text   ? prev.text   :
+        comment
 
       const blob = await generateTeaCard({
         tea_name: teaName, brand_name: brandName, shop_name: shopName,
@@ -959,7 +986,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </p>
 
             <div style={{ marginTop: 10 }}>
-              {summaryText && (
+              {latest && (
                 <div style={{ marginBottom: 8 }}>
                   <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
                     カードに載せる文章
@@ -967,8 +994,9 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                   <select className={styles.input} value={cardSource}
                     onChange={e => setCardSource(e.target.value as any)}
                     style={{ fontSize: 13 }}>
-                    <option value="memo">自分のメモ</option>
-                    <option value="summary">📝 AI要約</option>
+                    <option value="memo">自分のコメント</option>
+                    <option value="summary">📝 AI要約①（{styleLabel(latest.style)}）</option>
+                    {prev && <option value="summaryPrev">📝 AI要約②（{styleLabel(prev.style)}）</option>}
                   </select>
                 </div>
               )}
@@ -981,18 +1009,38 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               </p>
             </div>
 
-            {summaryText && (
-              <div className={`${styles.summaryBubble} ${savedStyle?.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
+            {latest && (
+              <div className={`${styles.summaryBubble} ${latest.style.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
                 <div className={styles.summaryBubbleHead}>
                   <span className={styles.summaryTag}>
-                    📝 AI要約{savedStyle ? `（${styleLabel(savedStyle)}）` : ''}
+                    📝 AI要約①（{styleLabel(latest.style)}）
+                    <span className={styles.summaryAge}>最新</span>
                   </span>
-                  <button type="button" className={styles.copyBtn} onClick={copySummary}>
-                    {copied ? '✅ コピーしました' : '📋 コピー'}
+                  <button type="button" className={styles.copyBtn} onClick={() => copySummary('latest')}>
+                    {copied === 'latest' ? '✅ コピーしました' : '📋 コピー'}
                   </button>
                 </div>
-                <p className={styles.summaryText}>{summaryText}</p>
+                <p className={styles.summaryText}>{latest.text}</p>
               </div>
+            )}
+            {prev && (
+              <div className={`${styles.summaryBubble} ${styles.summaryBubblePrev}`}>
+                <div className={styles.summaryBubbleHead}>
+                  <span className={styles.summaryTag}>
+                    📝 AI要約②（{styleLabel(prev.style)}）
+                    <span className={`${styles.summaryAge} ${styles.summaryAgePrev}`}>ひとつ前</span>
+                  </span>
+                  <button type="button" className={styles.copyBtn} onClick={() => copySummary('prev')}>
+                    {copied === 'prev' ? '✅ コピーしました' : '📋 コピー'}
+                  </button>
+                </div>
+                <p className={styles.summaryText}>{prev.text}</p>
+              </div>
+            )}
+            {prev && (
+              <p className={styles.hint} style={{ marginTop: 4 }}>
+                残るのは直近2件までです。次に作り直すと、いまの①が②に移り、②は消えます。
+              </p>
             )}
           </div>
         ) : (
@@ -1187,7 +1235,7 @@ export default function ReviewsPage() {
     /* allow_card_export は v320 のマイグレーション(089)で追加された列。
        未実行の環境では存在せず、指定するとクエリ全体が失敗して評価が
        一件も表示されなくなるため、失敗したらその列を外して取り直す。 */
-    const BASE_COLS = 'id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,summary_text,summary_tone,summary_length,tea_garden,origin_country,tea_grams,water_ml,color_name'
+    const BASE_COLS = 'id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,summary_text,summary_tone,summary_length,summary_at,summary_prev_text,summary_prev_tone,summary_prev_length,summary_prev_at,tea_garden,origin_country,tea_grams,water_ml,color_name'
 
     const fetchMine = (cols: string) => supabase.from('reviews')
       .select(cols)
