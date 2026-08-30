@@ -24,7 +24,7 @@
 
 /** 語尾・文体 */
 export type SummaryTone = 'desumasu' | 'dearu' | 'ojou'
-/** 長さ */
+/** 長さ。'short' は v387 で廃止したが、既存データを読めるよう型には残す。 */
 export type SummaryLength = 'short' | 'normal' | 'long'
 
 export type SummaryStyle = {
@@ -41,15 +41,19 @@ export const TONE_OPTIONS: { value: SummaryTone; label: string; sample: string }
 ]
 
 export const LENGTH_OPTIONS: { value: SummaryLength; label: string; note: string; max: number }[] = [
-  { value: 'short',  label: '短め', note: '40字前後・カード向き', max: 60 },
-  { value: 'normal', label: '標準', note: '120字前後',            max: 160 },
-  { value: 'long',   label: '長め', note: '200字前後・詳しく',    max: 260 },
+  { value: 'normal', label: '標準', note: '120字・Xにそのまま載る長さ', max: 120 },
+  { value: 'long',   label: '長め', note: '200字以内・カード向け',      max: 200 },
 ]
+
+/** 廃止した長さが保存されている場合に備え、必ず既定値へ寄せる */
+function lengthSpec(length: SummaryLength) {
+  return LENGTH_OPTIONS.find(o => o.value === length) ?? LENGTH_OPTIONS[0]
+}
 
 /** 選択内容を短い表記にする（保存済み要約の見出しに使う） */
 export function styleLabel(style: SummaryStyle): string {
   const t = TONE_OPTIONS.find(o => o.value === style.tone)?.label ?? ''
-  const l = LENGTH_OPTIONS.find(o => o.value === style.length)?.label ?? ''
+  const l = (LENGTH_OPTIONS.find(o => o.value === style.length) ?? LENGTH_OPTIONS[0]).label
   return `${t}・${l}`
 }
 
@@ -64,12 +68,10 @@ export function buildStyleInstruction(style: SummaryStyle): string {
     ojou:     'いわゆる「お嬢様言葉」で書くこと。文末は「〜ですわ」「〜ですのよ」「〜ますこと」などを使い、上品で優雅な言い回しにすること。ただし読みにくくなるほど大げさにはしないこと。',
   }[style.tone]
 
-  const len = LENGTH_OPTIONS.find(o => o.value === style.length)!
-  const length = {
-    short:  `全体で40字程度、最大でも${len.max}字に収めること。1文だけで簡潔にまとめること。`,
-    normal: `全体で120字程度、最大でも${len.max}字に収めること。2〜3文でまとめること。`,
-    long:   `全体で200字程度、最大でも${len.max}字に収めること。3〜4文で、味わいの移り変わりや飲み方の提案まで含めてよい。`,
-  }[style.length]
+  const len = lengthSpec(style.length)
+  const length = len.value === 'long'
+    ? `全体で200字程度、最大でも${len.max}字に収めること。3〜4文で、味わいの移り変わりや飲み方の提案まで含めてよい。`
+    : `全体で120字程度、最大でも${len.max}字に収めること。2〜3文でまとめること。Xにそのまま投稿できる長さにすること。`
 
   return [
     '以下のルールを必ず守って、紅茶の感想文を書いてください。',
@@ -152,6 +154,6 @@ export async function summarizeReview(
     ],
   }[style.tone].filter(Boolean)
 
-  const max = LENGTH_OPTIONS.find(o => o.value === style.length)!.max
+  const max = lengthSpec(style.length).max
   return joinWithin(sentences, max)
 }
