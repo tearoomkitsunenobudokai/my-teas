@@ -224,6 +224,19 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
     : !prev ? 'latest'
     : (prev.at ?? '') > (latest.at ?? '') ? 'prev' : 'latest'
 
+  /* 画面に並べる順。保存先の枠（latest / prev）は動かさず、見せ方だけ整える。
+     ・ロック中のものは必ず下（②）に置く
+     ・1件しか無いときは必ず①に置く（①が空欄になる状態を作らない）
+     ・ロックが無いときは新しいほうを上にする */
+  const slots: { key: 'latest' | 'prev'; entry: SummaryEntry }[] = (() => {
+    const list: { key: 'latest' | 'prev'; entry: SummaryEntry }[] = []
+    if (latest) list.push({ key: 'latest', entry: latest })
+    if (prev)   list.push({ key: 'prev',   entry: prev })
+    if (list.length < 2) return list
+    if (locked) return [...list.filter(x => x.key !== locked), ...list.filter(x => x.key === locked)]
+    return newerSlot === 'prev' ? [list[1], list[0]] : list
+  })()
+
   // 次に上書きされる枠。ロックされていないほうを使う。
   const targetSlot: 'latest' | 'prev' =
     locked === 'latest' ? 'prev'
@@ -1039,7 +1052,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </p>
 
             <div style={{ marginTop: 10 }}>
-              {latest && (
+              {slots.length > 0 && (
                 <div style={{ marginBottom: 8 }}>
                   <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
                     カードに載せる文章
@@ -1048,8 +1061,11 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                     onChange={e => setCardSource(e.target.value as any)}
                     style={{ fontSize: 13 }}>
                     <option value="memo">自分のコメント</option>
-                    <option value="summary">📝 AI要約①（{styleLabel(latest.style)}）</option>
-                    {prev && <option value="summaryPrev">📝 AI要約②（{styleLabel(prev.style)}）</option>}
+                    {slots.map((sl, i) => (
+                      <option key={sl.key} value={sl.key === 'prev' ? 'summaryPrev' : 'summary'}>
+                        📝 AI要約{i === 0 ? '①' : '②'}（{styleLabel(sl.entry.style)}）
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
@@ -1062,55 +1078,39 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               </p>
             </div>
 
-            {latest && (
-              <div className={`${styles.summaryBubble} ${latest.style.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
-                <div className={styles.summaryBubbleHead}>
-                  <span className={styles.summaryTag}>
-                    📝 AI要約①（{styleLabel(latest.style)}）
-                    {newerSlot === 'latest' && <span className={styles.summaryAge}>最新</span>}
-                    {locked === 'latest' && <span className={`${styles.summaryAge} ${styles.summaryAgeLock}`}>🔒 保護中</span>}
-                  </span>
-                  <span className={styles.summaryActions}>
-                    <button type="button" className={styles.copyBtn} disabled={lockBusy}
-                      onClick={() => toggleLock('latest')}
-                      title={locked === 'latest' ? 'ロックを外す' : '作り直しても消えないように保護する'}>
-                      {locked === 'latest' ? '🔒 ロック中' : '🔓 ロック'}
-                    </button>
-                    <button type="button" className={styles.copyBtn} onClick={() => copySummary('latest')}>
-                      {copied === 'latest' ? '✅ コピーしました' : '📋 コピー'}
-                    </button>
-                  </span>
+            {slots.map((sl, i) => {
+              const num = i === 0 ? '①' : '②'
+              const isLocked = locked === sl.key
+              const isNewer = newerSlot === sl.key
+              return (
+                <div key={sl.key}
+                  className={`${styles.summaryBubble} ${isNewer ? '' : styles.summaryBubblePrev} ${sl.entry.style.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
+                  <div className={styles.summaryBubbleHead}>
+                    <span className={styles.summaryTag}>
+                      📝 AI要約{num}（{styleLabel(sl.entry.style)}）
+                      {isNewer && <span className={styles.summaryAge}>最新</span>}
+                      {isLocked && <span className={`${styles.summaryAge} ${styles.summaryAgeLock}`}>🔒 保護中</span>}
+                    </span>
+                    <span className={styles.summaryActions}>
+                      <button type="button" className={styles.copyBtn} disabled={lockBusy}
+                        onClick={() => toggleLock(sl.key)}
+                        title={isLocked ? 'ロックを外す' : '作り直しても消えないように保護する'}>
+                        {isLocked ? '🔒 ロック中' : '🔓 ロック'}
+                      </button>
+                      <button type="button" className={styles.copyBtn}
+                        onClick={() => copySummary(sl.key)}>
+                        {copied === sl.key ? '✅ コピーしました' : '📋 コピー'}
+                      </button>
+                    </span>
+                  </div>
+                  <p className={styles.summaryText}>{sl.entry.text}</p>
                 </div>
-                <p className={styles.summaryText}>{latest.text}</p>
-              </div>
-            )}
-            {prev && (
-              <div className={`${styles.summaryBubble} ${newerSlot === 'prev' ? '' : styles.summaryBubblePrev} ${prev.style.tone === 'ojou' && newerSlot === 'prev' ? styles.summaryBubbleOjou : ''}`}>
-                <div className={styles.summaryBubbleHead}>
-                  <span className={styles.summaryTag}>
-                    📝 AI要約②（{styleLabel(prev.style)}）
-                    {newerSlot === 'prev' && <span className={styles.summaryAge}>最新</span>}
-                    {locked === 'prev' && <span className={`${styles.summaryAge} ${styles.summaryAgeLock}`}>🔒 保護中</span>}
-                  </span>
-                  <span className={styles.summaryActions}>
-                    <button type="button" className={styles.copyBtn} disabled={lockBusy}
-                      onClick={() => toggleLock('prev')}
-                      title={locked === 'prev' ? 'ロックを外す' : '作り直しても消えないように保護する'}>
-                      {locked === 'prev' ? '🔒 ロック中' : '🔓 ロック'}
-                    </button>
-                    <button type="button" className={styles.copyBtn} onClick={() => copySummary('prev')}>
-                      {copied === 'prev' ? '✅ コピーしました' : '📋 コピー'}
-                    </button>
-                  </span>
-                </div>
-                <p className={styles.summaryText}>{prev.text}</p>
-              </div>
-            )}
-            {latest && (
+              )
+            })}
+            {slots.length > 0 && (
               <p className={styles.hint} style={{ marginTop: 4 }}>
-                {locked === 'latest' ? '①はロック中です。次に作り直すと②が置き換わります。'
-                 : locked === 'prev' ? '②はロック中です。次に作り直すと①が置き換わります。'
-                 : prev ? '残るのは2件までです。次に作り直すと、いまの①が②に移り、②は消えます。残したい要約はロックしてください。'
+                {locked ? 'ロック中の要約（②）は、作り直しても残ります。新しい要約は①に入ります。'
+                 : slots.length >= 2 ? '残るのは2件までです。次に作り直すと、いまの①が②に移り、②は消えます。残したい要約はロックしてください。'
                  : '次に作り直すと、いまの要約は②に移ります。'}
               </p>
             )}
