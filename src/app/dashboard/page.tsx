@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import TeaCup from '@/components/TeaCup'
+import { stampIconAt } from '@/lib/stampIcons'
 import styles from './dashboard.module.css'
 
 function hexToRgba(hex: string, a = 0.78): string {
@@ -190,7 +191,9 @@ export default function DashboardPage() {
                 const isLast = i === stampDays - 1
                 return (
                   <div key={i} className={`${styles.stampBox} ${filled ? styles.stampBoxFilled : ''} ${isLast ? styles.stampBoxGoal : ''}`}>
-                    {filled ? '🍵' : (isLast ? `+${stampPoints}pt` : i + 1)}
+                    {filled
+                      ? <img src={stampIconAt(i).src} alt={stampIconAt(i).label} className={styles.stampBoxIcon}/>
+                      : (isLast ? `+${stampPoints}pt` : i + 1)}
                   </div>
                 )
               })}

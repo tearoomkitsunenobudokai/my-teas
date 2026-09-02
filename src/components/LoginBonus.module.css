@@ -101,3 +101,9 @@
 @media (prefers-reduced-motion: reduce) {
   .card, .boxNew, .overlay { animation: none; }
 }
+
+/* 淹れ方・添え物のアイコンをスタンプの絵柄として使う */
+.boxIcon {
+  width: 78%; height: 78%;
+  object-fit: contain;
+}

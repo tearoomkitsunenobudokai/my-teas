@@ -197,3 +197,9 @@
 .stickyHead {
   position: static;
 }
+
+/* === v390: スタンプの絵柄にアイコンを使う === */
+.stampBoxIcon {
+  width: 76%; height: 76%;
+  object-fit: contain;
+}

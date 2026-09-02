@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
+import { stampIconAt } from '@/lib/stampIcons'
 import styles from './LoginBonus.module.css'
 
 // アプリ（ダッシュボード）を開いたときに1回だけログインを記録し、
@@ -72,6 +73,7 @@ export default function LoginBonus() {
             // 今回押されたのは最後の1つ
             const isNew = pressed && i === count - 1
             const isGoal = i === need - 1
+            const icon = stampIconAt(i)
             return (
               <div key={i}
                 className={[
@@ -80,7 +82,9 @@ export default function LoginBonus() {
                   isNew ? styles.boxNew : '',
                   isGoal && !filled ? styles.boxGoal : '',
                 ].filter(Boolean).join(' ')}>
-                {filled ? '🍵' : (isGoal ? `+${bonus}pt` : i + 1)}
+                {filled
+                  ? <img src={icon.src} alt={icon.label} className={styles.boxIcon}/>
+                  : (isGoal ? `+${bonus}pt` : i + 1)}
               </div>
             )
           })}
