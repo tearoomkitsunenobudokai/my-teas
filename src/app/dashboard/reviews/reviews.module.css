@@ -1044,3 +1044,7 @@
 }
 .summaryAgePrev { background: var(--text-hint); }
 .summaryBubblePrev { opacity: 0.78; }
+
+/* === v389: 要約のロック === */
+.summaryActions { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.summaryAgeLock { background: #B8860B; }
