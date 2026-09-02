@@ -216,3 +216,12 @@
 @supports (max-height: 100dvh) {
   .modal, .detailModal { max-height: 90dvh; }
 }
+
+/* === v395: 変更できない設定値の表示 === */
+.settingFixed {
+  display: inline-block;
+  min-width: 56px; padding: 7px 10px;
+  font-size: 14px; font-weight: 700; text-align: center;
+  color: var(--text-muted); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px;
+}

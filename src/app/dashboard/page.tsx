@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
 import TeaCup from '@/components/TeaCup'
+import { stampIcon } from '@/lib/stampIcons'
 import styles from './dashboard.module.css'
 
 function hexToRgba(hex: string, a = 0.78): string {
@@ -22,6 +23,7 @@ export default function DashboardPage() {
   const [pointsUnlimited, setPointsUnlimited] = useState(false)
   const [loginCount, setLoginCount] = useState(0)
   const [stampDays, setStampDays] = useState(5)
+  const [stampIcons, setStampIcons] = useState<string[]>([])
   const [stampPoints, setStampPoints] = useState(2)
   const [showStamp, setShowStamp] = useState(false)
   const [topTeas, setTopTeas] = useState<any[]>([])
@@ -43,11 +45,12 @@ export default function DashboardPage() {
 
     // 所持ポイント（管理者・製作者は消費なし＝無制限扱い）
     const { data: profile } = await supabase.from('profiles')
-      .select('points,is_admin,is_creator,login_count').eq('id', user.id).single()
+      .select('points,is_admin,is_creator,login_count,stamp_icons').eq('id', user.id).single()
     if (profile) {
       setPoints(profile.points ?? 0)
       setPointsUnlimited(!!(profile.is_admin || profile.is_creator))
       setLoginCount(profile.login_count ?? 0)
+      setStampIcons(profile.stamp_icons ?? [])
     }
     // スタンプカードの設定（必要日数・付与ポイント）
     const { data: bonusSettings } = await supabase.from('app_settings')
@@ -190,7 +193,9 @@ export default function DashboardPage() {
                 const isLast = i === stampDays - 1
                 return (
                   <div key={i} className={`${styles.stampBox} ${filled ? styles.stampBoxFilled : ''} ${isLast ? styles.stampBoxGoal : ''}`}>
-                    {filled ? '🍵' : (isLast ? `+${stampPoints}pt` : i + 1)}
+                    {filled
+                      ? <img src={stampIcon(stampIcons[i], i).src} alt={stampIcon(stampIcons[i], i).label} className={styles.stampBoxIcon}/>
+                      : (isLast ? `+${stampPoints}pt` : i + 1)}
                   </div>
                 )
               })}
