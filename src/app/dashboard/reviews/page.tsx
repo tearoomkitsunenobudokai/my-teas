@@ -213,20 +213,70 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
   const [latest, setLatest] = useState<SummaryEntry | null>(readLatest(initial))
   const [prev,   setPrev]   = useState<SummaryEntry | null>(readPrev(initial))
+  // ロック中の枠。片方だけ保護できる（もう片方をロックすると自動的に外れる）
+  const [locked, setLocked] = useState<'latest' | 'prev' | null>(initial?.summary_locked ?? null)
+  const [lockBusy, setLockBusy] = useState(false)
+
+  // ①②は「枠」であって新しい順とは限らない（①をロックすると②に新しいものが入る）。
+  // どちらが新しいかは生成日時で判定する。
+  const newerSlot: 'latest' | 'prev' | null =
+    !latest ? null
+    : !prev ? 'latest'
+    : (prev.at ?? '') > (latest.at ?? '') ? 'prev' : 'latest'
+
+  /* 画面に並べる順。保存先の枠（latest / prev）は動かさず、見せ方だけ整える。
+     ・ロック中のものは必ず下（②）に置く
+     ・1件しか無いときは必ず①に置く（①が空欄になる状態を作らない）
+     ・ロックが無いときは新しいほうを上にする */
+  const slots: { key: 'latest' | 'prev'; entry: SummaryEntry }[] = (() => {
+    const list: { key: 'latest' | 'prev'; entry: SummaryEntry }[] = []
+    if (latest) list.push({ key: 'latest', entry: latest })
+    if (prev)   list.push({ key: 'prev',   entry: prev })
+    if (list.length < 2) return list
+    if (locked) return [...list.filter(x => x.key !== locked), ...list.filter(x => x.key === locked)]
+    return newerSlot === 'prev' ? [list[1], list[0]] : list
+  })()
+
+  // 次に上書きされる枠。ロックされていないほうを使う。
+  const targetSlot: 'latest' | 'prev' =
+    locked === 'latest' ? 'prev'
+    : locked === 'prev' ? 'latest'
+    : 'latest'   // ロックなしのときは従来どおり①へ入れ、①を②へ送る
   // これから生成するときの指定。前回の設定があればそれを引き継ぐ。
   const [tone,   setTone]   = useState<SummaryTone>(latest?.style.tone ?? DEFAULT_STYLE.tone)
   const [length, setLength] = useState<SummaryLength>(latest?.style.length ?? DEFAULT_STYLE.length)
   const [summarizing, setSummarizing] = useState(false)
   const [copied,      setCopied]      = useState<'latest' | 'prev' | null>(null)
 
+  /* ロックを切り替える。ポイントは消費しない。
+     片方をロックすると、もう片方のロックは自動的に外れる。 */
+  async function toggleLock(which: 'latest' | 'prev') {
+    if (!isEdit || lockBusy) return
+    const next = locked === which ? null : which
+    setLockBusy(true)
+    const { error } = await supabase.from('reviews')
+      .update({ summary_locked: next }).eq('id', initial.id)
+    setLockBusy(false)
+    if (error) { alert(error.message); return }
+    initial.summary_locked = next
+    setLocked(next)
+  }
+
   async function runSummary() {
     if (!isEdit) return
     const style: SummaryStyle = { tone, length }
-    const confirmMsg = latest
-      ? (prev
-          ? `${costSummary}ptを消費して、${styleLabel(style)}で作り直します。\n今の要約が「ひとつ前」に移り、いちばん古い要約は消えます。よろしいですか？`
-          : `${costSummary}ptを消費して、${styleLabel(style)}で作り直します。\n今の要約は「ひとつ前」として残ります。よろしいですか？`)
-      : `${costSummary}ptを消費して、${styleLabel(style)}で要約を作ります。よろしいですか？`
+    const willLose =
+      locked === 'latest' ? (prev ? 'AI要約②' : null)
+      : locked === 'prev' ? (latest ? 'AI要約①' : null)
+      : (latest && prev) ? 'AI要約②' : null
+    const kept = locked === 'latest' ? 'AI要約①' : locked === 'prev' ? 'AI要約②' : null
+
+    const confirmMsg = [
+      `${costSummary}ptを消費して、${styleLabel(style)}で要約を作ります。`,
+      kept ? `${kept}はロック中なので残ります。` : '',
+      willLose ? `${willLose}の内容は消えます。` : '',
+      'よろしいですか？',
+    ].filter(Boolean).join('\n')
     if (!confirm(confirmMsg)) return
     setSummarizing(true)
     try {
@@ -240,15 +290,29 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
 
       const text = await summarizeReview(initial, style)
 
-      // 今の最新を「ひとつ前」へ送り、新しいものを最新にする。
       const now = new Date().toISOString()
-      const patch = {
-        summary_text: text, summary_tone: style.tone, summary_length: style.length, summary_at: now,
-        summary_prev_text:   latest?.text ?? null,
-        summary_prev_tone:   latest?.style.tone ?? null,
-        summary_prev_length: latest?.style.length ?? null,
-        summary_prev_at:     latest?.at ?? null,
-      }
+      // ロックされていない枠に書き込む。
+      // ロックなしのときだけ、従来どおり①→②へ送ってから①を入れ替える。
+      const patch: Record<string, any> = targetSlot === 'prev'
+        ? {
+            // ①はロック中なので触らない
+            summary_prev_text: text, summary_prev_tone: style.tone,
+            summary_prev_length: style.length, summary_prev_at: now,
+          }
+        : locked === 'prev'
+          ? {
+              // ②はロック中なので送らず、①だけ入れ替える
+              summary_text: text, summary_tone: style.tone,
+              summary_length: style.length, summary_at: now,
+            }
+          : {
+              summary_text: text, summary_tone: style.tone,
+              summary_length: style.length, summary_at: now,
+              summary_prev_text:   latest?.text ?? null,
+              summary_prev_tone:   latest?.style.tone ?? null,
+              summary_prev_length: latest?.style.length ?? null,
+              summary_prev_at:     latest?.at ?? null,
+            }
 
       // ポイントは既に消費済みのため、生成結果は即座にDBへ保存する
       // （このモーダルの「保存」ボタンを押さなくても消えないようにする）
@@ -259,8 +323,10 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
       // これをしないと、モーダルを開き直したときに生成前の要約へ戻ってしまう。
       Object.assign(initial, patch)
 
-      setPrev(latest)
-      setLatest({ text, style, at: now })
+      const entry: SummaryEntry = { text, style, at: now }
+      if (targetSlot === 'prev') setPrev(entry)
+      else if (locked === 'prev') setLatest(entry)
+      else { setPrev(latest); setLatest(entry) }
     } catch (e: any) {
       alert(e?.message ?? '要約の生成に失敗しました')
     } finally {
@@ -986,7 +1052,7 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
             </p>
 
             <div style={{ marginTop: 10 }}>
-              {latest && (
+              {slots.length > 0 && (
                 <div style={{ marginBottom: 8 }}>
                   <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
                     カードに載せる文章
@@ -995,8 +1061,11 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
                     onChange={e => setCardSource(e.target.value as any)}
                     style={{ fontSize: 13 }}>
                     <option value="memo">自分のコメント</option>
-                    <option value="summary">📝 AI要約①（{styleLabel(latest.style)}）</option>
-                    {prev && <option value="summaryPrev">📝 AI要約②（{styleLabel(prev.style)}）</option>}
+                    {slots.map((sl, i) => (
+                      <option key={sl.key} value={sl.key === 'prev' ? 'summaryPrev' : 'summary'}>
+                        📝 AI要約{i === 0 ? '①' : '②'}（{styleLabel(sl.entry.style)}）
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}
@@ -1009,37 +1078,40 @@ function Modal({ userId, initial, costNormal, costOjou, costCard, onClose, onSav
               </p>
             </div>
 
-            {latest && (
-              <div className={`${styles.summaryBubble} ${latest.style.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
-                <div className={styles.summaryBubbleHead}>
-                  <span className={styles.summaryTag}>
-                    📝 AI要約①（{styleLabel(latest.style)}）
-                    <span className={styles.summaryAge}>最新</span>
-                  </span>
-                  <button type="button" className={styles.copyBtn} onClick={() => copySummary('latest')}>
-                    {copied === 'latest' ? '✅ コピーしました' : '📋 コピー'}
-                  </button>
+            {slots.map((sl, i) => {
+              const num = i === 0 ? '①' : '②'
+              const isLocked = locked === sl.key
+              const isNewer = newerSlot === sl.key
+              return (
+                <div key={sl.key}
+                  className={`${styles.summaryBubble} ${isNewer ? '' : styles.summaryBubblePrev} ${sl.entry.style.tone === 'ojou' ? styles.summaryBubbleOjou : ''}`}>
+                  <div className={styles.summaryBubbleHead}>
+                    <span className={styles.summaryTag}>
+                      📝 AI要約{num}（{styleLabel(sl.entry.style)}）
+                      {isNewer && <span className={styles.summaryAge}>最新</span>}
+                      {isLocked && <span className={`${styles.summaryAge} ${styles.summaryAgeLock}`}>🔒 保護中</span>}
+                    </span>
+                    <span className={styles.summaryActions}>
+                      <button type="button" className={styles.copyBtn} disabled={lockBusy}
+                        onClick={() => toggleLock(sl.key)}
+                        title={isLocked ? 'ロックを外す' : '作り直しても消えないように保護する'}>
+                        {isLocked ? '🔒 ロック中' : '🔓 ロック'}
+                      </button>
+                      <button type="button" className={styles.copyBtn}
+                        onClick={() => copySummary(sl.key)}>
+                        {copied === sl.key ? '✅ コピーしました' : '📋 コピー'}
+                      </button>
+                    </span>
+                  </div>
+                  <p className={styles.summaryText}>{sl.entry.text}</p>
                 </div>
-                <p className={styles.summaryText}>{latest.text}</p>
-              </div>
-            )}
-            {prev && (
-              <div className={`${styles.summaryBubble} ${styles.summaryBubblePrev}`}>
-                <div className={styles.summaryBubbleHead}>
-                  <span className={styles.summaryTag}>
-                    📝 AI要約②（{styleLabel(prev.style)}）
-                    <span className={`${styles.summaryAge} ${styles.summaryAgePrev}`}>ひとつ前</span>
-                  </span>
-                  <button type="button" className={styles.copyBtn} onClick={() => copySummary('prev')}>
-                    {copied === 'prev' ? '✅ コピーしました' : '📋 コピー'}
-                  </button>
-                </div>
-                <p className={styles.summaryText}>{prev.text}</p>
-              </div>
-            )}
-            {prev && (
+              )
+            })}
+            {slots.length > 0 && (
               <p className={styles.hint} style={{ marginTop: 4 }}>
-                残るのは直近2件までです。次に作り直すと、いまの①が②に移り、②は消えます。
+                {locked ? 'ロック中の要約（②）は、作り直しても残ります。新しい要約は①に入ります。'
+                 : slots.length >= 2 ? '残るのは2件までです。次に作り直すと、いまの①が②に移り、②は消えます。残したい要約はロックしてください。'
+                 : '次に作り直すと、いまの要約は②に移ります。'}
               </p>
             )}
           </div>
@@ -1235,7 +1307,7 @@ export default function ReviewsPage() {
     /* allow_card_export は v320 のマイグレーション(089)で追加された列。
        未実行の環境では存在せず、指定するとクエリ全体が失敗して評価が
        一件も表示されなくなるため、失敗したらその列を外して取り直す。 */
-    const BASE_COLS = 'id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,summary_text,summary_tone,summary_length,summary_at,summary_prev_text,summary_prev_tone,summary_prev_length,summary_prev_at,tea_garden,origin_country,tea_grams,water_ml,color_name'
+    const BASE_COLS = 'id,tea_name,brand_name,shop_name,color_hex,aroma_notes,score_aroma,score_astringency,score_richness,score_color_depth,comment,notes,is_public,drank_at,created_at,steep_seconds,brew_method,tea_grams_per_100ml,accompaniments,summary_normal,summary_ojou,summary_text,summary_tone,summary_length,summary_at,summary_prev_text,summary_prev_tone,summary_prev_length,summary_prev_at,summary_locked,tea_garden,origin_country,tea_grams,water_ml,color_name'
 
     const fetchMine = (cols: string) => supabase.from('reviews')
       .select(cols)
