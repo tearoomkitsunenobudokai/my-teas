@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { stampIcon } from '@/lib/stampIcons'
+import { stampIcon, handInfo } from '@/lib/stampIcons'
 import styles from './LoginBonus.module.css'
 
 // アプリ（ダッシュボード）を開いたときに1回だけログインを記録し、
@@ -18,7 +18,8 @@ import styles from './LoginBonus.module.css'
 type Result = {
   stamped: boolean
   granted: number
-  jackpot: boolean
+  hand: string
+  handPoints: number
   count: number
   need: number
   bonus: number
@@ -37,7 +38,7 @@ export default function LoginBonus() {
     if (ran.current) return   // Strict Mode等での二重実行を防ぐ
     ran.current = true
     const supabase = createClient()
-    supabase.rpc('record_login_and_grant_v3').then(({ data, error }) => {
+    supabase.rpc('record_login_and_grant_v4').then(({ data, error }) => {
       if (error || !data) return
       const r = data as Result
       if (!r.stamped) return   // 今日はもう押してある。何も出さない。
@@ -54,7 +55,9 @@ export default function LoginBonus() {
 
   if (!result) return null
 
-  const { granted, count, need, bonus, jackpot, icons } = result
+  const { granted, count, need, bonus, hand, handPoints, icons } = result
+  const info = handInfo(hand)
+  const hasHand = info.level > 0
   // count は「押した後」の個数。押す前は1つ少ない。
   const filledNow = pressed ? count : count - 1
   const remaining = Math.max(0, need - count)
@@ -68,7 +71,7 @@ export default function LoginBonus() {
         <p className={styles.eyebrow}>ログインスタンプ</p>
         <h2 className={styles.title}>
           {!pressed ? 'スタンプを押しています…'
-            : jackpot ? '🎊 絵柄がそろいました！'
+            : hasHand ? `${info.level === 3 ? '🎊' : info.level === 2 ? '✨' : '🎯'} ${info.label}！`
             : 'スタンプを押しました！'}
         </h2>
 
@@ -96,16 +99,25 @@ export default function LoginBonus() {
         </div>
 
         {achieved ? (
-          <div className={`${styles.bonusBox} ${jackpot ? styles.bonusBoxJackpot : ''}`}>
+          <div className={[
+            styles.bonusBox,
+            info.level === 3 ? styles.bonusBoxL3 : '',
+            info.level === 2 ? styles.bonusBoxL2 : '',
+          ].filter(Boolean).join(' ')}>
             <p className={styles.bonusTitle}>
-              {jackpot ? `🎊 ${need}個すべて同じ絵柄！` : `🎉 ${need}個たまりました`}
+              {hasHand ? `${info.label}（${info.note}）` : `🎉 ${need}個たまりました`}
             </p>
             <p className={styles.bonusText}>
               <strong>{granted}ポイント</strong>を獲得しました
             </p>
+            {hasHand && handPoints > 0 && (
+              <p className={styles.handBreak}>
+                {need}日達成 {bonus}pt ＋ 役ボーナス {handPoints}pt
+              </p>
+            )}
             <p className={styles.bonusNote}>
-              {jackpot ? 'めったに出ないそろいです。カードは新しいものに変わります'
-                       : 'カードは新しいものに変わります'}
+              {info.level === 3 ? 'めったに出ない役です。カードは新しいものに変わります'
+                                : 'カードは新しいものに変わります'}
             </p>
           </div>
         ) : (
@@ -115,7 +127,7 @@ export default function LoginBonus() {
             </p>
             <p className={styles.poolNote}>
               このカードの絵柄は {result.pool?.length ?? 0} 種類。
-              すべて同じ絵柄でそろうと、おまけがあります。
+              そろい方（役）に応じて、達成時におまけが付きます。
             </p>
           </>
         )}

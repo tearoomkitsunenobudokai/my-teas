@@ -46,3 +46,30 @@ export function stampIcon(key: string | undefined | null, fallbackIndex = 0): St
 export function stampIconAt(index: number): StampIcon {
   return STAMP_ICONS[index % STAMP_ICONS.length]
 }
+
+// ─── 役（ポーカー風） ─────────────────────────────────
+// 判定はサーバー側（stamp_hand）で行い、ここでは見せ方だけを持つ。
+// キーは supabase/migrations/102 の stamp_hand() と対応させること。
+
+export type StampHand = 'five' | 'four' | 'full' | 'complete' | 'three' | 'twopair' | 'none'
+
+export type HandInfo = {
+  label: string
+  note: string
+  /** 演出の強さ。3=最大 */
+  level: 0 | 1 | 2 | 3
+}
+
+export const HANDS: Record<StampHand, HandInfo> = {
+  five:     { label: 'ファイブカード', note: '5つすべて同じ絵柄',   level: 3 },
+  four:     { label: 'フォーカード',   note: '同じ絵柄が4つ',       level: 2 },
+  complete: { label: 'コンプリート',   note: '5つすべてちがう絵柄', level: 2 },
+  full:     { label: 'フルハウス',     note: '3つ＋2つのそろい',    level: 1 },
+  three:    { label: 'スリーカード',   note: '同じ絵柄が3つ',       level: 1 },
+  twopair:  { label: 'ツーペア',       note: '2つのペア',           level: 1 },
+  none:     { label: '',               note: '',                     level: 0 },
+}
+
+export function handInfo(hand: string | undefined | null): HandInfo {
+  return HANDS[(hand ?? 'none') as StampHand] ?? HANDS.none
+}
