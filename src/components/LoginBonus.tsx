@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { stampIconAt } from '@/lib/stampIcons'
+import { stampIcon } from '@/lib/stampIcons'
 import styles from './LoginBonus.module.css'
 
 // アプリ（ダッシュボード）を開いたときに1回だけログインを記録し、
@@ -18,9 +18,12 @@ import styles from './LoginBonus.module.css'
 type Result = {
   stamped: boolean
   granted: number
+  jackpot: boolean
   count: number
   need: number
   bonus: number
+  icons: string[]      // 引いた絵柄を古い順に
+  pool: string[]       // このカードで使う絵柄の候補
 }
 
 export default function LoginBonus() {
@@ -34,7 +37,7 @@ export default function LoginBonus() {
     if (ran.current) return   // Strict Mode等での二重実行を防ぐ
     ran.current = true
     const supabase = createClient()
-    supabase.rpc('record_login_and_grant_v2').then(({ data, error }) => {
+    supabase.rpc('record_login_and_grant_v3').then(({ data, error }) => {
       if (error || !data) return
       const r = data as Result
       if (!r.stamped) return   // 今日はもう押してある。何も出さない。
@@ -51,7 +54,7 @@ export default function LoginBonus() {
 
   if (!result) return null
 
-  const { granted, count, need, bonus } = result
+  const { granted, count, need, bonus, jackpot, icons } = result
   // count は「押した後」の個数。押す前は1つ少ない。
   const filledNow = pressed ? count : count - 1
   const remaining = Math.max(0, need - count)
@@ -64,7 +67,9 @@ export default function LoginBonus() {
 
         <p className={styles.eyebrow}>ログインスタンプ</p>
         <h2 className={styles.title}>
-          {pressed ? 'スタンプを押しました！' : 'スタンプを押しています…'}
+          {!pressed ? 'スタンプを押しています…'
+            : jackpot ? '🎊 絵柄がそろいました！'
+            : 'スタンプを押しました！'}
         </h2>
 
         <div className={styles.grid}>
@@ -73,7 +78,7 @@ export default function LoginBonus() {
             // 今回押されたのは最後の1つ
             const isNew = pressed && i === count - 1
             const isGoal = i === need - 1
-            const icon = stampIconAt(i)
+            const icon = stampIcon(icons?.[i], i)
             return (
               <div key={i}
                 className={[
@@ -91,17 +96,28 @@ export default function LoginBonus() {
         </div>
 
         {achieved ? (
-          <div className={styles.bonusBox}>
-            <p className={styles.bonusTitle}>🎉 {need}個たまりました</p>
+          <div className={`${styles.bonusBox} ${jackpot ? styles.bonusBoxJackpot : ''}`}>
+            <p className={styles.bonusTitle}>
+              {jackpot ? `🎊 ${need}個すべて同じ絵柄！` : `🎉 ${need}個たまりました`}
+            </p>
             <p className={styles.bonusText}>
               <strong>{granted}ポイント</strong>を獲得しました
             </p>
-            <p className={styles.bonusNote}>カードは新しいものに変わります</p>
+            <p className={styles.bonusNote}>
+              {jackpot ? 'めったに出ないそろいです。カードは新しいものに変わります'
+                       : 'カードは新しいものに変わります'}
+            </p>
           </div>
         ) : (
-          <p className={styles.progress}>
-            あと <strong>{remaining}</strong> 個で {bonus}ポイント
-          </p>
+          <>
+            <p className={styles.progress}>
+              あと <strong>{remaining}</strong> 個で {bonus}ポイント
+            </p>
+            <p className={styles.poolNote}>
+              このカードの絵柄は {result.pool?.length ?? 0} 種類。
+              すべて同じ絵柄でそろうと、おまけがあります。
+            </p>
+          </>
         )}
 
         <button className={styles.okBtn} onClick={close}>OK</button>
