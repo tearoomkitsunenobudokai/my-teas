@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { resizeImageKeepAspect } from '@/lib/resizeImage'
@@ -141,7 +141,9 @@ export default function AdminPage() {
     supabase.from('app_settings').select('key,value')
       .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days', 'maintenance_mode', 'maintenance_message', 'signup_enabled', 'signup_closed_message',
                   'card_collect_min_reviews', 'card_collect_min_account_days', 'card_collect_daily_limit', 'card_collect_paid_only',
-                  'manual_url'])
+                  'manual_url', 'login_stamp_pool_size',
+                  'stamp_hand_five', 'stamp_hand_four', 'stamp_hand_complete',
+                  'stamp_hand_full', 'stamp_hand_three', 'stamp_hand_twopair'])
       .then(({ data }) => {
         const m: any = {}
         for (const r of data ?? []) m[r.key] = r.value
@@ -158,6 +160,15 @@ export default function AdminPage() {
           paidOnly: (m['card_collect_paid_only'] ?? 'false').toLowerCase() === 'true',
         })
         setManualUrl(m['manual_url'] ?? '')
+        setStampPolicy({
+          poolSize: m['login_stamp_pool_size'] ?? '5',
+          five:     m['stamp_hand_five']     ?? '30',
+          four:     m['stamp_hand_four']     ?? '10',
+          complete: m['stamp_hand_complete'] ?? '8',
+          full:     m['stamp_hand_full']     ?? '3',
+          three:    m['stamp_hand_three']    ?? '0',
+          twopair:  m['stamp_hand_twopair']  ?? '0',
+        })
         setMaintMode((m['maintenance_mode'] ?? 'off') as 'off' | 'readonly' | 'full')
         setMaintMessage(m['maintenance_message'] ?? '')
         setSignupEnabled((m['signup_enabled'] ?? 'true') === 'true')
@@ -213,6 +224,23 @@ export default function AdminPage() {
     if (error) { alert(error.message); return }
     setManualUrl(url)
     setManualSaved(true); setTimeout(() => setManualSaved(false), 2500)
+  }
+
+  async function saveStampPolicy() {
+    setSavingStamp(true)
+    const now = new Date().toISOString()
+    const { error } = await supabase.from('app_settings').upsert([
+      { key: 'login_stamp_pool_size', value: stampPolicy.poolSize, updated_at: now },
+      { key: 'stamp_hand_five',     value: stampPolicy.five,     updated_at: now },
+      { key: 'stamp_hand_four',     value: stampPolicy.four,     updated_at: now },
+      { key: 'stamp_hand_complete', value: stampPolicy.complete, updated_at: now },
+      { key: 'stamp_hand_full',     value: stampPolicy.full,     updated_at: now },
+      { key: 'stamp_hand_three',    value: stampPolicy.three,    updated_at: now },
+      { key: 'stamp_hand_twopair',  value: stampPolicy.twopair,  updated_at: now },
+    ])
+    setSavingStamp(false)
+    if (error) { alert(error.message); return }
+    setStampSaved(true); setTimeout(() => setStampSaved(false), 2000)
   }
 
   async function savePointPolicy() {
@@ -376,7 +404,54 @@ export default function AdminPage() {
   }
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
+  const [stampPolicy, setStampPolicy] = useState({
+    poolSize: '5', five: '30', four: '10', complete: '8', full: '3', three: '0', twopair: '0',
+  })
+  const [savingStamp, setSavingStamp] = useState(false)
+  const [stampSaved, setStampSaved] = useState(false)
   const [manualUrl, setManualUrl] = useState('')
+
+  /* 役の出現率を数え上げる。
+     マス数と絵柄の種類数が変わると確率も変わるため、その場で計算する。
+     組み合わせは最大でも 10^8 にはならない範囲（マス数は現実的に10以下）だが、
+     念のため上限を設けて重くならないようにしている。 */
+  const stampDaysNum = Math.max(1, parseInt(pointPolicy.loginDays || '5', 10) || 5)
+  const { stampOdds, stampAvg } = useMemo(() => {
+    const pool = Math.max(2, Math.min(10, parseInt(stampPolicy.poolSize || '5', 10) || 5))
+    const slots = Math.min(8, stampDaysNum)
+    const counts: Record<string, number> = {
+      five: 0, four: 0, complete: 0, full: 0, three: 0, twopair: 0, none: 0,
+    }
+    const combo: number[] = []
+    const walk = (i: number) => {
+      if (i === slots) {
+        const m = new Map<number, number>()
+        for (const v of combo) m.set(v, (m.get(v) ?? 0) + 1)
+        const n = Array.from(m.values()).sort((a, b) => b - a)
+        const h =
+          n[0] === slots && slots >= 2      ? 'five'
+          : n[0] === slots - 1 && slots >= 4 ? 'four'
+          : n[0] === 3 && n[1] === 2         ? 'full'
+          : n.length === slots               ? 'complete'
+          : n[0] === 3                       ? 'three'
+          : n[0] === 2 && n[1] === 2         ? 'twopair'
+          : 'none'
+        counts[h]++
+        return
+      }
+      for (let v = 0; v < pool; v++) { combo.push(v); walk(i + 1); combo.pop() }
+    }
+    walk(0)
+    const total = Math.pow(pool, slots)
+    const odds: Record<string, number | null> = {}
+    let avg = 0
+    for (const k of ['five', 'four', 'complete', 'full', 'three', 'twopair']) {
+      odds[k] = counts[k] > 0 ? Math.round(total / counts[k]) : null
+      avg += (counts[k] / total) * (parseInt((stampPolicy as any)[k] || '0', 10) || 0)
+    }
+    return { stampOdds: odds, stampAvg: avg }
+  }, [stampPolicy, stampDaysNum])
+
   const [savingManual, setSavingManual] = useState(false)
   const [manualSaved, setManualSaved] = useState(false)
 
@@ -671,6 +746,68 @@ export default function AdminPage() {
               </a>
             )}
           </div>
+        </div>
+
+        {/* ログインスタンプの役 */}
+        <div className={styles.settingsCard} style={{ marginBottom: 20 }}>
+          <p className={styles.settingLabel} style={{ marginBottom: 6 }}>
+            🎴 ログインスタンプの役ボーナス
+          </p>
+          <p className={styles.settingDesc} style={{ marginBottom: 10 }}>
+            カードが埋まったとき、絵柄のそろい方（役）に応じて追加で配るポイントです。
+            0にすると演出だけになり、ポイントは付きません。
+            達成ボーナス本体は「ポイントの方針」で設定します。
+          </p>
+          {stampSaved && <p style={{ fontSize: 12, color: 'var(--green)', marginBottom: 8 }}>✓ 保存しました</p>}
+
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>1枚で使う絵柄の種類</p>
+              <p className={styles.settingDesc}>
+                少ないほど「そろい」が出やすくなります。増やすと役が出にくくなります
+              </p>
+            </div>
+            <div className={styles.settingControl}>
+              <input className={styles.settingInput} type="number" min={2} max={10}
+                value={stampPolicy.poolSize}
+                onChange={e => setStampPolicy(p => ({ ...p, poolSize: e.target.value }))}/>
+              <span className={styles.settingUnit}>種類</span>
+            </div>
+          </div>
+
+          {([
+            ['five',     'ファイブカード', '5つすべて同じ絵柄'],
+            ['four',     'フォーカード',   '同じ絵柄が4つ'],
+            ['complete', 'コンプリート',   '5つすべてちがう絵柄'],
+            ['full',     'フルハウス',     '3つ＋2つのそろい'],
+            ['three',    'スリーカード',   '同じ絵柄が3つ'],
+            ['twopair',  'ツーペア',       '2つのペア'],
+          ] as const).map(([key, label, note]) => (
+            <div className={styles.settingRow} key={key}>
+              <div className={styles.settingInfo}>
+                <p className={styles.settingLabel}>{label}</p>
+                <p className={styles.settingDesc}>
+                  {note}（{stampOdds[key] != null ? `およそ${stampOdds[key]}枚に1回` : '—'}）
+                </p>
+              </div>
+              <div className={styles.settingControl}>
+                <input className={styles.settingInput} type="number" min={0} max={9999}
+                  value={stampPolicy[key]}
+                  onChange={e => setStampPolicy(p => ({ ...p, [key]: e.target.value }))}/>
+                <span className={styles.settingUnit}>pt</span>
+              </div>
+            </div>
+          ))}
+
+          <p className={styles.settingDesc} style={{ marginTop: 10 }}>
+            いまの設定だと、役ボーナスは<strong>1枚あたり平均 {stampAvg.toFixed(2)}pt</strong>、
+            毎日ログインし続けた場合で<strong>年間およそ {Math.round(stampAvg * 365 / stampDaysNum)}pt</strong>になります。
+            配りすぎに注意してください。
+          </p>
+          <button className={styles.saveBtn} disabled={savingStamp} onClick={saveStampPolicy}
+            style={{ marginTop: 8 }}>
+            {savingStamp ? '保存中…' : '保存する'}
+          </button>
         </div>
 
         {/* 新規登録の受付 */}
