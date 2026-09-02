@@ -246,7 +246,6 @@ export default function AdminPage() {
     setSavingPolicy(true)
     const { error } = await supabase.from('app_settings').upsert([
       { key: 'points_initial', value: pointPolicy.initial, updated_at: new Date().toISOString() },
-      { key: 'login_bonus_days', value: pointPolicy.loginDays, updated_at: new Date().toISOString() },
       { key: 'login_bonus_points', value: pointPolicy.loginPoints, updated_at: new Date().toISOString() },
       { key: 'points_free_expiry_days', value: pointPolicy.freeExpiryDays, updated_at: new Date().toISOString() },
     ])
@@ -414,7 +413,7 @@ export default function AdminPage() {
      マス数と絵柄の種類数が変わると確率も変わるため、その場で計算する。
      組み合わせは最大でも 10^8 にはならない範囲（マス数は現実的に10以下）だが、
      念のため上限を設けて重くならないようにしている。 */
-  const stampDaysNum = Math.max(1, parseInt(pointPolicy.loginDays || '5', 10) || 5)
+  const stampDaysNum = STAMP_POOL_SIZE   // マス数・絵柄の種類数ともに5で固定
   const { stampOdds, stampAvg } = useMemo(() => {
     const pool = STAMP_POOL_SIZE   // 5種類で固定
     const slots = Math.min(8, stampDaysNum)
@@ -1036,12 +1035,13 @@ export default function AdminPage() {
           <div className={styles.settingRow}>
             <div className={styles.settingInfo}>
               <p className={styles.settingLabel}>ログインボーナス：必要日数</p>
-              <p className={styles.settingDesc}>累計何日ログインするとボーナスを付与するか</p>
+              <p className={styles.settingDesc}>
+                スタンプカードの役（ポーカー風）が成立する条件に直結するため、
+                {STAMP_POOL_SIZE}日で固定しています
+              </p>
             </div>
             <div className={styles.settingControl}>
-              <input className={styles.settingInput} type="number" min={1} max={999}
-                value={pointPolicy.loginDays}
-                onChange={e => setPointPolicy(p => ({ ...p, loginDays: e.target.value }))}/>
+              <span className={styles.settingFixed}>{STAMP_POOL_SIZE}</span>
               <span className={styles.settingUnit}>日</span>
             </div>
           </div>

@@ -21,8 +21,17 @@
 -- 管理画面からは変更できないようにしてあり、変えたい場合はここを直接書き換えること。
 update public.app_settings set value = '5' where key = 'login_stamp_pool_size';
 update public.app_settings
-  set description = '1枚のスタンプカードで使う絵柄の種類数（5固定を推奨。役の成立条件に影響する）'
+  set description = '1枚のスタンプカードで使う絵柄の種類数（5固定。役の成立条件に影響するため管理画面からは変更不可）'
   where key = 'login_stamp_pool_size';
+
+-- 達成日数も5で固定する。
+-- 5日・5マス・5種類でそろえており、この組み合わせのときだけ6つの役がすべて成立する。
+-- 例えば3日にすると、フォーカードもコンプリートも出せなくなる。
+-- 管理画面からは変更できないようにしてあり、変えたい場合はここを直接書き換えること。
+update public.app_settings set value = '5' where key = 'login_bonus_days';
+update public.app_settings
+  set description = 'ログインボーナスの必要日数（5固定。スタンプの役の成立条件に影響するため管理画面からは変更不可）'
+  where key = 'login_bonus_days';
 
 -- 役ごとの追加ポイント。0にすると演出だけでポイントは付かない。
 -- 初期値は控えめにしてある。
