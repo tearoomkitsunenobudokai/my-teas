@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { resizeImageKeepAspect } from '@/lib/resizeImage'
+import { STAMP_POOL_SIZE } from '@/lib/stampIcons'
 import { versionLabel } from '@/lib/version'
 import styles from './admin.module.css'
 
@@ -141,7 +142,7 @@ export default function AdminPage() {
     supabase.from('app_settings').select('key,value')
       .in('key', ['points_initial', 'login_bonus_days', 'login_bonus_points', 'points_free_expiry_days', 'maintenance_mode', 'maintenance_message', 'signup_enabled', 'signup_closed_message',
                   'card_collect_min_reviews', 'card_collect_min_account_days', 'card_collect_daily_limit', 'card_collect_paid_only',
-                  'manual_url', 'login_stamp_pool_size',
+                  'manual_url',
                   'stamp_hand_five', 'stamp_hand_four', 'stamp_hand_complete',
                   'stamp_hand_full', 'stamp_hand_three', 'stamp_hand_twopair'])
       .then(({ data }) => {
@@ -161,7 +162,6 @@ export default function AdminPage() {
         })
         setManualUrl(m['manual_url'] ?? '')
         setStampPolicy({
-          poolSize: m['login_stamp_pool_size'] ?? '5',
           five:     m['stamp_hand_five']     ?? '30',
           four:     m['stamp_hand_four']     ?? '10',
           complete: m['stamp_hand_complete'] ?? '8',
@@ -230,7 +230,6 @@ export default function AdminPage() {
     setSavingStamp(true)
     const now = new Date().toISOString()
     const { error } = await supabase.from('app_settings').upsert([
-      { key: 'login_stamp_pool_size', value: stampPolicy.poolSize, updated_at: now },
       { key: 'stamp_hand_five',     value: stampPolicy.five,     updated_at: now },
       { key: 'stamp_hand_four',     value: stampPolicy.four,     updated_at: now },
       { key: 'stamp_hand_complete', value: stampPolicy.complete, updated_at: now },
@@ -405,7 +404,7 @@ export default function AdminPage() {
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
   const [stampPolicy, setStampPolicy] = useState({
-    poolSize: '5', five: '30', four: '10', complete: '8', full: '3', three: '0', twopair: '0',
+    five: '30', four: '10', complete: '8', full: '3', three: '0', twopair: '0',
   })
   const [savingStamp, setSavingStamp] = useState(false)
   const [stampSaved, setStampSaved] = useState(false)
@@ -417,7 +416,7 @@ export default function AdminPage() {
      念のため上限を設けて重くならないようにしている。 */
   const stampDaysNum = Math.max(1, parseInt(pointPolicy.loginDays || '5', 10) || 5)
   const { stampOdds, stampAvg } = useMemo(() => {
-    const pool = Math.max(2, Math.min(10, parseInt(stampPolicy.poolSize || '5', 10) || 5))
+    const pool = STAMP_POOL_SIZE   // 5種類で固定
     const slots = Math.min(8, stampDaysNum)
     const counts: Record<string, number> = {
       five: 0, four: 0, complete: 0, full: 0, three: 0, twopair: 0, none: 0,
@@ -760,20 +759,11 @@ export default function AdminPage() {
           </p>
           {stampSaved && <p style={{ fontSize: 12, color: 'var(--green)', marginBottom: 8 }}>✓ 保存しました</p>}
 
-          <div className={styles.settingRow}>
-            <div className={styles.settingInfo}>
-              <p className={styles.settingLabel}>1枚で使う絵柄の種類</p>
-              <p className={styles.settingDesc}>
-                少ないほど「そろい」が出やすくなります。増やすと役が出にくくなります
-              </p>
-            </div>
-            <div className={styles.settingControl}>
-              <input className={styles.settingInput} type="number" min={2} max={10}
-                value={stampPolicy.poolSize}
-                onChange={e => setStampPolicy(p => ({ ...p, poolSize: e.target.value }))}/>
-              <span className={styles.settingUnit}>種類</span>
-            </div>
-          </div>
+          <p className={styles.settingDesc} style={{ marginBottom: 12 }}>
+            1枚で使う絵柄は<strong>5種類</strong>で固定です。
+            5マス・5種類のときだけ、6つの役がすべて成立します
+            （種類を減らすと「コンプリート」が出せなくなります）。
+          </p>
 
           {([
             ['five',     'ファイブカード', '5つすべて同じ絵柄'],

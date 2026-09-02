@@ -73,3 +73,14 @@ export const HANDS: Record<StampHand, HandInfo> = {
 export function handInfo(hand: string | undefined | null): HandInfo {
   return HANDS[(hand ?? 'none') as StampHand] ?? HANDS.none
 }
+
+/**
+ * 1枚のスタンプカードで使う絵柄の種類数。
+ *
+ * 5で固定している。ログインボーナスが5日、マスが5つ、絵柄も5種類とそろえることで
+ * 説明しやすくなるのに加え、5マス・5種類のときだけ6つの役がすべて成立するため。
+ * 4種類以下にすると「コンプリート（全部ちがう）」が出せなくなる。
+ *
+ * サーバー側の既定値（app_settings の login_stamp_pool_size）と一致させること。
+ */
+export const STAMP_POOL_SIZE = 5
