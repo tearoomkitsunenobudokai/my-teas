@@ -1,7 +1,10 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { stampIcon } from '@/lib/stampIcons'
+import {
+  stampIcon, STAMP_ICONS,
+  HANDS, HAND_ORDER, HAND_SAMPLES, HAND_ODDS,
+} from '@/lib/stampIcons'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import styles from './points.module.css'
@@ -58,6 +61,8 @@ export default function PointsPage() {
   const [stampIcons, setStampIcons] = useState<string[]>([])
   const [stampDays, setStampDays] = useState(5)
   const [stampBonus, setStampBonus] = useState(2)
+  const [handPoints, setHandPoints] = useState<Record<string, number>>({})
+  const [showHands, setShowHands] = useState(false)
   const [ledger, setLedger] = useState<any[]>([])
   const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({})
   const [packages, setPackages] = useState<any[]>([])
@@ -92,7 +97,9 @@ export default function PointsPage() {
       supabase.from('feature_costs').select('feature,label'),
       supabase.from('point_lots').select('amount,expires_at,source').eq('user_id', user.id).eq('kind', 'free').gt('amount', 0).order('expires_at', { ascending: true }),
       supabase.from('app_settings').select('key,value')
-        .in('key', ['login_bonus_days', 'login_bonus_points']),
+        .in('key', ['login_bonus_days', 'login_bonus_points',
+                    'stamp_hand_five', 'stamp_hand_four', 'stamp_hand_complete',
+                    'stamp_hand_full', 'stamp_hand_three', 'stamp_hand_twopair']),
     ])
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     setPoints(profile?.points ?? 0)
@@ -105,6 +112,14 @@ export default function PointsPage() {
     for (const r of settings ?? []) sm[r.key] = r.value
     setStampDays(parseInt(sm['login_bonus_days'] ?? '5', 10) || 5)
     setStampBonus(parseInt(sm['login_bonus_points'] ?? '2', 10) || 2)
+    setHandPoints({
+      five:     parseInt(sm['stamp_hand_five']     ?? '30', 10) || 0,
+      four:     parseInt(sm['stamp_hand_four']     ?? '10', 10) || 0,
+      complete: parseInt(sm['stamp_hand_complete'] ?? '8',  10) || 0,
+      full:     parseInt(sm['stamp_hand_full']     ?? '3',  10) || 0,
+      three:    parseInt(sm['stamp_hand_three']    ?? '0',  10) || 0,
+      twopair:  parseInt(sm['stamp_hand_twopair']  ?? '0',  10) || 0,
+    })
     setLedger(entries ?? [])
     const fm: Record<string, string> = {}
     for (const c of costs ?? []) fm[c.feature] = c.label
@@ -247,8 +262,10 @@ export default function PointsPage() {
                   {stampCount >= stampDays
                     ? 'あと少しで達成です。'
                     : `あと ${stampDays - stampCount} 個で ${stampBonus}pt`}
-                  　絵柄がすべて同じでそろうと、追加のおまけがあります。
                 </p>
+                <button type="button" className={styles.handLink} onClick={() => setShowHands(true)}>
+                  🎴 絵柄のそろい方（役）を見る
+                </button>
               </div>
             </section>
           )}
@@ -323,6 +340,56 @@ export default function PointsPage() {
             )}
           </section>
         </>
+      )}
+
+      {/* 役の一覧。絵柄の見本を並べて、どうそろえばよいかを示す。 */}
+      {showHands && (
+        <div className={styles.handOverlay} onClick={() => setShowHands(false)}>
+          <div className={styles.handModal} onClick={e => e.stopPropagation()}>
+            <button className={styles.handClose} onClick={() => setShowHands(false)} aria-label="閉じる">✕</button>
+            <h2 className={styles.handTitle}>🎴 絵柄のそろい方（役）</h2>
+            <p className={styles.handLead}>
+              スタンプの絵柄は、そのカードで使う{STAMP_ICONS.length > 5 ? 5 : STAMP_ICONS.length}種類から毎日1つ引かれます。
+              {stampDays}個そろったとき、並び方に応じて追加のポイントがもらえます。
+            </p>
+
+            <ul className={styles.handList}>
+              {HAND_ORDER.map(key => {
+                const info = HANDS[key]
+                const pts = handPoints[key] ?? 0
+                return (
+                  <li key={key} className={styles.handRow}>
+                    <div className={styles.handSample}>
+                      {HAND_SAMPLES[key].map((n, i) => (
+                        <img key={i} src={STAMP_ICONS[n].src} alt=""
+                          className={styles.handSampleIcon}/>
+                      ))}
+                    </div>
+                    <div className={styles.handInfo}>
+                      <span className={styles.handName}>
+                        {info.label}
+                        {pts > 0
+                          ? <span className={styles.handPt}>+{pts}pt</span>
+                          : <span className={styles.handPtNone}>おまけなし</span>}
+                      </span>
+                      <span className={styles.handNote}>
+                        {info.note}・約{HAND_ODDS[key] < 1
+                          ? Math.round(100 / HAND_ODDS[key])
+                          : Math.round(100 / HAND_ODDS[key])}枚に1回
+                      </span>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+
+            <p className={styles.handFoot}>
+              ※ 絵柄の見本です。実際に使われる絵柄はカードごとに変わります。
+              いずれの役にもならなかった場合、達成ボーナスの{stampBonus}ptのみとなります。
+            </p>
+            <button className={styles.handOk} onClick={() => setShowHands(false)}>閉じる</button>
+          </div>
+        </div>
       )}
     </div>
   )
