@@ -27,7 +27,7 @@
   position: relative;
   overflow: hidden;
   display: block;
-  height: 60px;
+  height: 68px;
   border-radius: var(--radius);
   background: var(--bg-muted);
   border: 1px solid transparent;
@@ -46,13 +46,15 @@
   background: var(--green);
 }
 
+/* img は上下左右の位置を指定しても自動では伸びないため、
+   高さを calc で明示する。差し引く値は .cellLabel の高さに合わせること。
+   ここを auto にすると画像が元の大きさのまま描画され、セルからはみ出す。 */
 .cellIcon {
   position: absolute;
-  left: 0; right: 0; top: 0;
-  /* 下の帯を避ける。値は .cellLabel の高さに合わせること */
-  bottom: 16px;
-  padding: 1px 2px 0;
-  width: auto; height: auto;
+  left: 0; top: 0;
+  width: 100%;
+  height: calc(100% - 17px);
+  padding: 2px 2px 0;
   object-fit: contain;
   display: block;
 }
@@ -151,8 +153,8 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .inner { padding: 7px 14px 5px; }
   .grid { gap: 7px; }
-  .cell { height: 66px; }
-  .cellIcon { bottom: 17px; }
+  .cell { height: 74px; }
+  .cellIcon { height: calc(100% - 18px); }
   .cellLabel { font-size: 10.5px; padding: 2px 2px 3px; }
   .railToggle { width: 30px; height: 39px; font-size: 13px; }
   .railItem { height: 39px; }
