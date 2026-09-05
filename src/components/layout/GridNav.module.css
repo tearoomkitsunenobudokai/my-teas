@@ -41,7 +41,10 @@
   background: var(--green-light);
   border-color: var(--green);
 }
-.cellActive .cellLabel { background: var(--green); }
+.cellActive .cellLabel {
+  color: #fff;
+  background: var(--green);
+}
 
 .cellIcon {
   position: absolute;
@@ -63,8 +66,11 @@
   line-height: 1.2;
   text-align: center;
   letter-spacing: -0.02em;
-  color: #fff;
-  background: rgba(14, 122, 88, 0.92);
+  /* 通常は塗りなしの黒文字。選択中だけ緑の帯を敷く（v398）。
+     絵の表示領域は .cellIcon の bottom で確保してあるので、
+     帯の有無にかかわらず絵と文字は重ならない。 */
+  color: var(--text);
+  background: transparent;
 }
 
 /* ── 折りたたみ時: 1行にすべて収める ──
