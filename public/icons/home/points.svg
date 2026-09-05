@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g stroke="#FFFFFF" stroke-width="11" fill="none" stroke-linejoin="round" stroke-linecap="round">
+<path d="M12 26 L108 26 Q112 26 112 30 L112 90 Q112 94 108 94 L12 94 Q8 94 8 90 L8 30 Q8 26 12 26 Z" fill="#FFF6E2"/>
+<path d="M8 26 L112 26 L112 44 L8 44 Z" fill="#1D9E75"/>
+<path d="M12 26 L108 26 Q112 26 112 30 L112 90 Q112 94 108 94 L12 94 Q8 94 8 90 L8 30 Q8 26 12 26 Z" fill="none"/>
+<circle cx="30" cy="68" r="12" fill="#7FD3B3"/>
+<circle cx="60" cy="68" r="12" fill="#7FD3B3"/>
+<circle cx="90" cy="68" r="12" fill="#F5C243"/>
+</g><g stroke="#3A2E1F" stroke-width="4.2" stroke-linejoin="round" stroke-linecap="round">
+<path d="M12 26 L108 26 Q112 26 112 30 L112 90 Q112 94 108 94 L12 94 Q8 94 8 90 L8 30 Q8 26 12 26 Z" fill="#FFF6E2"/>
+<path d="M8 26 L112 26 L112 44 L8 44 Z" fill="#1D9E75"/>
+<path d="M12 26 L108 26 Q112 26 112 30 L112 90 Q112 94 108 94 L12 94 Q8 94 8 90 L8 30 Q8 26 12 26 Z" fill="none"/>
+<circle cx="30" cy="68" r="12" fill="#7FD3B3"/>
+<circle cx="60" cy="68" r="12" fill="#7FD3B3"/>
+<circle cx="90" cy="68" r="12" fill="#F5C243"/>
+</g><path d="M24 68 L28.5 73 L37 63" stroke="#0E7A58" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M54 68 L58.5 73 L67 63" stroke="#0E7A58" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M90 60 L92.8 65.6 L99 66.5 L94.5 70.9 L95.6 77 L90 74.1 L84.4 77 L85.5 70.9 L81 66.5 L87.2 65.6 Z" fill="#D89A18"/><path d="M12 30 L108 30 L108 40 L12 40 Z" fill="url(#sh)"/></svg>

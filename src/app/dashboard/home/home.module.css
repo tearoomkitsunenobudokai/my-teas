@@ -50,9 +50,15 @@
 .tilePrimary:hover { background: var(--green-dark); box-shadow: 0 6px 18px rgba(29,158,117,0.32); }
 
 /* タイルの幅に合わせて文字を伸縮させる。狭い画面でも4枚が1列に収まる。 */
-.tileIcon { font-size: clamp(19px, 6.2vw, 30px); line-height: 1; }
+/* img は高さを明示すること。auto にすると元の大きさで描画され、はみ出す。 */
+.tileIcon {
+  width: 100%;
+  height: clamp(26px, 8.8vw, 40px);
+  object-fit: contain;
+  display: block;
+}
 .tileLabel {
-  font-size: clamp(9.5px, 2.9vw, 15px);
+  font-size: clamp(8.5px, 2.5vw, 13.5px);
   font-weight: 700; line-height: 1.25;
   word-break: auto-phrase;
 }
@@ -61,8 +67,8 @@
 .heroTileRow:has(> :nth-child(3):last-child) {
   grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 430px;
 }
-.heroTileRow:has(> :nth-child(3):last-child) .tileIcon { font-size: clamp(22px, 7.5vw, 30px); }
-.heroTileRow:has(> :nth-child(3):last-child) .tileLabel { font-size: clamp(11px, 3.6vw, 15px); }
+.heroTileRow:has(> :nth-child(3):last-child) .tileIcon { height: clamp(30px, 10vw, 44px); }
+.heroTileRow:has(> :nth-child(3):last-child) .tileLabel { font-size: clamp(10px, 3.2vw, 14.5px); }
 .btnPrimary {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--green); color: #fff;
