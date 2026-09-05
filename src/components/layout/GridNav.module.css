@@ -26,14 +26,14 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 6px 3px 5px;
+  gap: 3px;
+  padding: 5px 3px 4px;
   border-radius: var(--radius);
   background: var(--bg-muted);
   border: 1px solid transparent;
   color: var(--text);
   text-decoration: none;
-  min-height: 54px;
+  min-height: 62px;
   transition: background 0.15s, border-color 0.15s;
 }
 .cell:active { background: #e9e6e1; }
@@ -44,8 +44,10 @@
 }
 
 .cellIcon {
-  font-size: 20px;
-  line-height: 1;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
 }
 
 .cellLabel {
@@ -86,9 +88,14 @@
   justify-content: center;
   height: 34px;
   border-radius: 6px;
-  font-size: 17px;
   text-decoration: none;
   background: transparent;
+}
+.railIcon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
 }
 .railItem:active { background: var(--bg-muted); }
 
@@ -129,10 +136,11 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .inner { padding: 7px 14px 5px; }
   .grid { gap: 7px; }
-  .cell { min-height: 62px; padding: 7px 3px 6px; }
-  .cellIcon { font-size: 23px; }
+  .cell { min-height: 74px; padding: 6px 3px 5px; }
+  .cellIcon { width: 42px; height: 42px; }
   .cellLabel { font-size: 11.5px; }
   .railToggle { width: 30px; height: 39px; font-size: 13px; }
-  .railItem { height: 39px; font-size: 20px; }
+  .railItem { height: 39px; }
+  .railIcon { width: 30px; height: 30px; }
   .toggleBtn { font-size: 11.5px; padding: 2px 18px; }
 }
