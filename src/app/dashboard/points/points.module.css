@@ -102,3 +102,36 @@
   .expiryNote { font-size: 14.5px; }
   .expiryHint { font-size: 13px; }
 }
+
+/* === v403: ログインスタンプの確認 === */
+.stampCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+}
+.stampLead {
+  font-size: 13px; color: var(--text); margin: 0 0 12px; line-height: 1.6;
+}
+.stampGrid {
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  margin-bottom: 10px;
+}
+.stampBox {
+  width: 54px; height: 54px; border-radius: 12px;
+  border: 2px dashed var(--border-strong, #ccc);
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.stampBoxFilled {
+  border-style: solid; border-color: var(--green);
+  background: var(--green-light);
+}
+.stampBoxIcon { width: 76%; height: 76%; object-fit: contain; }
+.stampBoxNum { font-size: 16px; font-weight: 700; color: var(--text-hint); }
+.stampFoot {
+  font-size: 12px; color: var(--text-muted); margin: 0; text-align: center; line-height: 1.6;
+}
+@media (max-width: 420px) {
+  .stampBox { width: 46px; height: 46px; }
+}
