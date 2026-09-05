@@ -1,11 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="#513E11" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
-<path d="M58 22 Q94 22 100 52 Q104 73 85 75 Q74 76 74 83 Q74 94 61 96
-         Q28 98 20 66 Q14 37 39 27 Q48 22 58 22 Z" fill="#F7EBD2"/>
-<path d="M58 22 Q94 22 100 52 Q104 73 85 75 Q74 76 74 83 Q74 94 61 96
-         Q28 98 20 66 Q14 37 39 27 Q48 22 58 22 Z"/>
-<circle cx="43" cy="42" r="8" fill="#D96C7A" stroke-width="2.4"/>
-<circle cx="70" cy="39" r="8" fill="#F2B733" stroke-width="2.4"/>
-<circle cx="84" cy="59" r="8" fill="#5E93B8" stroke-width="2.4"/>
-<circle cx="36" cy="67" r="8" fill="#4E9C6B" stroke-width="2.4"/>
-<circle cx="58" cy="76" r="8" fill="#C96F3F" stroke-width="2.4"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g stroke="#FFFFFF" stroke-width="11" fill="none" stroke-linejoin="round" stroke-linecap="round">
+<path d="M60 16 Q104 16 104 58 Q104 82 84 82 Q72 82 72 90 Q72 104 58 104
+         Q16 104 16 60 Q16 16 60 16 Z" fill="#3FB392"/>
+<circle cx="42" cy="40" r="9" fill="#F0604E"/>
+<circle cx="74" cy="38" r="9" fill="#FFC63A"/>
+<circle cx="88" cy="62" r="9" fill="#3FB6C4"/>
+<circle cx="36" cy="70" r="9" fill="#5DBE6E"/>
+</g><g stroke="#3A2E1F" stroke-width="4.2" stroke-linejoin="round" stroke-linecap="round">
+<path d="M60 16 Q104 16 104 58 Q104 82 84 82 Q72 82 72 90 Q72 104 58 104
+         Q16 104 16 60 Q16 16 60 16 Z" fill="#3FB392"/>
+<circle cx="42" cy="40" r="9" fill="#F0604E"/>
+<circle cx="74" cy="38" r="9" fill="#FFC63A"/>
+<circle cx="88" cy="62" r="9" fill="#3FB6C4"/>
+<circle cx="36" cy="70" r="9" fill="#5DBE6E"/>
+</g><path d="M34 26 Q56 18 76 24 Q54 26 34 34 Z" fill="#fff" opacity=".5"/></svg>
