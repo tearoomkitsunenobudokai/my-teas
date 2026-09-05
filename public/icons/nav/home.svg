@@ -1,11 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" stroke="#513E11" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
-<path d="M18 57 L60 24 L102 57" stroke-width="3.8"/>
-<path d="M27 53 L60 28 L93 53 L93 94 Q93 97 90 97 L30 97 Q27 97 27 94 Z" fill="#C96F3F"/>
-<path d="M30 60 L30 94 Q30 97 33 97 L87 97 Q90 97 90 94 L90 60 Z" fill="#F7EBD2"/>
-<path d="M30 60 L30 94 Q30 97 33 97 L87 97 Q90 97 90 94 L90 60"/>
-<path d="M27 53 L60 28 L93 53" />
-<path d="M48 97 L48 72 Q48 69 51 69 L69 69 Q72 69 72 72 L72 97" fill="#F2B733"/>
-<path d="M48 97 L48 72 Q48 69 51 69 L69 69 Q72 69 72 72 L72 97"/>
-<path d="M60 69 L60 97" stroke-width="2.4"/>
-<path d="M74 33 Q70 27 74 21 Q78 15 74 10" stroke="#BFB8B2" stroke-width="3"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><defs><linearGradient id="sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><g stroke="#FFFFFF" stroke-width="11" fill="none" stroke-linejoin="round" stroke-linecap="round">
+<path d="M60 16 L104 54 L96 54 L96 100 Q96 104 92 104 L28 104 Q24 104 24 100 L24 54 L16 54 Z" fill="#1D9E75"/>
+<path d="M60 16 L104 54 L96 54 L96 100 Q96 104 92 104 L28 104 Q24 104 24 100 L24 54 L16 54 Z" fill="none"/>
+<path d="M24 54 L96 54 L96 100 Q96 104 92 104 L28 104 Q24 104 24 100 Z" fill="#FFF6E2"/>
+<path d="M24 54 L96 54 L96 100 Q96 104 92 104 L28 104 Q24 104 24 100 Z" fill="none"/>
+<path d="M48 104 L48 76 Q48 72 52 72 L68 72 Q72 72 72 76 L72 104 Z" fill="#7A5233"/>
+<path d="M48 104 L48 76 Q48 72 52 72 L68 72 Q72 72 72 76 L72 104 Z" fill="none"/>
+</g><g stroke="#3A2E1F" stroke-width="4.2" stroke-linejoin="round" stroke-linecap="round">
+<path d="M60 16 L104 54 L96 54 L96 100 Q96 104 92 104 L28 104 Q24 104 24 100 L24 54 L16 54 Z" fill="#1D9E75"/>
+<path d="M60 16 L104 54 L96 54 L96 100 Q96 104 92 104 L28 104 Q24 104 24 100 L24 54 L16 54 Z" fill="none"/>
+<path d="M24 54 L96 54 L96 100 Q96 104 92 104 L28 104 Q24 104 24 100 Z" fill="#FFF6E2"/>
+<path d="M24 54 L96 54 L96 100 Q96 104 92 104 L28 104 Q24 104 24 100 Z" fill="none"/>
+<path d="M48 104 L48 76 Q48 72 52 72 L68 72 Q72 72 72 76 L72 104 Z" fill="#7A5233"/>
+<path d="M48 104 L48 76 Q48 72 52 72 L68 72 Q72 72 72 76 L72 104 Z" fill="none"/>
+</g><path d="M60 22 L96 53 L24 53 Z" fill="url(#sh)"/><circle cx="60" cy="86" r="3" fill="#F5C243"/></svg>

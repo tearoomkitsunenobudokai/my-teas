@@ -19,7 +19,7 @@ import styles from './GridNav.module.css'
  * 状態は localStorage に保存し、次回もその状態で開く。
  */
 
-// アイコンは /public/icons/nav/ のSVG（v396で絵文字から差し替え）。
+// アイコンは /public/icons/nav/ のSVG（v396で絵文字から差し替え、v397で絵柄を刷新）。
 // 差し替える場合は同名のファイルを置き換えるだけでよい。
 const NAV = [
   // ラベルは4列に収まるよう短めにしている（折り返すと行が増えて高さを取るため）
