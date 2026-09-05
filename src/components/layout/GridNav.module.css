@@ -21,19 +21,18 @@
   gap: 6px;
 }
 
+/* 絵をタイル全面に広げ、文字を下部の帯に重ねる（v398）。
+   帯の高さぶんだけ絵の領域を上に詰めているので、絵と文字は重ならない。 */
 .cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 5px 3px 4px;
+  position: relative;
+  overflow: hidden;
+  display: block;
+  aspect-ratio: 1 / 1;
   border-radius: var(--radius);
   background: var(--bg-muted);
   border: 1px solid transparent;
   color: var(--text);
   text-decoration: none;
-  min-height: 70px;
   transition: background 0.15s, border-color 0.15s;
 }
 .cell:active { background: #e9e6e1; }
@@ -42,20 +41,30 @@
   background: var(--green-light);
   border-color: var(--green);
 }
+.cellActive .cellLabel { background: var(--green); }
 
 .cellIcon {
-  width: 40px;
-  height: 40px;
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  /* 下の帯を避ける。値は .cellLabel の高さに合わせること */
+  bottom: 19px;
+  padding: 1px 2px 0;
+  width: auto; height: auto;
   object-fit: contain;
   display: block;
 }
 
 .cellLabel {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 3px 2px 4px;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.2;
   text-align: center;
   letter-spacing: -0.02em;
+  color: #fff;
+  background: rgba(14, 122, 88, 0.92);
 }
 
 /* ── 折りたたみ時: 1行にすべて収める ──
@@ -136,9 +145,8 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .inner { padding: 7px 14px 5px; }
   .grid { gap: 7px; }
-  .cell { min-height: 80px; padding: 6px 3px 5px; }
-  .cellIcon { width: 48px; height: 48px; }
-  .cellLabel { font-size: 11.5px; }
+  .cellIcon { bottom: 21px; }
+  .cellLabel { font-size: 11.5px; padding: 3px 2px 5px; }
   .railToggle { width: 30px; height: 39px; font-size: 13px; }
   .railItem { height: 39px; }
   .railIcon { width: 33px; height: 33px; }
