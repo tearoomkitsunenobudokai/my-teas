@@ -135,3 +135,67 @@
 @media (max-width: 420px) {
   .stampBox { width: 46px; height: 46px; }
 }
+
+/* === v405: 役の一覧 === */
+.handLink {
+  display: block; width: 100%; margin-top: 8px; padding: 8px;
+  font-size: 12.5px; font-weight: 700;
+  color: var(--green-dark); background: var(--green-light);
+  border: 1px solid var(--green); border-radius: 9px; cursor: pointer;
+}
+.handLink:hover { background: #fff; }
+
+.handOverlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.handModal {
+  position: relative;
+  background: var(--bg-card); border-radius: 16px;
+  padding: 22px 18px 16px;
+  max-width: 440px; width: 100%;
+  max-height: 86vh; overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,.22);
+}
+.handClose {
+  position: absolute; top: 12px; right: 14px;
+  background: none; border: none; font-size: 18px;
+  color: var(--text-muted); cursor: pointer;
+}
+.handTitle { font-size: 17px; font-weight: 700; margin: 0 0 8px; color: var(--text); }
+.handLead  { font-size: 12.5px; color: var(--text-muted); margin: 0 0 14px; line-height: 1.7; }
+
+.handList { list-style: none; margin: 0 0 12px; padding: 0; }
+.handRow {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-top: 1px solid var(--border);
+}
+.handRow:last-child { border-bottom: 1px solid var(--border); }
+.handSample { display: flex; gap: 2px; flex-shrink: 0; }
+.handSampleIcon {
+  width: 21px; height: 21px; object-fit: contain;
+  background: var(--green-light);
+  border: 1px solid var(--green); border-radius: 5px; padding: 1px;
+}
+.handInfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.handName { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.handPt {
+  margin-left: 7px; padding: 1px 7px; border-radius: 999px;
+  font-size: 11px; color: #fff; background: var(--green);
+}
+.handPtNone {
+  margin-left: 7px; font-size: 11px; color: var(--text-hint); font-weight: 600;
+}
+.handNote { font-size: 11.5px; color: var(--text-muted); }
+
+.handFoot { font-size: 11.5px; color: var(--text-muted); margin: 0 0 12px; line-height: 1.7; }
+.handOk {
+  width: 100%; padding: 11px; font-size: 15px; font-weight: 700;
+  color: #fff; background: var(--green); border: none; border-radius: 10px; cursor: pointer;
+}
+
+@media (max-width: 420px) {
+  .handSampleIcon { width: 18px; height: 18px; }
+  .handName { font-size: 12.5px; }
+}

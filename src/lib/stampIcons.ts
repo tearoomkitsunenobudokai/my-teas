@@ -74,6 +74,31 @@ export function handInfo(hand: string | undefined | null): HandInfo {
   return HANDS[(hand ?? 'none') as StampHand] ?? HANDS.none
 }
 
+/** 役を強い順に並べたもの（一覧表示に使う）。'none' は含めない。 */
+export const HAND_ORDER: StampHand[] = ['five', 'four', 'complete', 'full', 'three', 'twopair']
+
+/**
+ * 役の見本。0〜4 は絵柄の種類を表す番号で、同じ番号なら同じ絵柄。
+ * どのアイコンを当てるかは表示側で決める（STAMP_ICONS の先頭から順に使う）。
+ */
+export const HAND_SAMPLES: Record<StampHand, number[]> = {
+  five:     [0, 0, 0, 0, 0],
+  four:     [0, 0, 0, 0, 1],
+  complete: [0, 1, 2, 3, 4],
+  full:     [0, 0, 0, 1, 1],
+  three:    [0, 0, 0, 1, 2],
+  twopair:  [0, 0, 1, 1, 2],
+  none:     [0, 1, 2, 3, 4],
+}
+
+/**
+ * 役の出現率（%）。5マス・絵柄5種類のときの値。
+ * supabase/migrations/102 のコメントと対応させること。
+ */
+export const HAND_ODDS: Record<StampHand, number> = {
+  five: 0.16, four: 3.2, complete: 3.84, full: 6.4, three: 19.2, twopair: 28.8, none: 38.4,
+}
+
 /**
  * 1枚のスタンプカードで使う絵柄の種類数。
  *
