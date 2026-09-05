@@ -27,7 +27,7 @@
   position: relative;
   overflow: hidden;
   display: block;
-  aspect-ratio: 1 / 1;
+  height: 60px;
   border-radius: var(--radius);
   background: var(--bg-muted);
   border: 1px solid transparent;
@@ -41,13 +41,16 @@
   background: var(--green-light);
   border-color: var(--green);
 }
-.cellActive .cellLabel { background: var(--green); }
+.cellActive .cellLabel {
+  color: #fff;
+  background: var(--green);
+}
 
 .cellIcon {
   position: absolute;
   left: 0; right: 0; top: 0;
   /* 下の帯を避ける。値は .cellLabel の高さに合わせること */
-  bottom: 19px;
+  bottom: 16px;
   padding: 1px 2px 0;
   width: auto; height: auto;
   object-fit: contain;
@@ -57,14 +60,17 @@
 .cellLabel {
   position: absolute;
   left: 0; right: 0; bottom: 0;
-  padding: 3px 2px 4px;
-  font-size: 10px;
+  padding: 2px 2px 3px;
+  font-size: 9.5px;
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
   letter-spacing: -0.02em;
-  color: #fff;
-  background: rgba(14, 122, 88, 0.92);
+  /* 通常は塗りなしの黒文字。選択中だけ緑の帯を敷く（v398）。
+     絵の表示領域は .cellIcon の bottom で確保してあるので、
+     帯の有無にかかわらず絵と文字は重ならない。 */
+  color: var(--text);
+  background: transparent;
 }
 
 /* ── 折りたたみ時: 1行にすべて収める ──
@@ -145,8 +151,9 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .inner { padding: 7px 14px 5px; }
   .grid { gap: 7px; }
-  .cellIcon { bottom: 21px; }
-  .cellLabel { font-size: 11.5px; padding: 3px 2px 5px; }
+  .cell { height: 66px; }
+  .cellIcon { bottom: 17px; }
+  .cellLabel { font-size: 10.5px; padding: 2px 2px 3px; }
   .railToggle { width: 30px; height: 39px; font-size: 13px; }
   .railItem { height: 39px; }
   .railIcon { width: 33px; height: 33px; }
