@@ -83,21 +83,21 @@ export default function HomePage() {
         <p className={styles.heroLead}>今日の一杯を、記録に。</p>
         <div className={styles.heroTileRow}>
           <Link href="/dashboard/reviews?new=1" className={`${styles.tile} ${styles.tilePrimary}`}>
-            <span className={styles.tileIcon}>🍵</span>
+            <img src="/icons/home/rate.svg" alt="" className={styles.tileIcon}/>
             <span className={styles.tileLabel}>お茶を評価する</span>
           </Link>
           <Link href="/dashboard/certified-shops" className={styles.tile}>
-            <span className={styles.tileIcon}>🥇</span>
+            <img src="/icons/home/shop.svg" alt="" className={styles.tileIcon}/>
             <span className={styles.tileLabel}>紅茶の美味しいお店を探す</span>
           </Link>
           <Link href="/dashboard/points" className={styles.tile}>
-            <span className={styles.tileIcon}>💎</span>
+            <img src="/icons/home/points.svg" alt="" className={styles.tileIcon}/>
             <span className={styles.tileLabel}>ポイント確認</span>
           </Link>
           {/* マニュアルのURLが未設定のあいだは出さない */}
           {manualUrl && (
             <a href={manualUrl} target="_blank" rel="noopener noreferrer" className={styles.tile}>
-              <span className={styles.tileIcon}>📖</span>
+              <img src="/icons/home/manual.svg" alt="" className={styles.tileIcon}/>
               <span className={styles.tileLabel}>使用方法</span>
             </a>
           )}
