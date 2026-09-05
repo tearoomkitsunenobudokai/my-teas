@@ -19,18 +19,22 @@ import styles from './GridNav.module.css'
  * 状態は localStorage に保存し、次回もその状態で開く。
  */
 
+// アイコンは /public/icons/nav/ のSVG（v396で絵文字から差し替え）。
+// 差し替える場合は同名のファイルを置き換えるだけでよい。
 const NAV = [
   // ラベルは4列に収まるよう短めにしている（折り返すと行が増えて高さを取るため）
   // ホームの下にある「統計」へは、SubNav のタブから移動する（v362）
-  { href: '/dashboard/home', label: 'ホーム', icon: '🏠' },
-  { href: '/dashboard/reviews', label: '自分の評価', icon: '⭐' },
-  { href: '/dashboard/community', label: 'コミュニティ', icon: '👥' },
-  { href: '/dashboard/certified-shops', label: '認定店', icon: '🏅' },
-  { href: '/dashboard/colors', label: '色パレット', icon: '🎨' },
-  { href: '/dashboard/ai-analysis', label: 'AI分析', icon: '🤖' },
-  { href: '/dashboard/card-print', label: '印刷', icon: '🖨' },
-  { href: '/dashboard/contact', label: '問い合わせ', icon: '✉️' },
+  { href: '/dashboard/home', label: 'ホーム', icon: 'home' },
+  { href: '/dashboard/reviews', label: '自分の評価', icon: 'reviews' },
+  { href: '/dashboard/community', label: 'コミュニティ', icon: 'community' },
+  { href: '/dashboard/certified-shops', label: '認定店', icon: 'certified' },
+  { href: '/dashboard/colors', label: '色パレット', icon: 'colors' },
+  { href: '/dashboard/ai-analysis', label: 'AI分析', icon: 'ai' },
+  { href: '/dashboard/card-print', label: '印刷', icon: 'print' },
+  { href: '/dashboard/contact', label: '問い合わせ', icon: 'contact' },
 ]
+
+const iconSrc = (icon: string) => `/icons/nav/${icon}.svg`
 
 const COLLAPSE_KEY = 'teanote_gridnav_collapsed'
 
@@ -80,7 +84,7 @@ export default function GridNav() {
                 title={label}
                 aria-label={label}
                 className={`${styles.railItem} ${isActive(href) ? styles.railActive : ''}`}>
-                {icon}
+                <img src={iconSrc(icon)} alt="" className={styles.railIcon}/>
               </Link>
             ))}
           </div>
@@ -92,7 +96,7 @@ export default function GridNav() {
                   key={href}
                   href={href}
                   className={`${styles.cell} ${isActive(href) ? styles.cellActive : ''}`}>
-                  <span className={styles.cellIcon}>{icon}</span>
+                  <img src={iconSrc(icon)} alt="" className={styles.cellIcon}/>
                   <span className={styles.cellLabel}>{label}</span>
                 </Link>
               ))}
