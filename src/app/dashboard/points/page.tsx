@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { stampIcon } from '@/lib/stampIcons'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import styles from './points.module.css'
@@ -52,6 +53,11 @@ export default function PointsPage() {
   const [pointsFree, setPointsFree] = useState(0)
   const [pointsPaid, setPointsPaid] = useState(0)
   const [expiringLots, setExpiringLots] = useState<any[]>([])
+  // ログインスタンプ（ダッシュボードと同じ内容をここでも確認できるようにする）
+  const [stampCount, setStampCount] = useState(0)
+  const [stampIcons, setStampIcons] = useState<string[]>([])
+  const [stampDays, setStampDays] = useState(5)
+  const [stampBonus, setStampBonus] = useState(2)
   const [ledger, setLedger] = useState<any[]>([])
   const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({})
   const [packages, setPackages] = useState<any[]>([])
@@ -78,19 +84,27 @@ export default function PointsPage() {
        ここで失敗しても残高は表示できるので、画面は続行する。 */
     const { error: sweepErr } = await supabase.rpc('sweep_expired_free_points', { p_user_id: user.id })
     if (sweepErr) console.error('期限切れポイントの整理に失敗しました', sweepErr)
-    const [{ data: profile }, { data: entries }, { data: pkgs }, { data: claims }, { data: costs }, { data: lots }] = await Promise.all([
-      supabase.from('profiles').select('is_admin,is_creator,points,points_free,points_paid').eq('id', user.id).single(),
+    const [{ data: profile }, { data: entries }, { data: pkgs }, { data: claims }, { data: costs }, { data: lots }, { data: settings }] = await Promise.all([
+      supabase.from('profiles').select('is_admin,is_creator,points,points_free,points_paid,login_count,stamp_icons').eq('id', user.id).single(),
       supabase.from('points_ledger').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),
       supabase.from('point_packages').select('*').eq('is_active', true).order('sort_order'),
       supabase.from('point_package_claims').select('package_id,period_key').eq('user_id', user.id),
       supabase.from('feature_costs').select('feature,label'),
       supabase.from('point_lots').select('amount,expires_at,source').eq('user_id', user.id).eq('kind', 'free').gt('amount', 0).order('expires_at', { ascending: true }),
+      supabase.from('app_settings').select('key,value')
+        .in('key', ['login_bonus_days', 'login_bonus_points']),
     ])
     setIsAdmin((profile?.is_admin || profile?.is_creator) ?? false)
     setPoints(profile?.points ?? 0)
     setPointsFree(profile?.points_free ?? 0)
     setPointsPaid(profile?.points_paid ?? 0)
     setExpiringLots(lots ?? [])
+    setStampCount(profile?.login_count ?? 0)
+    setStampIcons(profile?.stamp_icons ?? [])
+    const sm: Record<string, string> = {}
+    for (const r of settings ?? []) sm[r.key] = r.value
+    setStampDays(parseInt(sm['login_bonus_days'] ?? '5', 10) || 5)
+    setStampBonus(parseInt(sm['login_bonus_points'] ?? '2', 10) || 2)
     setLedger(entries ?? [])
     const fm: Record<string, string> = {}
     for (const c of costs ?? []) fm[c.feature] = c.label
@@ -205,6 +219,39 @@ export default function PointsPage() {
               </div>
             )}
           </div>
+
+          {/* ログインスタンプ。ダッシュボードでも見られるが、
+              ポイントの入手方法として、この画面でも確認できるようにしている。 */}
+          {!isAdmin && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionTitle}>🎴 ログインスタンプ</h2>
+              <div className={styles.stampCard}>
+                <p className={styles.stampLead}>
+                  毎日ログインするとスタンプが1つ押されます。
+                  {stampDays}個たまると<b>{stampBonus}pt</b>もらえます。
+                </p>
+                <div className={styles.stampGrid}>
+                  {Array.from({ length: stampDays }).map((_, i) => {
+                    const filled = i < stampCount
+                    const icon = stampIcon(stampIcons[i], i)
+                    return (
+                      <div key={i} className={`${styles.stampBox} ${filled ? styles.stampBoxFilled : ''}`}>
+                        {filled
+                          ? <img src={icon.src} alt={icon.label} className={styles.stampBoxIcon}/>
+                          : <span className={styles.stampBoxNum}>{i + 1}</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+                <p className={styles.stampFoot}>
+                  {stampCount >= stampDays
+                    ? 'あと少しで達成です。'
+                    : `あと ${stampDays - stampCount} 個で ${stampBonus}pt`}
+                  　絵柄がすべて同じでそろうと、追加のおまけがあります。
+                </p>
+              </div>
+            </section>
+          )}
 
           {comingSoon && <div className={styles.comingSoonBanner}>🚧 {comingSoon}</div>}
           {purchaseMsg && <div className={styles.comingSoonBanner}>💳 {purchaseMsg}</div>}
