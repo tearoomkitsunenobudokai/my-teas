@@ -33,7 +33,7 @@
   border: 1px solid transparent;
   color: var(--text);
   text-decoration: none;
-  min-height: 62px;
+  min-height: 70px;
   transition: background 0.15s, border-color 0.15s;
 }
 .cell:active { background: #e9e6e1; }
@@ -44,8 +44,8 @@
 }
 
 .cellIcon {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   display: block;
 }
@@ -92,8 +92,8 @@
   background: transparent;
 }
 .railIcon {
-  width: 26px;
-  height: 26px;
+  width: 29px;
+  height: 29px;
   object-fit: contain;
   display: block;
 }
@@ -136,11 +136,11 @@
 @media (max-width: 768px), ((pointer: coarse) and (max-width: 1100px)) {
   .inner { padding: 7px 14px 5px; }
   .grid { gap: 7px; }
-  .cell { min-height: 74px; padding: 6px 3px 5px; }
-  .cellIcon { width: 42px; height: 42px; }
+  .cell { min-height: 80px; padding: 6px 3px 5px; }
+  .cellIcon { width: 48px; height: 48px; }
   .cellLabel { font-size: 11.5px; }
   .railToggle { width: 30px; height: 39px; font-size: 13px; }
   .railItem { height: 39px; }
-  .railIcon { width: 30px; height: 30px; }
+  .railIcon { width: 33px; height: 33px; }
   .toggleBtn { font-size: 11.5px; padding: 2px 18px; }
 }
