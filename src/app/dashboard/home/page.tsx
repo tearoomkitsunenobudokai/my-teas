@@ -77,6 +77,32 @@ export default function HomePage() {
       <div className={styles.stickyHead}>
       <section className={styles.hero}>
         <span className={styles.heroEyebrow}>MY-TEAS</span>
+        {/* 読み込みが終わるまでは、名前もタイルの数も確定しない。
+            先に描画すると「ようこそ」→「おかえりなさい」、タイル3つ→4つ、と
+            二度切り替わって見えるため、確定するまでは骨組みだけを見せる。 */}
+        {loading ? (
+          <>
+            {/* 見出しは名前の長さで1〜2行に変わる。空の箱では高さが合わないため、
+                本物と同じ h1 に見えない文字を入れて、2行ぶんの高さを確保する。 */}
+            <h1 className={`${styles.heroTitle} ${styles.heroTitleSkeleton}`} aria-hidden="true">
+              {'\u00A0'}<br/>{'\u00A0'}
+            </h1>
+            <p className={styles.heroLead}>今日の一杯を、記録に。</p>
+            <div className={styles.heroTileRow}>
+              {/* 本物と同じ中身を、見えない状態で入れておく。
+                  タイルの高さは中身（絵＋2行のラベル）で決まるため、
+                  空の箱にすると切り替わったときに画面が飛ぶ。 */}
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className={`${styles.tile} ${styles.tileSkeleton}`} aria-hidden="true">
+                  <img src="/icons/home/rate.svg" alt="" className={styles.tileIcon}/>
+                  <span className={styles.tileLabel}>{'\u00A0'}<br/>{'\u00A0'}</span>
+                </div>
+              ))}
+            </div>
+            <span className={styles.srOnly}>読み込み中</span>
+          </>
+        ) : (
+        <>
         <h1 className={styles.heroTitle}>
           {name ? `おかえりなさい、${name}さん` : 'ようこそ'}
         </h1>
@@ -102,6 +128,8 @@ export default function HomePage() {
             </a>
           )}
         </div>
+        </>
+        )}
       </section>
       </div>
 

@@ -216,3 +216,39 @@
 .stickyHead {
   position: static;
 }
+
+/* === v406: 読み込み中の骨組み ===
+   名前とタイルの数が確定するまで表示する。
+   高さは本物と同じにして、切り替わったときに画面が飛ばないようにする。 */
+.heroTitleSkeleton {
+  width: min(72%, 320px);
+  margin-left: auto; margin-right: auto;
+  border-radius: 8px;
+  color: transparent;
+  background: linear-gradient(90deg, #ece9e4 25%, #f5f3f0 50%, #ece9e4 75%);
+  background-size: 200% 100%;
+  animation: heroShimmer 1.2s ease-in-out infinite;
+}
+.tileSkeleton {
+  border-color: transparent;
+  background: linear-gradient(90deg, #ece9e4 25%, #f5f3f0 50%, #ece9e4 75%);
+  background-size: 200% 100%;
+  animation: heroShimmer 1.2s ease-in-out infinite;
+  cursor: default;
+}
+.tileSkeleton:hover { transform: none; }
+.tileSkeleton > * { visibility: hidden; }
+@keyframes heroShimmer {
+  from { background-position: 200% 0 }
+  to   { background-position: -200% 0 }
+}
+@media (prefers-reduced-motion: reduce) {
+  .heroTitleSkeleton, .tileSkeleton { animation: none; }
+}
+
+/* 画面には出さず、読み上げにだけ伝える */
+.srOnly {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
