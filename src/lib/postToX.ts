@@ -6,10 +6,15 @@
 // ここではその数え方を再現し、上限に収まるよう本文を削る。
 // ─────────────────────────────────────────────────────────
 
-/** ポストに必ず付けるタグ */
-export const POST_HASHTAGS = '#紅茶 #My-Teas'
+/** ポストに必ず付けるタグ。
+    Xのハッシュタグで使えるのは英数字とアンダースコアのみで、
+    ハイフンは区切りとして扱われる。「#My-Teas」だと「#My」で切れるため、
+    ハイフンを取って「#MyTeas」にしている。 */
+export const POST_HASHTAGS = '#紅茶 #MyTeas'
 /** ポストに必ず付けるアカウント */
 export const POST_MENTION = '@myteas_kbk'
+/** ポストに載せるサイトのURL */
+export const POST_URL = 'https://my-teas.jp'
 
 /** Xの上限（重み付き） */
 const WEIGHT_LIMIT = 280
@@ -77,21 +82,26 @@ export function buildPostText(review?: ReviewForPost): string {
   if (brand) info.push(`🏷️ ${brand}`)
   if (shop)  info.push(`🏠 ${shop}`)
 
-  const lines = [head, ...info, POST_HASHTAGS, POST_MENTION]
-  const text = lines.join('\n')
+  // URLは実際の長さによらず、重み23として数えられる。
+  // 文字数の計算では、その分を差し引いて考える。
+  const tail = [POST_HASHTAGS, POST_MENTION, POST_URL]
+  const weightOf = (ls: string[]) =>
+    postWeight([...ls, POST_HASHTAGS, POST_MENTION].join('\n')) + 1 + URL_WEIGHT
 
   // 上限を超える場合は、紅茶の情報から削って収める。
-  // タグとアカウントは必ず残す。
-  if (postWeight(text) <= WEIGHT_LIMIT) return text
+  // タグ・アカウント・URLは必ず残す。
+  if (weightOf([head, ...info]) <= WEIGHT_LIMIT) {
+    return [head, ...info, ...tail].join('\n')
+  }
   while (info.length > 0) {
     info.pop()
-    const t = [head, ...info, POST_HASHTAGS, POST_MENTION].join('\n')
-    if (postWeight(t) <= WEIGHT_LIMIT) return t
+    if (weightOf([head, ...info]) <= WEIGHT_LIMIT) {
+      return [head, ...info, ...tail].join('\n')
+    }
   }
   // それでも収まらない場合は、見出しを切り詰める
-  const fixed = [POST_HASHTAGS, POST_MENTION].join('\n')
-  const room = WEIGHT_LIMIT - postWeight(fixed) - 1
-  return [trimToWeight(head, room), POST_HASHTAGS, POST_MENTION].join('\n')
+  const room = WEIGHT_LIMIT - postWeight([POST_HASHTAGS, POST_MENTION].join('\n')) - 2 - URL_WEIGHT
+  return [trimToWeight(head, room), ...tail].join('\n')
 }
 
 /** Xの投稿画面を開くURLを作る（ブラウザ版） */
