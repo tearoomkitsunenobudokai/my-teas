@@ -201,7 +201,8 @@ export default function PointsPage() {
 
   return (
     <div className={styles.page}>
-      <Link href="/dashboard" className={styles.back}>← ダッシュボードに戻る</Link>
+      {/* ホームのタイルから入る画面なので、戻り先もホームにそろえる（v412） */}
+      <Link href="/dashboard/home" className={styles.back}>← ホームに戻る</Link>
       <h1 className={styles.title}>💎 ポイント</h1>
       <p className={styles.lead}>AI分析機能（AIティーアドバイザー・オススメの1杯）の利用に使うポイントです。</p>
 
