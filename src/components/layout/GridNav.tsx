@@ -113,9 +113,9 @@ export default function GridNav() {
                 className={styles.toggleBtn}
                 onClick={toggle}
                 aria-expanded={true}
-                aria-label="メニューを閉じる">
+                aria-label="メニューを最小化">
                 <span className={styles.chevron}>▲</span>
-                閉じる
+                最小化
               </button>
             </div>
           </>
