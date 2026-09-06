@@ -134,3 +134,62 @@
 @media (prefers-reduced-motion: reduce) {
   .bonusBoxL3 { animation: none; }
 }
+
+/* ── まだ成立しうる役の一覧（v415） ──
+   達成前のポップアップに出す。成立しなくなった役は灰色にして、
+   「あと何を引けばよいか」が伝わるようにしている。
+   ポップアップの中なので、文字も余白も小さめにそろえている。 */
+.hands {
+  text-align: left;
+  background: var(--bg, #f7f7f5);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  margin: 0 0 1rem;
+}
+.handsHead {
+  font-size: 11.5px; font-weight: 700;
+  color: var(--text-muted, #666);
+  margin: 0 0 0.5rem;
+}
+.handList {
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.handRow {
+  display: flex; align-items: baseline; gap: 6px;
+  padding: 3px 0;
+  font-size: 12px;
+  color: var(--text, #1a1a1a);
+}
+.handName {
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.handNote {
+  font-size: 11px;
+  color: var(--text-muted, #666);
+  flex: 1 1 auto;
+}
+/* もう成立しない役 */
+.handRowOut { opacity: 0.4; }
+.handRowOut .handName { text-decoration: line-through; }
+.handOut {
+  font-size: 10px; font-weight: 700;
+  color: var(--text-muted, #666);
+  flex: 0 0 auto;
+}
+.handsFoot {
+  font-size: 10.5px; color: var(--text-muted, #666);
+  margin: 0.5rem 0 0; line-height: 1.5;
+}
+
+@media (max-width: 420px) {
+  .handRow  { font-size: 11.5px; }
+  .handNote { font-size: 10.5px; }
+}
+
+/* 確認用の表示（ポイント画面から開いたとき）の注意書き */
+.previewNote {
+  font-size: 11px; color: var(--text-muted, #666);
+  margin: 0 0 0.7rem; line-height: 1.5;
+}

@@ -109,3 +109,79 @@ export const HAND_ODDS: Record<StampHand, number> = {
  * サーバー側の既定値（app_settings の login_stamp_pool_size）と一致させること。
  */
 export const STAMP_POOL_SIZE = 5
+
+// ─── まだ成立しうる役の判定 ─────────────────────────────
+//
+// 「絵柄の個数の並び」から役を引くための表。5マス前提。
+// 例: 同じ絵柄が3つ＋別が2つ → '3,2' → フルハウス。
+// サーバー側の stamp_hand()（migrations/102）と同じ分け方にしている。
+const HAND_BY_PATTERN: Record<string, StampHand> = {
+  '5':         'five',
+  '4,1':       'four',
+  '3,2':       'full',
+  '3,1,1':     'three',
+  '2,2,1':     'twopair',
+  '2,1,1,1':   'none',
+  '1,1,1,1,1': 'complete',
+}
+
+/**
+ * 引いた絵柄から、まだ成立する可能性が残っている役を求める。
+ *
+ * 残りの抽選の振り分けをすべて試し、たどり着ける並びを集めている。
+ * マスは5つ・絵柄は多くても10種類なので、総当たりで十分間に合う。
+ *
+ * 判定に使うのは「どの絵柄が何個あるか」だけで、並び順は見ていない。
+ * 役は並び順に関係なく決まるため。
+ *
+ * @param icons 引いた絵柄のキー（古い順）
+ * @param need  マスの数
+ * @param poolSize このカードで使う絵柄の種類数
+ */
+export function possibleHands(
+  icons: string[],
+  need: number,
+  poolSize: number,
+): Record<StampHand, boolean> {
+  const result: Record<StampHand, boolean> = {
+    five: false, four: false, complete: false,
+    full: false, three: false, twopair: false, none: false,
+  }
+
+  const drawn = (icons ?? []).slice(0, need)
+  const remain = Math.max(0, need - drawn.length)
+
+  // 出た絵柄ごとの個数
+  const counts = new Map<string, number>()
+  for (const key of drawn) counts.set(key, (counts.get(key) ?? 0) + 1)
+  const base = Array.from(counts.values())
+
+  // まだ一度も出ていない絵柄のぶんの枠。ここに入れると新しい絵柄が増える。
+  const unused = Math.max(0, poolSize - base.length)
+  const slots = base.length + unused
+  if (slots === 0) return result
+
+  const add = new Array<number>(slots).fill(0)
+
+  const walk = (i: number, left: number) => {
+    if (i === slots) {
+      if (left > 0) return
+      const finals: number[] = []
+      for (let j = 0; j < slots; j++) {
+        const c = (j < base.length ? base[j] : 0) + add[j]
+        if (c > 0) finals.push(c)
+      }
+      const hand = HAND_BY_PATTERN[finals.sort((a, b) => b - a).join(',')]
+      if (hand) result[hand] = true
+      return
+    }
+    for (let n = 0; n <= left; n++) {
+      add[i] = n
+      walk(i + 1, left - n)
+    }
+    add[i] = 0
+  }
+  walk(0, remain)
+
+  return result
+}
