@@ -89,8 +89,56 @@ export function buildPostText(review: ReviewForPost, siteUrl?: string): string {
   return parts.join('\n')
 }
 
-/** Xの投稿画面を開くURLを作る */
+/** Xの投稿画面を開くURLを作る（ブラウザ版） */
 export function buildPostUrl(review: ReviewForPost, siteUrl?: string): string {
   const text = buildPostText(review, siteUrl)
   return `https://x.com/intent/post?text=${encodeURIComponent(text)}`
+}
+
+/**
+ * Xの投稿画面を開く。
+ *
+ * スマホでは、まずXアプリを開こうとする。
+ * ブラウザ版（x.com/intent/post）だと、アプリにログインしていても
+ * ブラウザ側にセッションが無ければログイン画面が出てしまうため。
+ *
+ * アプリが入っていない場合に備え、一定時間たっても画面が切り替わらなければ
+ * ブラウザ版を開く。アプリが開いた場合はページが背面に回るので、
+ * visibilitychange / pagehide を見て取り消す。
+ */
+export function openPostToX(review: ReviewForPost, siteUrl?: string): void {
+  const text = buildPostText(review, siteUrl)
+  const webUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`
+
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(ua)
+
+  if (!isMobile) {
+    window.open(webUrl, '_blank', 'noopener,noreferrer')
+    return
+  }
+
+  // Xアプリのスキーム。X になった今も twitter:// が使われている。
+  const appUrl = `twitter://post?message=${encodeURIComponent(text)}`
+
+  let cancelled = false
+  const cancel = () => { cancelled = true }
+  document.addEventListener('visibilitychange', cancel, { once: true })
+  window.addEventListener('pagehide', cancel, { once: true })
+  window.addEventListener('blur', cancel, { once: true })
+
+  const timer = setTimeout(() => {
+    document.removeEventListener('visibilitychange', cancel)
+    window.removeEventListener('pagehide', cancel)
+    window.removeEventListener('blur', cancel)
+    // アプリが開かなかったときだけ、ブラウザ版へ切り替える
+    if (!cancelled && document.visibilityState === 'visible') {
+      window.location.href = webUrl
+    }
+  }, 1200)
+
+  // 開けなかった場合に備え、タイマーは必ず解除できるようにしておく
+  void timer
+
+  window.location.href = appUrl
 }
