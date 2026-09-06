@@ -6,10 +6,15 @@
 // ここではその数え方を再現し、上限に収まるよう本文を削る。
 // ─────────────────────────────────────────────────────────
 
-/** ポストに必ず付けるタグ */
-export const POST_HASHTAGS = '#紅茶 #My-Teas'
+/** ポストに必ず付けるタグ。
+    Xのハッシュタグで使えるのは英数字とアンダースコアのみで、
+    ハイフンは区切りとして扱われる。「#My-Teas」だと「#My」で切れるため、
+    ハイフンを取って「#MyTeas」にしている。 */
+export const POST_HASHTAGS = '#紅茶 #MyTeas'
 /** ポストに必ず付けるアカウント */
 export const POST_MENTION = '@myteas_kbk'
+/** ポストに載せるサイトのURL */
+export const POST_URL = 'https://my-teas.jp'
 
 /** Xの上限（重み付き） */
 const WEIGHT_LIMIT = 280
@@ -56,14 +61,47 @@ export type ReviewForPost = {
 /**
  * ポストのたたき台を作る。
  *
- * 並びは「本文 → タグ → アカウント」で固定。
+ * 並びは「本文 → 紅茶の情報 → タグ → アカウント」で固定。
  * hashtags パラメータを使うとタグが必ず末尾に付き、
  * アカウントがタグより前に来てしまうため、すべて text にまとめている。
+ *
+ * 紅茶名・ブランド・お店は、入力されているものだけを並べる。
+ * 未入力の項目は行ごと出さない（「ブランド未設定」などと出さない）。
  *
  * 利用者はX側の画面で自由に書き換えられるため、ここではあくまで下書きを渡す。
  */
 export function buildPostText(review?: ReviewForPost): string {
-  return ['お茶を飲みました！', POST_HASHTAGS, POST_MENTION].join('\n')
+  const tea   = review?.tea_name?.trim() || ''
+  const brand = review?.brand_name?.trim() || ''
+  const shop  = review?.shop_name?.trim() || ''
+
+  const head = tea ? `${tea}を飲みました！` : 'お茶を飲みました！'
+
+  // 紅茶の情報。入力があるものだけを行にする。
+  const info: string[] = []
+  if (brand) info.push(`🏷️ ${brand}`)
+  if (shop)  info.push(`🏠 ${shop}`)
+
+  // URLは実際の長さによらず、重み23として数えられる。
+  // 文字数の計算では、その分を差し引いて考える。
+  const tail = [POST_HASHTAGS, POST_MENTION, POST_URL]
+  const weightOf = (ls: string[]) =>
+    postWeight([...ls, POST_HASHTAGS, POST_MENTION].join('\n')) + 1 + URL_WEIGHT
+
+  // 上限を超える場合は、紅茶の情報から削って収める。
+  // タグ・アカウント・URLは必ず残す。
+  if (weightOf([head, ...info]) <= WEIGHT_LIMIT) {
+    return [head, ...info, ...tail].join('\n')
+  }
+  while (info.length > 0) {
+    info.pop()
+    if (weightOf([head, ...info]) <= WEIGHT_LIMIT) {
+      return [head, ...info, ...tail].join('\n')
+    }
+  }
+  // それでも収まらない場合は、見出しを切り詰める
+  const room = WEIGHT_LIMIT - postWeight([POST_HASHTAGS, POST_MENTION].join('\n')) - 2 - URL_WEIGHT
+  return [trimToWeight(head, room), ...tail].join('\n')
 }
 
 /** Xの投稿画面を開くURLを作る（ブラウザ版） */
