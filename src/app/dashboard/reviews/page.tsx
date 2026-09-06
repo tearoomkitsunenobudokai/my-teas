@@ -1231,7 +1231,7 @@ export default function ReviewsPage() {
   /* Xの投稿画面を、下書きを入れた状態で開く。
      実際に投稿するかどうかはX側で決められる（ここでは何も送信しない）。 */
   function postToX(r: any) {
-    openPostToX(r, typeof window !== 'undefined' ? window.location.origin : undefined)
+    openPostToX(r)
   }
 
   async function makeCardFromRow(r: any) {
