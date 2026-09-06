@@ -168,4 +168,19 @@
   .avatarUploadBtn { font-size: 15px; }
   .avatarHint { font-size: 12.5px; }
   .myPageBtn { font-size: 15px; }
+
+  /* 文字だけ拡大すると、300px固定の器に収まらず窮屈になる。
+     スマホでは画面幅いっぱいまで広げ、左右に少し余白を残す。
+     位置は画面の右端を基準にしたいので、ヘッダーの内側ではなく
+     画面に対して固定する。 */
+  .panel {
+    position: fixed;
+    top: 62px; right: 8px; left: 8px;
+    width: auto;
+    max-height: calc(100dvh - 74px);
+    overflow-y: auto;
+  }
+  /* パネル側でスクロールするので、フォーム側の高さ制限は外す。
+     両方に制限があると入れ子でスクロールが起きて操作しづらい。 */
+  .editForm { max-height: none; overflow-y: visible; }
 }
