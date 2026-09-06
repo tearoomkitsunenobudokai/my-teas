@@ -7,7 +7,9 @@
 // ─────────────────────────────────────────────────────────
 
 /** ポストに必ず付けるタグ */
-export const POST_HASHTAGS = '#My-Teas #紅茶'
+export const POST_HASHTAGS = '#紅茶 #My-Teas'
+/** ポストに必ず付けるアカウント */
+export const POST_MENTION = '@myteas_kbk'
 
 /** Xの上限（重み付き） */
 const WEIGHT_LIMIT = 280
@@ -53,46 +55,21 @@ export type ReviewForPost = {
 
 /**
  * ポストのたたき台を作る。
- * 本文は AI要約 → 自分のメモ → 香りノートからの自動文、の順で使う。
+ *
+ * 並びは「本文 → タグ → アカウント」で固定。
+ * hashtags パラメータを使うとタグが必ず末尾に付き、
+ * アカウントがタグより前に来てしまうため、すべて text にまとめている。
+ *
  * 利用者はX側の画面で自由に書き換えられるため、ここではあくまで下書きを渡す。
  */
-export function buildPostText(review: ReviewForPost, siteUrl?: string): string {
-  const name = review.tea_name?.trim() || 'この紅茶'
-  const brand = review.brand_name?.trim() || ''
-  const shop = review.shop_name?.trim() || ''
-
-  // 1行目：何を飲んだか
-  const head = brand ? `${brand}の${name}` : name
-  const where = shop ? `＠${shop}` : ''
-  const line1 = `${head}を飲みました。${where}`
-
-  // 本文：要約があればそれを使う
-  const body = (
-    review.summary_text?.trim() ||
-    review.summary_normal?.trim() ||
-    review.comment?.trim() ||
-    ((review.aroma_notes ?? []).length > 0
-      ? `${(review.aroma_notes as string[]).slice(0, 3).join('・')}の香りが印象的でした。`
-      : '')
-  )
-
-  // 本文に使える重みを求める（1行目・タグ・URL・改行を差し引く）
-  const fixed = [line1, POST_HASHTAGS].join('\n')
-  let room = WEIGHT_LIMIT - postWeight(fixed) - 2 // 本文前後の改行
-  if (siteUrl) room -= URL_WEIGHT + 1
-
-  const parts = [line1]
-  if (body && room > 10) parts.push(trimToWeight(body, room))
-  parts.push(POST_HASHTAGS)
-  if (siteUrl) parts.push(siteUrl)
-
-  return parts.join('\n')
+export function buildPostText(review?: ReviewForPost): string {
+  return ['お茶を飲みました！', POST_HASHTAGS, POST_MENTION].join('\n')
 }
 
 /** Xの投稿画面を開くURLを作る（ブラウザ版） */
-export function buildPostUrl(review: ReviewForPost, siteUrl?: string): string {
-  const text = buildPostText(review, siteUrl)
-  return `https://x.com/intent/post?text=${encodeURIComponent(text)}`
+export function buildPostUrl(review?: ReviewForPost): string {
+  const text = buildPostText(review)
+  return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`
 }
 
 /**
@@ -106,9 +83,9 @@ export function buildPostUrl(review: ReviewForPost, siteUrl?: string): string {
  * ブラウザ版を開く。アプリが開いた場合はページが背面に回るので、
  * visibilitychange / pagehide を見て取り消す。
  */
-export function openPostToX(review: ReviewForPost, siteUrl?: string): void {
-  const text = buildPostText(review, siteUrl)
-  const webUrl = `https://x.com/intent/post?text=${encodeURIComponent(text)}`
+export function openPostToX(review?: ReviewForPost): void {
+  const text = buildPostText(review)
+  const webUrl = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`
 
   const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
   const isMobile = /iPhone|iPad|iPod|Android/i.test(ua)
