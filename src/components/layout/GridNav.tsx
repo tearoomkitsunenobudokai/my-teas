@@ -58,8 +58,14 @@ export default function GridNav() {
   function isActive(href: string): boolean {
     // AI分析は配下にページが分かれているので前方一致
     if (href === '/dashboard/ai-analysis') return pathname.startsWith(href)
-    // 統計(/dashboard)はホームの下位画面なので、そこにいる間もホームを選択中にする（v362）
-    if (href === '/dashboard/home') return pathname === '/dashboard/home' || pathname === '/dashboard'
+    // ホームの下位画面にいる間も、ホームを選択中にする。
+    //   /dashboard        … 統計（v362）
+    //   /dashboard/points … ポイント（v412）。ホームのタイルから入る画面のため
+    if (href === '/dashboard/home') {
+      return pathname === '/dashboard/home'
+        || pathname === '/dashboard'
+        || pathname === '/dashboard/points'
+    }
     return pathname === href
   }
 
