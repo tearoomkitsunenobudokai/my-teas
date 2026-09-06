@@ -56,14 +56,42 @@ export type ReviewForPost = {
 /**
  * ポストのたたき台を作る。
  *
- * 並びは「本文 → タグ → アカウント」で固定。
+ * 並びは「本文 → 紅茶の情報 → タグ → アカウント」で固定。
  * hashtags パラメータを使うとタグが必ず末尾に付き、
  * アカウントがタグより前に来てしまうため、すべて text にまとめている。
+ *
+ * 紅茶名・ブランド・お店は、入力されているものだけを並べる。
+ * 未入力の項目は行ごと出さない（「ブランド未設定」などと出さない）。
  *
  * 利用者はX側の画面で自由に書き換えられるため、ここではあくまで下書きを渡す。
  */
 export function buildPostText(review?: ReviewForPost): string {
-  return ['お茶を飲みました！', POST_HASHTAGS, POST_MENTION].join('\n')
+  const tea   = review?.tea_name?.trim() || ''
+  const brand = review?.brand_name?.trim() || ''
+  const shop  = review?.shop_name?.trim() || ''
+
+  const head = tea ? `${tea}を飲みました！` : 'お茶を飲みました！'
+
+  // 紅茶の情報。入力があるものだけを行にする。
+  const info: string[] = []
+  if (brand) info.push(`🏷️ ${brand}`)
+  if (shop)  info.push(`🏠 ${shop}`)
+
+  const lines = [head, ...info, POST_HASHTAGS, POST_MENTION]
+  const text = lines.join('\n')
+
+  // 上限を超える場合は、紅茶の情報から削って収める。
+  // タグとアカウントは必ず残す。
+  if (postWeight(text) <= WEIGHT_LIMIT) return text
+  while (info.length > 0) {
+    info.pop()
+    const t = [head, ...info, POST_HASHTAGS, POST_MENTION].join('\n')
+    if (postWeight(t) <= WEIGHT_LIMIT) return t
+  }
+  // それでも収まらない場合は、見出しを切り詰める
+  const fixed = [POST_HASHTAGS, POST_MENTION].join('\n')
+  const room = WEIGHT_LIMIT - postWeight(fixed) - 1
+  return [trimToWeight(head, room), POST_HASHTAGS, POST_MENTION].join('\n')
 }
 
 /** Xの投稿画面を開くURLを作る（ブラウザ版） */
