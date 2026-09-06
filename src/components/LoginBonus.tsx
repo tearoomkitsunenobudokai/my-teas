@@ -145,7 +145,7 @@ export default function LoginBonus() {
                         className={`${styles.handRow} ${open ? '' : styles.handRowOut}`}>
                         <span className={styles.handName}>{info.label}</span>
                         <span className={styles.handNote}>{info.note}</span>
-                        {!open && <span className={styles.handOut}>むり</span>}
+                        {!open && <span className={styles.handOut}>失敗</span>}
                       </li>
                     )
                   })}
