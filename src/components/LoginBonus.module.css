@@ -187,3 +187,9 @@
   .handRow  { font-size: 11.5px; }
   .handNote { font-size: 10.5px; }
 }
+
+/* 確認用の表示（ポイント画面から開いたとき）の注意書き */
+.previewNote {
+  font-size: 11px; color: var(--text-muted, #666);
+  margin: 0 0 0.7rem; line-height: 1.5;
+}

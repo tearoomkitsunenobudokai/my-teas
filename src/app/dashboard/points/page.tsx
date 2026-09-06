@@ -2,11 +2,13 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import {
-  stampIcon, STAMP_ICONS,
+  stampIcon, STAMP_ICONS, STAMP_POOL_SIZE,
   HANDS, HAND_ORDER, HAND_SAMPLES, HAND_ODDS,
 } from '@/lib/stampIcons'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import StampCardView from '@/components/StampCardView'
+import loginBonusStyles from '@/components/LoginBonus.module.css'
 import styles from './points.module.css'
 
 const TYPE_LABEL: Record<string, string> = {
@@ -63,6 +65,9 @@ export default function PointsPage() {
   const [stampBonus, setStampBonus] = useState(2)
   const [handPoints, setHandPoints] = useState<Record<string, number>>({})
   const [showHands, setShowHands] = useState(false)
+  // スタンプのポップアップの確認用の表示。
+  // ここでは record_login_and_grant_v4 を呼ばないので、開いてもポイントは増えない。
+  const [showStampCard, setShowStampCard] = useState(false)
   const [ledger, setLedger] = useState<any[]>([])
   const [featureLabels, setFeatureLabels] = useState<Record<string, string>>({})
   const [packages, setPackages] = useState<any[]>([])
@@ -267,6 +272,9 @@ export default function PointsPage() {
                 <button type="button" className={styles.handLink} onClick={() => setShowHands(true)}>
                   🎴 絵柄のそろい方（役）を見る
                 </button>
+                <button type="button" className={styles.handLink} onClick={() => setShowStampCard(true)}>
+                  🔍 いまのスタンプを見る（ポイントは増えません）
+                </button>
               </div>
             </section>
           )}
@@ -344,6 +352,22 @@ export default function PointsPage() {
       )}
 
       {/* 役の一覧。絵柄の見本を並べて、どうそろえばよいかを示す。 */}
+      {/* スタンプのポップアップを確認用に開く。通信はしない。 */}
+      {showStampCard && (
+        <div className={loginBonusStyles.overlay} onClick={() => setShowStampCard(false)}>
+          <StampCardView
+            count={stampCount}
+            need={stampDays}
+            bonus={stampBonus}
+            icons={stampIcons}
+            poolSize={STAMP_POOL_SIZE}
+            pressed
+            preview
+            onClose={() => setShowStampCard(false)}
+          />
+        </div>
+      )}
+
       {showHands && (
         <div className={styles.handOverlay} onClick={() => setShowHands(false)}>
           <div className={styles.handModal} onClick={e => e.stopPropagation()}>
