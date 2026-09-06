@@ -14,7 +14,7 @@ import {
   TONE_OPTIONS, LENGTH_OPTIONS,
   type SummaryTone, type SummaryLength, type SummaryStyle,
 } from '@/lib/reviewSummary'
-import { buildPostUrl } from '@/lib/postToX'
+import { openPostToX } from '@/lib/postToX'
 import { generateTeaCard, downloadBlob } from '@/lib/teaCard'
 import { brewIconPath, accompanimentIconPath, ACCOMPANIMENT_ORDER } from '@/lib/icons'
 import { buildCsv, parseReviewsCsv, dropDuplicates } from '@/lib/reviewCsv'
@@ -1231,8 +1231,7 @@ export default function ReviewsPage() {
   /* Xの投稿画面を、下書きを入れた状態で開く。
      実際に投稿するかどうかはX側で決められる（ここでは何も送信しない）。 */
   function postToX(r: any) {
-    const url = buildPostUrl(r, typeof window !== 'undefined' ? window.location.origin : undefined)
-    window.open(url, '_blank', 'noopener,noreferrer')
+    openPostToX(r, typeof window !== 'undefined' ? window.location.origin : undefined)
   }
 
   async function makeCardFromRow(r: any) {
