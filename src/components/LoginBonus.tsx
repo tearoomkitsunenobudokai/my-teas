@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase'
-import { stampIcon, handInfo } from '@/lib/stampIcons'
+import { stampIcon, handInfo, possibleHands, HANDS, HAND_ORDER } from '@/lib/stampIcons'
 import styles from './LoginBonus.module.css'
 
 // アプリ（ダッシュボード）を開いたときに1回だけログインを記録し、
@@ -62,6 +62,12 @@ export default function LoginBonus() {
   const filledNow = pressed ? count : count - 1
   const remaining = Math.max(0, need - count)
   const achieved = granted > 0
+
+  // まだ成立しうる役。マスが5つのときだけ6役がそろうので、
+  // 設定が変わって5以外になった場合は一覧を出さず、従来の説明文に戻す。
+  const poolSize = result.pool?.length ?? 0
+  const possible = possibleHands(icons ?? [], need, poolSize)
+  const showHandList = need === 5 && poolSize >= 5
 
   return (
     <div className={`${styles.overlay} ${closing ? styles.overlayClosing : ''}`} onClick={close}>
@@ -125,10 +131,35 @@ export default function LoginBonus() {
             <p className={styles.progress}>
               あと <strong>{remaining}</strong> 個で {bonus}ポイント
             </p>
-            <p className={styles.poolNote}>
-              このカードの絵柄は {result.pool?.length ?? 0} 種類。
-              そろい方（役）に応じて、達成時におまけが付きます。
-            </p>
+            {showHandList ? (
+              <div className={styles.hands}>
+                <p className={styles.handsHead}>
+                  そろい方（役）に応じて、達成時におまけが付きます
+                </p>
+                <ul className={styles.handList}>
+                  {HAND_ORDER.map(key => {
+                    const info = HANDS[key]
+                    const open = possible[key]
+                    return (
+                      <li key={key}
+                        className={`${styles.handRow} ${open ? '' : styles.handRowOut}`}>
+                        <span className={styles.handName}>{info.label}</span>
+                        <span className={styles.handNote}>{info.note}</span>
+                        {!open && <span className={styles.handOut}>むり</span>}
+                      </li>
+                    )
+                  })}
+                </ul>
+                <p className={styles.handsFoot}>
+                  灰色は、今の絵柄ではもう成立しない役です。
+                </p>
+              </div>
+            ) : (
+              <p className={styles.poolNote}>
+                このカードの絵柄は {result.pool?.length ?? 0} 種類。
+                そろい方（役）に応じて、達成時におまけが付きます。
+              </p>
+            )}
           </>
         )}
 
